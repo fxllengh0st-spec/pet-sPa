@@ -163,6 +163,19 @@
     transform: rotate(-10deg);
 }
 
+/* Gallery Scroll */
+.gallery-scroll {
+    display: flex; gap: 12px; overflow-x: auto; padding: 4px 16px 16px; margin: 0 -16px;
+    scroll-snap-type: x mandatory;
+    overscroll-behavior-x: contain;
+}
+.gallery-item-home {
+    height: 120px; width: 140px; border-radius: 16px; object-fit: cover;
+    box-shadow: var(--shadow-sm); flex-shrink: 0;
+    scroll-snap-align: center;
+    border: 2px solid white;
+}
+
 .testimonials-section { margin-bottom: 60px; }
 .testimonials-scroll {
     display: flex; gap: 12px; overflow-x: auto; padding-bottom: 12px; scroll-snap-type: x mandatory;

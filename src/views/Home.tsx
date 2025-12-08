@@ -1,4 +1,5 @@
 
+
 import React from 'react';
 import { Sparkles, Scissors, Droplet, Heart, ShoppingBag } from 'lucide-react';
 import { Route } from '../types';
@@ -64,7 +65,8 @@ export const HomePage: React.FC<HomePageProps> = ({ session, onNavigate, onOpenB
         />
       </header>
       
-      <div className="container" style={{ marginTop: '-40px', position: 'relative', zIndex: 20 }}>
+      {/* Ajustado marginTop de -40px para -15px para abaixar o título 'Nossos Serviços' */}
+      <div className="container" style={{ marginTop: '-15px', position: 'relative', zIndex: 20 }}>
          <h2 className="section-title reveal-on-scroll" style={{ marginTop: 0, marginBottom: 20 }}>Nossos Serviços</h2>
          
          <div className="services-preview-grid">
@@ -142,6 +144,21 @@ export const HomePage: React.FC<HomePageProps> = ({ session, onNavigate, onOpenB
                 <p>Ganhe <strong>10% OFF</strong> no primeiro banho agendando pelo app!</p>
             </div>
             <img src={`${BASE_STORAGE_URL}/bt.webp`} alt="Mascote" className="promo-mascot-img" />
+         </div>
+
+         {/* Social Proof Gallery */}
+         <div className="social-proof-section mt-4 reveal-on-scroll">
+            <h2 className="section-title">Galeria da Fofura</h2>
+            <div className="gallery-scroll">
+                {[1, 2, 4, 5, 6].map((num) => (
+                    <img 
+                        key={num}
+                        src={`${BASE_STORAGE_URL}/${num}.jpg`} 
+                        alt="Cliente Feliz" 
+                        className="gallery-item-home"
+                    />
+                ))}
+            </div>
          </div>
 
          {/* Testimonials */}
