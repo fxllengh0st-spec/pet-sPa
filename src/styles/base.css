@@ -1,0 +1,62 @@
+/* =========================================
+   BASE & RESET
+   ========================================= */
+
+/* Scrollbar Customizada (Cross-browser) */
+html {
+    scrollbar-width: thin;
+    scrollbar-color: #DDE1E6 transparent;
+    scroll-behavior: smooth;
+    scrollbar-gutter: stable; /* Previne pulos de layout */
+}
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #DDE1E6; border-radius: 10px; transition: background 0.2s; }
+::-webkit-scrollbar-thumb:hover { background: #B2BEC3; }
+
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+body {
+  font-family: 'Inter', sans-serif;
+  background-color: var(--bg-app);
+  color: var(--text-main);
+  margin: 0; padding: 0;
+  line-height: 1.6; /* Melhor legibilidade */
+  padding-top: calc(var(--mobile-header-height) + 10px); 
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+h1, h2, h3, h4 { 
+    font-family: 'Quicksand', sans-serif;
+    color: var(--secondary); 
+    margin: 0 0 0.5em 0; 
+    font-weight: 700; 
+    letter-spacing: -0.02em;
+    text-wrap: balance; /* Títulos equilibrados visualmente */
+}
+
+p { margin: 0 0 1rem 0; color: var(--text-body); font-size: 0.95rem; font-weight: 500; }
+a { text-decoration: none; color: inherit; transition: color 0.2s; }
+
+img { max-width: 100%; height: auto; display: block; }
+
+/* Utilities for Scroll */
+.scroll-hidden {
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none;  /* IE 10+ */
+}
+.scroll-hidden::-webkit-scrollbar { 
+    display: none; /* Chrome/Safari */
+}
+.no-scrollbar::-webkit-scrollbar {
+    display: none;
+}
+.no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+.scroll-visible {
+    /* Helper to toggle back if needed via JS or media query, usually left empty or specific overrides */
+}

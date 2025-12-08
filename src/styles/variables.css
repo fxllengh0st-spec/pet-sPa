@@ -1,0 +1,54 @@
+/* =========================================
+   TOKENS (Design System)
+   ========================================= */
+
+:root {
+  /* Paleta: Laranja Vibrante + Tons Suaves */
+  --primary: #FF8C42;       
+  --primary-hover: #FF7A20;
+  --primary-glow: rgba(255, 140, 66, 0.35); 
+  
+  --secondary: #2D3436;     
+  --secondary-light: #636E72;
+  
+  --accent: #FFF5EB;        /* Laranja muito pálido para fundos de ícones */
+  --surface: #FFFFFF;
+  
+  --bg-app: #F8F9FA;        /* Cinza ultra leve, quase branco */
+  --bg-input: #F2F4F6;      /* Cinza frio para inputs */
+  
+  --text-main: #2D3436;
+  --text-body: #636E72;     
+  --text-muted: #95a5a6;
+  
+  /* Status Colors (Pastel & Strong) */
+  --status-pending-bg: #FFF4E5; --status-pending-text: #FF9F43;
+  --status-confirmed-bg: #E6FFF5; --status-confirmed-text: #00B894;
+  --status-progress-bg: #E3F2FD; --status-progress-text: #0984E3;
+  --status-completed-bg: #F0F2F5; --status-completed-text: #2D3436;
+  --status-cancelled-bg: #FFF0F0; --status-cancelled-text: #FF7675;
+
+  /* Formas: Super Arredondadas (Pill & Blob) */
+  --radius-sm: 12px;
+  --radius-md: 24px;        
+  --radius-lg: 32px;
+  --radius-pill: 999px;     
+  
+  /* Sombras "Dreamy" (Difusas e em Camadas - Refinadas) */
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.04);
+  --shadow-card: 0 8px 24px rgba(0, 0, 0, 0.05), 0 2px 6px rgba(0,0,0,0.02);
+  --shadow-float: 0 20px 40px -10px rgba(255, 140, 66, 0.25); 
+  --shadow-inner: inset 0 2px 4px rgba(0,0,0,0.02);
+  
+  /* Z-Index Hierarchy */
+  --z-back: 0;
+  --z-normal: 10;
+  --z-fixed: 100;
+  --z-modal: 2000;
+  --z-overlay: 2500;
+  --z-toast: 3000;
+
+  --safe-bottom: env(safe-area-inset-bottom, 20px);
+  --header-height: 80px;
+  --mobile-header-height: 70px;
+}

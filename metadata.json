@@ -1,0 +1,8 @@
+{
+  "name": "Copy of React-PetSpa-WebApp",
+  "description": "Recrie este projeto com React typescript. Continue utilizando as Key, db e etc. Corrija erros que encontrar e refine UI. Foco em UX",
+  "requestFramePermissions": [
+    "camera",
+    "microphone"
+  ]
+}
