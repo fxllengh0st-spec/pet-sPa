@@ -1,6 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
-import { Heart, Star, Camera, ChevronDown } from 'lucide-react';
+import { Heart, Star, Camera, ChevronDown, ChevronLeft } from 'lucide-react';
+import { Route } from '../types';
 
 // URL base do Bucket ATUALIZADA
 const BASE_STORAGE_URL = 'https://vfryefavzurwoiuznkwv.supabase.co/storage/v1/object/public/site-assets';
@@ -8,17 +9,20 @@ const BASE_STORAGE_URL = 'https://vfryefavzurwoiuznkwv.supabase.co/storage/v1/ob
 // Nome da imagem de capa alterado para 3.jpg conforme solicitado
 const HEADER_BG = '3.jpg'; 
 
-// Nomes das imagens da galeria
+// Nomes das imagens da galeria (Lista validada)
 const GALLERY_IMAGES = [
   '1.jpg', 
   '2.jpg', 
-  'bg.jpg', // Adicionei a bg antiga na galeria para não perder
   '4.jpg', 
   '5.jpg', 
   '6.jpg',
 ];
 
-export const AboutUs: React.FC = () => {
+interface AboutUsProps {
+    onNavigate?: (route: Route) => void;
+}
+
+export const AboutUs: React.FC<AboutUsProps> = ({ onNavigate }) => {
   const [photos, setPhotos] = useState<string[]>([]);
 
   useEffect(() => {
@@ -34,6 +38,13 @@ export const AboutUs: React.FC = () => {
         className="about-hero reveal-on-scroll" 
         style={{ backgroundImage: `url(${BASE_STORAGE_URL}/${HEADER_BG})` }}
       >
+        {/* Back Button Floating */}
+        {onNavigate && (
+            <button className="btn-icon-sm about-back-btn" onClick={() => onNavigate('home')}>
+                <ChevronLeft size={24} />
+            </button>
+        )}
+
         <div className="about-hero-overlay">
           <div className="about-hero-content">
             <h1 className="about-title fade-in-up">Nossa História</h1>
@@ -51,6 +62,17 @@ export const AboutUs: React.FC = () => {
           <div className="about-icon-header pulse-animation">
             <Heart fill="#FF8C42" color="#FF8C42" size={32} />
           </div>
+
+          {/* Imagem de Destaque - Quem somos nós */}
+          <div style={{ marginBottom: 24, borderRadius: 16, overflow: 'hidden', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}>
+             <img 
+               src={`${BASE_STORAGE_URL}/bg.jpg`} 
+               alt="Fundadores PetSpa" 
+               style={{ width: '100%', height: 'auto', display: 'block', minHeight: 200, objectFit: 'cover' }}
+               onError={(e) => e.currentTarget.style.display = 'none'}
+             />
+          </div>
+
           <h2>Quem somos nós?</h2>
           <p>
             Olá! Somos o casal fundador da PetSpa. Tudo começou quando percebemos que nossos próprios pets mereciam mais do que apenas um banho; eles mereciam uma experiência de spa.
@@ -76,9 +98,10 @@ export const AboutUs: React.FC = () => {
                    src={`${BASE_STORAGE_URL}/${img}`} 
                    alt="Momento PetSpa" 
                    className="gallery-img"
+                   loading="lazy"
                    onError={(e) => {
-                     // Fallback visual caso a imagem não tenha sido carregada ainda
-                     (e.target as HTMLImageElement).src = `https://placehold.co/600x800/FF8C42/FFF?text=Foto+${index+1}`;
+                     // Se falhar, esconde a imagem para não quebrar o layout
+                     (e.target as HTMLImageElement).style.display = 'none';
                    }}
                 />
                 <div className="gallery-overlay">

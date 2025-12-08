@@ -163,17 +163,30 @@
     transform: rotate(-10deg);
 }
 
-/* Gallery Scroll */
+/* Gallery - Changed from Scroll to Grid Wrap */
 .gallery-scroll {
-    display: flex; gap: 12px; overflow-x: auto; padding: 4px 16px 16px; margin: 0 -16px;
-    scroll-snap-type: x mandatory;
-    overscroll-behavior-x: contain;
+    display: flex;
+    flex-wrap: wrap; /* Wraps to next line */
+    gap: 10px;
+    padding: 4px 0 16px;
+    justify-content: center;
 }
+
 .gallery-item-home {
-    height: 120px; width: 140px; border-radius: 16px; object-fit: cover;
-    box-shadow: var(--shadow-sm); flex-shrink: 0;
-    scroll-snap-align: center;
+    height: 120px;
+    /* Responsive sizing: fill available space, minimum 100px, max 160px */
+    flex: 1 1 100px;
+    max-width: 160px;
+    min-width: 100px;
+    border-radius: 16px;
+    object-fit: cover;
+    box-shadow: var(--shadow-sm);
     border: 2px solid white;
+    transition: transform 0.2s;
+}
+
+.gallery-item-home:hover {
+    transform: scale(1.02);
 }
 
 .testimonials-section { margin-bottom: 60px; }
@@ -265,6 +278,18 @@
   margin-top: -20px; 
   box-shadow: var(--shadow-card);
 }
+.about-back-btn {
+    position: absolute;
+    top: 16px; left: 16px;
+    z-index: 50;
+    background: rgba(255,255,255,0.2);
+    backdrop-filter: blur(8px);
+    color: white;
+    border: 1px solid rgba(255,255,255,0.3);
+}
+.about-back-btn:hover {
+    background: white; color: var(--secondary);
+}
 
 .about-hero-overlay {
   position: absolute; inset: 0;
@@ -320,6 +345,137 @@
 @media (min-width: 768px) {
   .masonry-grid { column-count: 3; }
   .about-title { font-size: 3rem; }
+}
+
+/* --- MARKETPLACE --- */
+.market-header-nav {
+    display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;
+}
+
+.category-filters {
+    padding-bottom: 12px;
+}
+
+.filter-btn {
+    padding: 8px 16px;
+    border-radius: 20px;
+    border: 1px solid transparent;
+    background: white;
+    color: var(--secondary);
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.2s;
+    box-shadow: var(--shadow-sm);
+}
+.filter-btn.active {
+    background: var(--primary);
+    color: white;
+    box-shadow: 0 4px 10px rgba(255, 140, 66, 0.3);
+}
+
+.product-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+    padding-bottom: 40px;
+}
+
+.product-card {
+    background: white;
+    border-radius: 16px;
+    overflow: hidden;
+    padding: 0 !important; /* Override default card padding */
+    display: flex;
+    flex-direction: column;
+}
+
+.product-img-wrapper {
+    position: relative;
+    height: 120px;
+    width: 100%;
+}
+.product-img {
+    width: 100%; height: 100%; object-fit: cover;
+}
+.product-cat-badge {
+    position: absolute; top: 8px; left: 8px;
+    background: rgba(255,255,255,0.9);
+    padding: 2px 8px; border-radius: 10px;
+    font-size: 0.65rem; font-weight: 700;
+    color: var(--secondary); text-transform: uppercase;
+}
+
+.product-info { padding: 12px; display: flex; flex-direction: column; flex: 1; }
+.product-title { font-size: 0.9rem; margin-bottom: 4px; line-height: 1.3; }
+.product-desc { font-size: 0.75rem; color: #888; margin-bottom: 8px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+
+.product-bottom { margin-top: auto; display: flex; justify-content: space-between; align-items: center; }
+.product-price { color: var(--primary); font-size: 0.95rem; }
+
+.btn-add-cart {
+    width: 30px; height: 30px; border-radius: 50%;
+    background: var(--secondary); color: white; border: none;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; transition: transform 0.2s;
+}
+.btn-add-cart:active { transform: scale(0.9); }
+
+/* Cart Sidebar (Modal) */
+.cart-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 2100;
+    opacity: 0; pointer-events: none; transition: opacity 0.3s;
+}
+.cart-overlay.open { opacity: 1; pointer-events: auto; }
+
+.cart-sidebar {
+    position: fixed; top: 0; right: 0; bottom: 0;
+    width: 85%; max-width: 400px;
+    background: white;
+    z-index: 2200;
+    transform: translateX(100%);
+    transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+    display: flex; flex-direction: column;
+    box-shadow: -5px 0 25px rgba(0,0,0,0.1);
+}
+.cart-sidebar.open { transform: translateX(0); }
+
+.cart-header {
+    padding: 20px; border-bottom: 1px solid #eee;
+    display: flex; justify-content: space-between; align-items: center;
+}
+.cart-header h3 { margin: 0; font-size: 1.1rem; }
+
+.cart-items { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 16px; }
+
+.cart-item { display: flex; align-items: center; gap: 12px; background: #f9f9f9; padding: 10px; border-radius: 12px; }
+.cart-item-img { width: 50px; height: 50px; border-radius: 8px; object-fit: cover; }
+.cart-item-info { flex: 1; }
+.cart-item-title { font-size: 0.9rem; font-weight: 600; color: var(--secondary); }
+.cart-item-price { font-size: 0.85rem; color: var(--primary); font-weight: 700; }
+.btn-remove-item {
+    background: white; border: 1px solid #eee; color: #ff7675;
+    width: 28px; height: 28px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center; cursor: pointer;
+}
+
+.empty-cart {
+    height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #ccc;
+}
+
+.cart-footer { padding: 20px; border-top: 1px solid #eee; background: #fafafa; }
+.cart-total-row { display: flex; justify-content: space-between; margin-bottom: 16px; font-size: 1.1rem; }
+.cart-total-row strong { color: var(--secondary); }
+
+/* Badge Count */
+#cart-count-badge {
+    position: absolute; top: -5px; right: -5px;
+    background: #ff4757; color: white;
+    font-size: 0.65rem; font-weight: 700;
+    width: 18px; height: 18px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    border: 2px solid white;
 }
 
 /* --- ADMIN --- */

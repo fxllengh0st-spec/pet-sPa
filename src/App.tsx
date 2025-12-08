@@ -315,7 +315,7 @@ export default function App() {
           )}
 
           {view === 'market' && (
-            <Marketplace />
+            <Marketplace onNavigate={navigateTo} />
           )}
           
           {view === 'login' && (
@@ -336,7 +336,7 @@ export default function App() {
             <Chat onNavigate={(r) => navigateTo(r as Route)} />
           )}
           
-          {view === 'about' && <AboutUs />}
+          {view === 'about' && <AboutUs onNavigate={navigateTo} />}
           
           {view === 'dashboard' && (
             <Dashboard 
