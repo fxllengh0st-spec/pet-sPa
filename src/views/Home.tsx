@@ -18,14 +18,23 @@ export const HomePage: React.FC<HomePageProps> = ({ session, onNavigate, onOpenB
       <header 
         className="hero-header reveal-on-scroll"
         style={{ 
-            background: 'linear-gradient(135deg, #FF9966 0%, #FF5E62 100%)', 
+            /* Adicionada máscara escura (linear-gradient preto transparente) sobre o gradiente laranja */
+            background: `
+                linear-gradient(to bottom, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.4) 100%), 
+                linear-gradient(135deg, #FF9966 0%, #FF5E62 100%)
+            `,
             position: 'relative',
             overflow: 'hidden'
         }}
       >
         <div className="hero-content">
-          <h1 className="fade-in-up">Seu pet limpo,<br />feliz e saudável!</h1>
-          <p className="fade-in-up delay-1">Confiança, carinho e tecnologia. Agendamento inteligente com IA.</p>
+          {/* Adicionado text-shadow mais forte para contraste */}
+          <h1 className="fade-in-up" style={{ textShadow: '0 2px 10px rgba(0,0,0,0.6)' }}>
+            Seu pet limpo,<br />feliz e saudável!
+          </h1>
+          <p className="fade-in-up delay-1" style={{ color: 'rgba(255,255,255,0.95)', textShadow: '0 1px 4px rgba(0,0,0,0.5)' }}>
+            Confiança, carinho e tecnologia. Agendamento inteligente com IA.
+          </p>
           <div className="hero-actions fade-in-up delay-2">
             <button className="btn btn-white hero-btn" onClick={() => session ? onOpenBooking() : onNavigate('login')}>
                 Agendar Agora
@@ -36,7 +45,7 @@ export const HomePage: React.FC<HomePageProps> = ({ session, onNavigate, onOpenB
           </div>
         </div>
 
-        {/* Imagem decorativa na direita */}
+        {/* Imagem decorativa na direita - Tamanho Reduzido pela metade */}
         <img 
             src={`${BASE_STORAGE_URL}/random.png`} 
             alt="Pet Feliz" 
@@ -45,11 +54,12 @@ export const HomePage: React.FC<HomePageProps> = ({ session, onNavigate, onOpenB
                 position: 'absolute',
                 right: '2%',
                 bottom: 0,
-                height: '25vh',
+                height: '12vh', /* Reduzido de 25vh para 12vh */
+                maxHeight: '120px', /* Limite máximo em pixels */
                 zIndex: 1,
                 objectFit: 'contain',
                 pointerEvents: 'none',
-                filter: 'drop-shadow(0 4px 12px rgba(0,0,0,0.2))'
+                filter: 'drop-shadow(0 4px 12px rgba(0,0,0,0.4))'
             }}
         />
       </header>
