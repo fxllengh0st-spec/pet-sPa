@@ -7,6 +7,8 @@
 body.mode-chat {
   overflow: hidden;
   overscroll-behavior-y: none;
+  position: fixed;
+  width: 100%;
 }
 
 /* Oculta elementos de navegação padrão quando no modo chat */
@@ -18,23 +20,32 @@ body.mode-chat {
 
 .mode-chat main#app {
     padding-top: 0;
-    height: 100dvh;
+    height: 100%;
 }
 
+/* 
+   Using fixed positioning combined with JS visualViewport handling 
+   is the most robust way to handle mobile keyboards.
+*/
 .chat-layout {
   display: flex;
   flex-direction: column;
-  height: 100dvh;
   background-color: var(--bg-app); 
-  position: fixed; inset: 0;
+  position: fixed; 
+  left: 0;
+  right: 0;
+  bottom: 0;
+  top: 0;
+  height: 100%; /* Fallback */
   z-index: var(--z-fixed);
   font-family: 'Inter', sans-serif;
+  overflow: hidden;
 }
 
 /* Header Limpo e Moderno */
 .chat-header-modern {
   flex-shrink: 0;
-  height: 60px; /* Reduced from 70px */
+  height: 60px;
   background: rgba(255, 255, 255, 0.95);
   backdrop-filter: blur(10px);
   border-bottom: 1px solid rgba(0,0,0,0.05);
@@ -85,6 +96,8 @@ body.mode-chat {
   padding: 20px 16px;
   display: flex; flex-direction: column; gap: 12px;
   scroll-behavior: smooth;
+  /* Important for momentum scrolling on iOS */
+  -webkit-overflow-scrolling: touch; 
 }
 
 .chat-date-divider { text-align: center; margin: 16px 0; opacity: 0.6; }
@@ -102,12 +115,13 @@ body.mode-chat {
 
 /* Bolhas de Mensagem */
 .chat-bubble {
-    padding: 10px 16px; /* Reduced */
+    padding: 10px 16px;
     border-radius: 18px;
     font-size: 0.9rem;
     line-height: 1.4;
     position: relative;
     box-shadow: var(--shadow-sm);
+    word-wrap: break-word;
 }
 
 /* Bolha do Bot (Branca/Clean) */
@@ -134,7 +148,6 @@ body.mode-chat {
     flex-shrink: 0; overflow: hidden;
 }
 .chat-msg-avatar img { width: 100%; height: 100%; object-fit: cover; }
-.user-avatar-icon { background: #eee; color: #888; }
 
 /* Animação de Digitação */
 .typing-bubble { display: flex; gap: 4px; padding: 12px 16px; align-items: center; height: 40px; }
@@ -163,7 +176,6 @@ body.mode-chat {
     transform: translateY(-2px); 
     box-shadow: 0 4px 10px rgba(255, 140, 66, 0.2);
 }
-.chat-chip-btn:disabled { opacity: 0.6; cursor: default; transform: none; }
 
 /* Footer / Input Area */
 .chat-footer-modern {
@@ -171,6 +183,7 @@ body.mode-chat {
     background: white;
     padding: 12px 16px;
     display: flex; align-items: center; gap: 10px;
+    /* safe area handling is done via parent resizing, but fallback: */
     padding-bottom: max(12px, env(safe-area-inset-bottom));
     box-shadow: 0 -4px 20px rgba(0,0,0,0.03);
     border-top: 1px solid rgba(0,0,0,0.03);
@@ -182,7 +195,7 @@ body.mode-chat {
 }
 
 .chat-input-modern {
-    width: 100%; height: 44px; /* Reduced */
+    width: 100%; height: 44px;
     border-radius: 22px; 
     border: 2px solid var(--bg-input);
     background: var(--bg-input);
@@ -207,16 +220,3 @@ body.mode-chat {
     box-shadow: 0 4px 10px rgba(255, 140, 66, 0.3);
 }
 .chat-send-btn:disabled { background: #E0E0E0; box-shadow: none; cursor: default; }
-.chat-send-btn:hover:not(:disabled) { transform: scale(1.1) rotate(-10deg); }
-
-.chat-processing-overlay {
-    position: absolute; bottom: 80px; left: 50%; transform: translateX(-50%);
-    background: rgba(45, 52, 54, 0.9); 
-    padding: 8px 16px; border-radius: 24px;
-    z-index: 50;
-    display: flex; align-items: center; gap: 8px;
-    color: white; font-weight: 600; font-size: 0.85rem;
-    box-shadow: 0 8px 16px rgba(0,0,0,0.15);
-    animation: fadeInUp 0.3s;
-}
-.chat-processing-overlay .spinner { width: 14px; height: 14px; border-width: 2px; border-color: white; border-top-color: transparent; }
