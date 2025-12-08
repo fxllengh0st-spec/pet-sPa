@@ -18,6 +18,15 @@ interface Message {
   options?: { label: string; action?: string; payload?: any; nextNode?: string }[];
 }
 
+// --- Tipos para o Cérebro Reserva (Fallback State Machine) ---
+type FallbackState = 
+  | 'IDLE' 
+  | 'CREATE_PET_NAME' 
+  | 'CREATE_PET_BREED' 
+  | 'SCHEDULE_PET' 
+  | 'SCHEDULE_SERVICE' 
+  | 'SCHEDULE_TIME';
+
 export const Chat: React.FC<ChatProps> = ({ onNavigate }) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [isTyping, setIsTyping] = useState(false);
@@ -35,14 +44,16 @@ export const Chat: React.FC<ChatProps> = ({ onNavigate }) => {
   // User Session for AI Context
   const [currentUserId, setCurrentUserId] = useState<string | undefined>(undefined);
 
+  // --- Fallback Logic State (Cérebro Reserva Local) ---
+  const [fallbackState, setFallbackState] = useState<FallbackState>('IDLE');
+  const [fallbackData, setFallbackData] = useState<any>({}); // Armazena dados temporários (nome do pet, id do serviço, etc)
+
   // --- Mobile Keyboard Fix ---
   useEffect(() => {
-    // This ensures the chat container resizes to the VISUAL viewport (what's visible above keyboard)
-    // rather than the layout viewport (which often stays full height on iOS)
     const handleResize = () => {
         if (chatContainerRef.current && window.visualViewport) {
             chatContainerRef.current.style.height = `${window.visualViewport.height}px`;
-            chatContainerRef.current.style.top = `${window.visualViewport.offsetTop}px`; // Handle scroll offset if any
+            chatContainerRef.current.style.top = `${window.visualViewport.offsetTop}px`; 
             scrollToBottom();
         }
     };
@@ -50,7 +61,7 @@ export const Chat: React.FC<ChatProps> = ({ onNavigate }) => {
     if (window.visualViewport) {
         window.visualViewport.addEventListener('resize', handleResize);
         window.visualViewport.addEventListener('scroll', handleResize);
-        handleResize(); // Initial set
+        handleResize(); 
     }
 
     return () => {
@@ -62,7 +73,6 @@ export const Chat: React.FC<ChatProps> = ({ onNavigate }) => {
   }, []);
 
   const scrollToBottom = () => {
-    // Small timeout to allow DOM update
     setTimeout(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     }, 100);
@@ -87,7 +97,7 @@ export const Chat: React.FC<ChatProps> = ({ onNavigate }) => {
     setMessages(prev => [...prev, { id: Date.now().toString(), text, sender, options }]);
   };
 
-  // --- Logic Flow (Hybrid: Structured + AI) ---
+  // --- Logic Flow (Initial Greeting) ---
   const processNode = async (nodeId: string) => {
     setIsTyping(true);
     await new Promise(r => setTimeout(r, 600)); 
@@ -101,33 +111,22 @@ export const Chat: React.FC<ChatProps> = ({ onNavigate }) => {
         if (userSession) {
             const userName = userSession.user.user_metadata.full_name?.split(' ')[0] || 'Tutor';
             node = {
-                message: `Olá, ${userName}! 🐶 Sou o assistente inteligente da PetSpa. Posso agendar banhos, cadastrar seus pets e tirar dúvidas. Como ajudo?`,
+                message: `Olá, ${userName}! 🐶 Sou o assistente inteligente da PetSpa. Posso agendar banhos e cadastrar pets pra você. Como posso ajudar hoje?`,
                 options: [
                     { label: '📅 Agendar Banho', action: 'triggerAI_Appointment' },
-                    { label: '🐶 Cadastrar Pet', action: 'triggerAI_NewPet' },
-                    { label: '🏠 Menu Principal', action: 'navHome' }
+                    { label: '🐶 Novo Pet', action: 'triggerAI_NewPet' }
                 ]
             };
         } else {
             node = {
-                message: 'Olá! Sou o mascote da PetSpa 🐶. Para agendamentos inteligentes e suporte completo, preciso que você entre na sua conta.',
+                message: 'Olá! Sou o mascote da PetSpa 🐶. Para eu conseguir agendar pra você, preciso que você entre na sua conta.',
                 options: [
-                    { label: '🔐 Entrar / Cadastrar', action: 'navLogin' },
-                    { label: '📍 Apenas ver endereço', nextNode: 'CONTACT' }
+                    { label: '🔐 Entrar / Cadastrar', action: 'navLogin' }
                 ]
             };
         }
         break;
-
-      case 'CONTACT':
-        node = {
-           message: 'Estamos na Av. Pet, 123.\n📞 (11) 99999-9999',
-           options: [{ label: 'Voltar', nextNode: 'START' }]
-        };
-        break;
-
       default:
-        // Se cair aqui, deixa o usuário falar com a AI
         break;
     }
 
@@ -140,80 +139,179 @@ export const Chat: React.FC<ChatProps> = ({ onNavigate }) => {
     // Navigation Actions
     if (opt.action === 'navLogin') onNavigate('login');
     else if (opt.action === 'navHome') onNavigate('home');
-    else if (opt.action === 'navServices') onNavigate('services');
-    else if (opt.action === 'navProfile') onNavigate('user-profile');
-    else if (opt.action === 'navMarket') onNavigate('market');
     
-    // Quick actions that just paste text for the AI to process
+    // Quick actions that just paste text for the AI to process (or fallback)
     else if (opt.action === 'triggerAI_Appointment') {
         handleInputSubmit(null, "Quero agendar um serviço");
     }
     else if (opt.action === 'triggerAI_NewPet') {
         handleInputSubmit(null, "Quero cadastrar um novo pet");
     }
+    // Fallback Options Logic
+    else if (opt.action === 'fallback_select_pet') {
+        handleFallbackFlowInput(opt.payload); // Payload is pet ID
+    }
+    else if (opt.action === 'fallback_select_service') {
+        handleFallbackFlowInput(opt.payload); // Payload is service object
+    }
   };
 
-  // --- BACKUP BRAIN (Decision Tree) ---
-  const activateBackupBrain = (text: string) => {
+  // --- BACKUP BRAIN (Interactive State Machine) ---
+  // Este sistema assume o controle quando o Gemini falha, pedindo dados passo a passo.
+
+  const activateBackupBrain = async (text: string) => {
     const t = text.toLowerCase();
     
-    // 1. Agendamento
+    // Intent: Cadastro de Pet
+    if (t.includes('pet') || t.includes('cadastra') || t.includes('novo')) {
+         setFallbackState('CREATE_PET_NAME');
+         setFallbackData({});
+         return {
+          message: "A minha conexão com a nuvem oscilou, mas eu mesmo faço isso pra você! 🐶\n\nQual é o **nome** do pet?",
+          options: []
+        };
+    }
+    
+    // Intent: Agendamento
     if (t.includes('agenda') || t.includes('marca') || t.includes('banho') || t.includes('tosa')) {
+       // Tenta buscar os pets pra facilitar
+       if (currentUserId) {
+           try {
+               const pets = await api.booking.getMyPets(currentUserId);
+               if (pets.length > 0) {
+                   setFallbackState('SCHEDULE_PET');
+                   setFallbackData({});
+                   return {
+                       message: "Certo, vou agendar manualmente pra você. Para qual pet seria?",
+                       options: pets.map(p => ({ label: p.name, action: 'fallback_select_pet', payload: p.id }))
+                   };
+               }
+           } catch(e) {}
+       }
+       
+       // Se não achou pets ou deu erro, fluxo genérico
        return {
-         message: "Estou com uma instabilidade momentânea na minha conexão neural 🔌. Mas não se preocupe! Você pode agendar agora mesmo pelo nosso sistema manual.",
+         message: "Estou com dificuldade de acessar minha inteligência avançada. 🧠🔌\nPor favor, use o botão abaixo para agendar visualmente:",
          options: [
-           { label: '📅 Ir para Agendamento', action: 'navServices' },
-           { label: '🏠 Menu Principal', action: 'navHome' }
+           { label: '📅 Abrir Assistente de Agendamento', action: 'navServices' }
          ]
        };
     }
-    
-    // 2. Preços
-    if (t.includes('preço') || t.includes('valor') || t.includes('custa') || t.includes('serviço')) {
-        return {
-          message: "No momento não consigo consultar o banco de dados de preços detalhado. Por favor, veja nossa lista completa na aba Serviços.",
-          options: [
-            { label: '💲 Ver Tabela de Preços', action: 'navServices' }
-          ]
-        };
-    }
 
-    // 3. Cadastro / Pets
-    if (t.includes('pet') || t.includes('cadastra') || t.includes('novo')) {
-         return {
-          message: "Para cadastrar um novo amiguinho, acesse seu perfil.",
-          options: [
-            { label: '🐶 Meu Perfil', action: 'navProfile' }
-          ]
-        };
-    }
-
-    // Default Backup Fallback
+    // Default Fallback
     return {
-      message: "Ops! Meu cérebro principal está fora do ar (manutenção programada). 🛠️\n\nMas o app continua funcionando! O que deseja fazer?",
+      message: "Minha inteligência principal está fora do ar momentaneamente. 🛠️\nComo posso ajudar?",
       options: [
-         { label: '📅 Agendar', action: 'navServices' },
-         { label: '🛍️ Loja', action: 'navMarket' },
-         { label: '👤 Meu Perfil', action: 'navProfile' }
+         { label: '📅 Agendar', action: 'triggerAI_Appointment' },
+         { label: '🐶 Cadastrar Pet', action: 'triggerAI_NewPet' }
       ]
     };
   };
 
+  // --- Fallback Flow Handler ---
+  // Processa as respostas do usuário quando o Fallback está ativo
+  const handleFallbackFlowInput = async (input: any) => {
+      const textInput = typeof input === 'string' ? input : '';
+      
+      setIsTyping(true);
+      await new Promise(r => setTimeout(r, 500));
+      setIsTyping(false);
+
+      if (fallbackState === 'CREATE_PET_NAME') {
+          // Usuário digitou o nome
+          setFallbackData({ ...fallbackData, name: textInput });
+          addMessage(textInput, 'user');
+          setFallbackState('CREATE_PET_BREED');
+          addMessage(`Ótimo nome! E qual é a raça dx ${textInput}? (Ou digite "não sei")`, 'bot');
+          return;
+      }
+
+      if (fallbackState === 'CREATE_PET_BREED') {
+          // Usuário digitou a raça, agora finaliza
+          addMessage(textInput, 'user');
+          setIsTyping(true);
+          try {
+              await api.booking.createPet(currentUserId!, {
+                  name: fallbackData.name,
+                  breed: textInput
+              });
+              setIsTyping(false);
+              addMessage(`Prontinho! 🎉 Cadastrei o(a) **${fallbackData.name}** com sucesso! O que deseja fazer agora?`, 'bot', [
+                  { label: '📅 Agendar Banho', action: 'triggerAI_Appointment' }
+              ]);
+          } catch (e) {
+              setIsTyping(false);
+              addMessage("Ops, tive um erro ao salvar no banco de dados. Tente novamente mais tarde.", 'bot');
+          }
+          setFallbackState('IDLE');
+          setFallbackData({});
+          return;
+      }
+
+      if (fallbackState === 'SCHEDULE_PET') {
+          // Usuário selecionou o Pet (via options payload)
+          const petId = input; 
+          setFallbackData({ ...fallbackData, petId });
+          addMessage("Selecionado!", 'user'); // Feedback visual
+          
+          // Busca serviços para mostrar opções
+          setIsTyping(true);
+          const services = await api.booking.getServices();
+          setIsTyping(false);
+          
+          setFallbackState('SCHEDULE_SERVICE');
+          addMessage("Qual serviço você gostaria?", 'bot', 
+              services.map(s => ({ label: `${s.name} (${formatCurrency(s.price)})`, action: 'fallback_select_service', payload: s }))
+          );
+          return;
+      }
+
+      if (fallbackState === 'SCHEDULE_SERVICE') {
+          const service = input; // Service Object
+          setFallbackData({ ...fallbackData, service });
+          addMessage(service.name, 'user');
+          setFallbackState('SCHEDULE_TIME');
+          addMessage("Para quando você gostaria? Digite a data e hora (ex: Amanhã às 14h, ou 25/12 as 10:00).", 'bot');
+          return;
+      }
+
+      if (fallbackState === 'SCHEDULE_TIME') {
+          // Tentar parsear data rudimentarmente (O Gemini faria isso melhor, mas é um fallback)
+          addMessage(textInput, 'user');
+          
+          // Como é um fallback manual complexo fazer parse de NL, vamos simplificar:
+          // Criamos um agendamento para "amanhã" se falhar o parse, ou pedir pra usar o wizard.
+          // Para esta demo, vamos tentar criar um agendamento fictício ou real se a string for ISO.
+          // Mas o melhor UX aqui é admitir a limitação de parse do fallback:
+          
+          addMessage(`Entendido. Como estou no modo manual, vou abrir a confirmação final pra você selecionar a data exata.`, 'bot');
+          // Aqui poderíamos chamar o BookingWizard, mas vamos simular finalização:
+          
+          setFallbackState('IDLE');
+          onNavigate('services'); // Redireciona para o wizard visual que é mais seguro para datas sem IA
+          return;
+      }
+  };
+
   const handleInputSubmit = async (e: React.FormEvent | null, textOverride?: string) => {
     if (e) e.preventDefault();
-    
     const textToSend = textOverride || inputValue;
     if (!textToSend.trim()) return;
 
-    // 1. User Message
+    // Se estivermos em um fluxo de fallback, desvia para o handler local
+    if (fallbackState !== 'IDLE') {
+        handleFallbackFlowInput(textToSend);
+        setInputValue('');
+        return;
+    }
+
+    // 1. User Message (Standard AI Flow)
     addMessage(textToSend, 'user');
     setInputValue('');
     setIsTyping(true);
 
-    // 2. AI Processing (Action Capable)
+    // 2. AI Processing
     try {
-        // Map history to simple text format or structured format for Gemini
-        // Using the last 10 messages for context
         const historyContext = messages.slice(-10).map(m => ({
             role: m.sender === 'user' ? 'user' : 'model',
             parts: [{ text: m.text }]
@@ -222,7 +320,7 @@ export const Chat: React.FC<ChatProps> = ({ onNavigate }) => {
         const responseText = await geminiService.sendMessage(
             historyContext, 
             textToSend, 
-            currentUserId // Pass User ID so AI can execute CRUD operations
+            currentUserId 
         );
 
         setIsTyping(false);
@@ -233,7 +331,7 @@ export const Chat: React.FC<ChatProps> = ({ onNavigate }) => {
         console.error("AI Error, activating backup brain", err);
         
         // --- BACKUP BRAIN ACTIVATION ---
-        const fallback = activateBackupBrain(textToSend);
+        const fallback = await activateBackupBrain(textToSend);
         addMessage(fallback.message, 'bot', fallback.options);
     }
   };
@@ -258,8 +356,8 @@ export const Chat: React.FC<ChatProps> = ({ onNavigate }) => {
           <div className="chat-title-group">
             <h3>Assistente IA</h3>
             <div className="chat-status">
-              <span className="status-indicator"></span>
-              {currentUserId ? 'Conectado & Habilitado' : 'Visitante'}
+              <span className={`status-indicator ${fallbackState !== 'IDLE' ? 'bg-yellow-500' : ''}`}></span>
+              {fallbackState !== 'IDLE' ? 'Modo Manual' : (currentUserId ? 'Conectado' : 'Visitante')}
             </div>
           </div>
         </div>
@@ -315,7 +413,8 @@ export const Chat: React.FC<ChatProps> = ({ onNavigate }) => {
                className="chat-input-modern" 
                value={inputValue} 
                onChange={e => setInputValue(e.target.value)}
-               placeholder="Digite aqui..."
+               placeholder={fallbackState !== 'IDLE' ? "Responda aqui..." : "Digite aqui..."}
+               autoFocus
              />
          </div>
          <button type="submit" className="chat-send-btn" disabled={!inputValue.trim()}>
