@@ -2,6 +2,7 @@
 import React from 'react';
 import { Appointment, Pet, Profile, Route } from '../types';
 import { getAvatarUrl, getPetAvatarUrl } from '../utils/ui';
+import { LayoutDashboard } from 'lucide-react';
 
 interface DashboardProps {
     profile: Profile | null;
@@ -19,13 +20,39 @@ export const Dashboard: React.FC<DashboardProps> = ({
     apps, 
     onNavigate, 
     setSelectedPet, 
-    setSelectedAppointment,
+    setSelectedAppointment, 
     onOpenBooking 
 }) => {
     return (
       <div className="container dashboard-grid page-enter" style={{paddingTop: 24}}>
          {/* Left Column: User Context */}
          <div className="dash-col-left">
+            
+            {/* Admin Quick Access */}
+            {profile?.role === 'admin' && (
+                <div 
+                    className="card clickable-card reveal-on-scroll" 
+                    onClick={() => onNavigate('admin')}
+                    style={{
+                        marginBottom: 16, 
+                        background: 'linear-gradient(135deg, #2d3436 0%, #000000 100%)',
+                        color: 'white',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 12,
+                        border: '1px solid rgba(255,255,255,0.1)'
+                    }}
+                >
+                    <div style={{background:'rgba(255,255,255,0.15)', padding:8, borderRadius:8, display:'flex'}}>
+                        <LayoutDashboard size={20} color="white" />
+                    </div>
+                    <div>
+                        <strong style={{display:'block', fontSize:'0.95rem'}}>Painel Admin</strong>
+                        <span style={{fontSize:'0.75rem', color:'rgba(255,255,255,0.7)'}}>Métricas & Kanban</span>
+                    </div>
+                </div>
+            )}
+
             <div className="card dashboard-header-card clickable-card reveal-on-scroll" onClick={() => onNavigate('user-profile')}>
                <div className="dashboard-welcome"><h3>Olá, {profile?.full_name?.split(' ')[0]}!</h3><p>Ver meu perfil</p></div>
                <div className="dashboard-icon">
@@ -37,7 +64,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
                </div>
             </div>
             
-            <div className="card reveal-on-scroll" style={{marginTop: 24}}>
+            <div className="card reveal-on-scroll" style={{marginTop: 16}}>
                <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:16}}>
                    <h3 style={{margin:0}}>Meus Pets</h3>
                    <span style={{fontSize:'0.8rem', color:'var(--primary)'}} onClick={() => onNavigate('user-profile')}>Gerenciar</span>

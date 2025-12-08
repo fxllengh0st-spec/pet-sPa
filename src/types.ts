@@ -19,11 +19,12 @@ export interface Service {
 }
 
 export interface Pet {
-  id: number;
+  id: string; // Alterado de number para string (UUID)
   owner_id: string;
   name: string;
   breed?: string;
   weight?: number;
+  birth_date?: string; // Adicionado conforme schema
   notes?: string;
 }
 
@@ -33,7 +34,7 @@ export interface Appointment {
   id: number;
   created_at: string;
   client_id: string;
-  pet_id: number;
+  pet_id: string; // Alterado para string para dar match com Pet
   service_id: number;
   employee_id?: string | null;
   start_time: string;
@@ -54,6 +55,7 @@ export interface Product {
   stock_quantity: number;
   image: string;
   description?: string;
+  stock_status?: 'in_stock' | 'low_stock' | 'out_of_stock';
 }
 
 export interface Employee {

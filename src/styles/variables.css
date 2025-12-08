@@ -1,12 +1,13 @@
+
 /* =========================================
-   TOKENS (Design System)
+   TOKENS (Design System) - COMPACT MOBILE VERSION
    ========================================= */
 
 :root {
   /* Paleta: Laranja Vibrante + Tons Suaves */
   --primary: #FF8C42;       
-  --primary-hover: #FF7A20;
-  --primary-glow: rgba(255, 140, 66, 0.35); 
+  --primary-hover: #E87A30;
+  --primary-glow: rgba(255, 140, 66, 0.4); 
   
   --secondary: #2D3436;     
   --secondary-light: #636E72;
@@ -14,8 +15,8 @@
   --accent: #FFF5EB;        /* Laranja muito pálido para fundos de ícones */
   --surface: #FFFFFF;
   
-  --bg-app: #F8F9FA;        /* Cinza ultra leve, quase branco */
-  --bg-input: #F2F4F6;      /* Cinza frio para inputs */
+  --bg-app: #F4F6F8;        /* Cinza um pouco mais frio e moderno */
+  --bg-input: #F0F2F5;      /* Cinza frio para inputs */
   
   --text-main: #2D3436;
   --text-body: #636E72;     
@@ -28,17 +29,17 @@
   --status-completed-bg: #F0F2F5; --status-completed-text: #2D3436;
   --status-cancelled-bg: #FFF0F0; --status-cancelled-text: #FF7675;
 
-  /* Formas: Super Arredondadas (Pill & Blob) */
-  --radius-sm: 12px;
-  --radius-md: 24px;        
-  --radius-lg: 32px;
+  /* Formas: Tighter Radii */
+  --radius-sm: 8px;
+  --radius-md: 16px;        
+  --radius-lg: 24px;
   --radius-pill: 999px;     
   
   /* Sombras "Dreamy" (Difusas e em Camadas - Refinadas) */
-  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.04);
-  --shadow-card: 0 8px 24px rgba(0, 0, 0, 0.05), 0 2px 6px rgba(0,0,0,0.02);
-  --shadow-float: 0 20px 40px -10px rgba(255, 140, 66, 0.25); 
-  --shadow-inner: inset 0 2px 4px rgba(0,0,0,0.02);
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.03);
+  --shadow-card: 0 4px 20px rgba(0, 0, 0, 0.05), 0 2px 6px rgba(0,0,0,0.02);
+  --shadow-float: 0 10px 25px -5px rgba(255, 140, 66, 0.25); 
+  --shadow-inner: inset 0 1px 3px rgba(0,0,0,0.03);
   
   /* Z-Index Hierarchy */
   --z-back: 0;
@@ -48,7 +49,7 @@
   --z-overlay: 2500;
   --z-toast: 3000;
 
-  --safe-bottom: env(safe-area-inset-bottom, 20px);
-  --header-height: 80px;
-  --mobile-header-height: 70px;
+  --safe-bottom: env(safe-area-inset-bottom, 16px);
+  --header-height: 60px;
+  --mobile-header-height: 56px;
 }

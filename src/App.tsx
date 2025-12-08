@@ -7,13 +7,15 @@ import { Chat } from './components/Chat';
 import { AboutUs } from './components/AboutUs';
 import { AdminPanel } from './components/Admin';
 import { Logo } from './components/Logo';
+import { Marketplace } from './components/Marketplace';
 import { useToast } from './context/ToastContext';
-import { Home, MessageCircle, User, Shield } from 'lucide-react';
+import { Home, MessageCircle, User, Shield, ShoppingBag } from 'lucide-react';
 
 // Modules
 import { LoginFlowOverlay } from './components/LoginFlowOverlay';
 import { MascotCompanion } from './components/MascotCompanion';
 import { BookingWizard } from './components/BookingWizard';
+import { PetWizard } from './components/PetWizard'; // Importado
 
 // Views
 import { HomePage } from './views/Home';
@@ -42,6 +44,7 @@ const CARE_TIPS = [
 const MASCOT_COMMENTS: Partial<Record<Route, string[]>> = {
     'home': ['Pronto para um dia de spa? 🛁', 'Seu pet merece o melhor!', 'Toque em Agendar para começar!', ...CARE_TIPS],
     'services': ['O Banho Premium é divino! ✨', 'Temos hidratação com cheirinho de morango 🍓', 'Corte de unhas? Deixa com a gente!', ...CARE_TIPS],
+    'market': ['Os brinquedos novos chegaram! 🎾', 'Essa ração é top de linha.', 'Seu pet vai amar esses mimos.'],
     'about': ['A Ana e o João são incríveis ❤️', 'Essa história me emociona...', 'Olha eu nas fotos! 📸'],
     'dashboard': ['Sua agenda organizada 📅', 'Não esqueça dos compromissos!', 'Tudo sob controle aqui.', ...CARE_TIPS],
     'user-profile': ['Que perfil chique! 💅', 'Seus pets são lindos!', 'Mantenha os dados atualizados.'],
@@ -66,8 +69,9 @@ export default function App() {
   const [selectedPet, setSelectedPet] = useState<Pet | null>(null);
   const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null);
 
-  // Booking Modal State
+  // Modal States
   const [showBookingModal, setShowBookingModal] = useState(false);
+  const [showPetWizard, setShowPetWizard] = useState(false); // New state
 
   // Login Flow State
   const [loginStage, setLoginStage] = useState<LoginStage>('idle');
@@ -111,32 +115,23 @@ export default function App() {
             loadProfile(existingSession.user.id);
             loadUserData(existingSession.user.id);
         } else {
-            // AUTO LOGIN FOR DEV
+            // AUTO LOGIN FOR DEV (Only if no session)
             console.log("Iniciando auto-login de desenvolvimento...");
-            setLoginStage('authenticating');
             try {
                 // api.auth.signIn agora retorna { data, error }
                 const { data, error } = await api.auth.signIn(DEV_USER.email, DEV_USER.pass);
                 
                 if (!error && data?.session) {
-                    // Sucesso no auto login
                     setSession(data.session);
-                    setLoginStage('welcome');
-                    
-                    // Mensagem do Mascote sobre o Auto Login
-                    setTimeout(() => {
-                        setMascotMessage("Au au! 🐶 Fiz o login automático para agilizar seus testes. O cadastro real já funciona perfeitamente!");
-                        setShowMascotBubble(true);
-                        // Esconde o balão após 8 segundos para dar tempo de ler
-                        setTimeout(() => setShowMascotBubble(false), 8000);
-                    }, 1000);
+                    // Skip login stage for auto-login to make it smoother
+                    toast.success('Login automático de desenvolvimento realizado! 🐶');
+                    loadProfile(data.session.user.id);
+                    loadUserData(data.session.user.id);
                 } else {
                     console.warn("Auto-login falhou (Credenciais ou Rede):", error?.message);
-                    setLoginStage('idle');
                 }
             } catch (e) {
                 console.error("Erro crítico no auto-login:", e);
-                setLoginStage('idle');
             }
         }
     };
@@ -146,7 +141,7 @@ export default function App() {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
       if (session) {
-         if (loginStage === 'idle') {
+         if (loginStage === 'idle' && !profile) {
              loadProfile(session.user.id);
              loadUserData(session.user.id);
          }
@@ -165,14 +160,14 @@ export default function App() {
 
       const comments = MASCOT_COMMENTS[view];
       if (comments && comments.length > 0) {
-          // Pequena chance de não mostrar nada para não ser irritante
-          if (Math.random() > 0.7) return;
-
-          const randomComment = comments[Math.floor(Math.random() * comments.length)];
-          setMascotMessage(randomComment);
-          setShowMascotBubble(true);
-          const timer = setTimeout(() => setShowMascotBubble(false), 5000);
-          return () => clearTimeout(timer);
+          // Chance de 40% de mostrar mensagem
+          if (Math.random() > 0.4) {
+              const randomComment = comments[Math.floor(Math.random() * comments.length)];
+              setMascotMessage(randomComment);
+              setShowMascotBubble(true);
+              const timer = setTimeout(() => setShowMascotBubble(false), 5000);
+              return () => clearTimeout(timer);
+          }
       } else {
           setShowMascotBubble(false);
       }
@@ -234,6 +229,14 @@ export default function App() {
             onSuccess={async () => { await loadUserData(session.user.id); }}
          />
        )}
+
+       {showPetWizard && (
+         <PetWizard 
+            onClose={() => setShowPetWizard(false)}
+            session={session}
+            onSuccess={async () => { await loadUserData(session.user.id); }}
+         />
+       )}
        
        <MascotCompanion 
           showBookingModal={showBookingModal}
@@ -249,26 +252,24 @@ export default function App() {
 
        {/* Mobile Header (Top Navigation) */}
        <div className="mobile-header-bar">
-          <Logo height={32} onClick={() => navigateTo('home')} />
+          <Logo height={28} onClick={() => navigateTo('home')} />
           <div className="mobile-header-nav">
              <button className={`header-icon-btn ${view === 'home' ? 'active' : ''}`} onClick={() => navigateTo('home')}>
-                <Home size={22}/>
+                <Home size={20}/>
+             </button>
+             <button className={`header-icon-btn ${view === 'market' ? 'active' : ''}`} onClick={() => navigateTo('market')}>
+                <ShoppingBag size={20}/>
              </button>
              <button className={`header-icon-btn ${view === 'chat' ? 'active' : ''}`} onClick={() => navigateTo('chat')}>
-                <MessageCircle size={22}/>
+                <MessageCircle size={20}/>
              </button>
              {session ? (
                  <button className={`header-icon-btn ${view === 'dashboard' ? 'active' : ''}`} onClick={() => navigateTo('dashboard')}>
-                    <User size={22}/>
+                    <User size={20}/>
                  </button>
              ) : (
                  <button className={`header-icon-btn ${view === 'login' ? 'active' : ''}`} onClick={() => navigateTo('login')}>
-                    <User size={22}/>
-                 </button>
-             )}
-             {profile?.role === 'admin' && (
-                 <button className={`header-icon-btn ${view === 'admin' ? 'active' : ''}`} onClick={() => navigateTo('admin')}>
-                    <Shield size={22}/>
+                    <User size={20}/>
                  </button>
              )}
           </div>
@@ -276,10 +277,11 @@ export default function App() {
 
        {/* Desktop Nav */}
        <header className="desktop-nav">
-          <Logo height={40} onClick={() => navigateTo('home')} />
+          <Logo height={32} onClick={() => navigateTo('home')} />
           <nav className="nav-links-desktop">
              <a href="#" className={`nav-link-item ${view === 'home' && 'active'}`} onClick={() => navigateTo('home')}>Início</a>
              <a href="#" className={`nav-link-item ${view === 'services' && 'active'}`} onClick={() => navigateTo('services')}>Serviços</a>
+             <a href="#" className={`nav-link-item ${view === 'market' && 'active'}`} onClick={() => navigateTo('market')}>Loja</a>
              <a href="#" className={`nav-link-item ${view === 'about' && 'active'}`} onClick={() => navigateTo('about')}>Sobre Nós</a>
              <a href="#" className={`nav-link-item nav-link-cta ${view === 'chat' && 'active'}`} onClick={() => navigateTo('chat')}>Assistente IA</a>
              {session ? (
@@ -310,6 +312,10 @@ export default function App() {
                 onOpenBooking={() => setShowBookingModal(true)} 
                 session={session} 
             />
+          )}
+
+          {view === 'market' && (
+            <Marketplace />
           )}
           
           {view === 'login' && (
@@ -353,7 +359,8 @@ export default function App() {
                 pets={pets} 
                 apps={apps} 
                 onNavigate={navigateTo} 
-                setSelectedPet={setSelectedPet} 
+                setSelectedPet={setSelectedPet}
+                onAddPet={() => setShowPetWizard(true)} // Passed callback
             />
           )}
           

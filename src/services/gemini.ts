@@ -1,4 +1,4 @@
-import { GoogleGenAI } from "@google/genai";
+import { GoogleGenAI, Content, Part } from "@google/genai";
 
 const SYSTEM_INSTRUCTION = `
 Você é o **Mascote Oficial da PetSpa**, um assistente virtual amigável, prestativo e que adora animais 🐶.
@@ -24,6 +24,7 @@ let aiInstance: GoogleGenAI | null = null;
 
 const getAiClient = () => {
     if (!aiInstance) {
+        // Initialization strictly per SDK guidelines using process.env.API_KEY
         aiInstance = new GoogleGenAI({ apiKey: process.env.API_KEY });
     }
     return aiInstance;
@@ -35,13 +36,19 @@ export const geminiService = {
       const ai = getAiClient();
       const model = 'gemini-2.5-flash';
       
+      // Map the history to the strict Content[] type expected by the SDK
+      const chatHistory: Content[] = history.map(h => ({
+        role: h.role,
+        parts: h.parts as Part[]
+      }));
+
       const chat = ai.chats.create({
         model: model,
         config: {
           systemInstruction: SYSTEM_INSTRUCTION,
           temperature: 0.7,
         },
-        history: history
+        history: chatHistory
       });
 
       const result = await chat.sendMessage({ message });

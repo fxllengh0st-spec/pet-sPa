@@ -1,3 +1,4 @@
+
 import { supabase } from '../lib/supabase';
 import { Appointment, Employee, Pet, Product, Profile, Service } from '../types';
 
@@ -56,7 +57,7 @@ export const api = {
       const { error } = await supabase.from('pets').insert({ ...pet, owner_id: userId });
       if (error) throw error;
     },
-    async createAppointment(userId: string, petId: number, serviceId: number, start: string, end: string) {
+    async createAppointment(userId: string, petId: string, serviceId: number, start: string, end: string) {
       const { error } = await supabase.from('appointments').insert({
         client_id: userId,
         pet_id: petId,

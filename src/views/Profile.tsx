@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { ChevronLeft, Plus } from 'lucide-react';
+import { ChevronLeft, Plus, LayoutDashboard } from 'lucide-react';
 import { Profile, Pet, Route } from '../types';
 import { useToast } from '../context/ToastContext';
 import { getAvatarUrl, getPetAvatarUrl } from '../utils/ui';
@@ -12,6 +12,7 @@ interface UserProfileProps {
     apps: any[];
     onNavigate: (route: Route) => void;
     setSelectedPet: (pet: Pet) => void;
+    onAddPet?: () => void; // New prop
 }
 
 export const UserProfileView: React.FC<UserProfileProps> = ({ 
@@ -20,7 +21,8 @@ export const UserProfileView: React.FC<UserProfileProps> = ({
     pets, 
     apps, 
     onNavigate, 
-    setSelectedPet 
+    setSelectedPet,
+    onAddPet
 }) => {
     const toast = useToast();
     
@@ -49,12 +51,42 @@ export const UserProfileView: React.FC<UserProfileProps> = ({
            </div>
        </div>
 
+       {profile?.role === 'admin' && (
+           <div 
+             className="card clickable-card reveal-on-scroll" 
+             onClick={() => onNavigate('admin')}
+             style={{
+                 marginTop: 0, 
+                 marginBottom: 24, 
+                 background: 'var(--secondary)', 
+                 color: 'white', 
+                 display:'flex', 
+                 alignItems:'center', 
+                 gap: 16
+             }}
+           >
+                <div style={{width: 40, height: 40, background: 'rgba(255,255,255,0.1)', borderRadius: '50%', display:'flex', alignItems:'center', justifyContent:'center'}}>
+                    <LayoutDashboard size={20} color="white" />
+                </div>
+                <div>
+                    <h3 style={{color:'white', fontSize:'1rem', margin:0}}>Painel de Administrador</h3>
+                    <p style={{color:'rgba(255,255,255,0.7)', margin:0, fontSize:'0.8rem'}}>Acessar Métricas e Kanban</p>
+                </div>
+           </div>
+       )}
+
        <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:16}} className="reveal-on-scroll">
             <h3>Meus Pets</h3>
-            <button className="btn-icon-sm" style={{width:32, height:32}} onClick={() => toast.info('Funcionalidade de cadastro em desenvolvimento 🏗️')}><Plus size={16}/></button>
+            <button 
+                className="btn-icon-sm" 
+                style={{width:32, height:32}} 
+                onClick={() => onAddPet ? onAddPet() : toast.info('Funcionalidade indisponível')}
+            >
+                <Plus size={16}/>
+            </button>
        </div>
        
-       {pets.length === 0 ? <p>Nenhum pet cadastrado.</p> : (
+       {pets.length === 0 ? <p className="text-center text-gray-500 py-4">Nenhum pet cadastrado.</p> : (
          <div className="pet-grid">
            {pets.map(p => (
               <div key={p.id} className="card pet-card clickable-card reveal-on-scroll" onClick={() => { setSelectedPet(p); onNavigate('pet-details'); }}>

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { api } from '../services/api';
 import { geminiService } from '../services/gemini';
@@ -379,6 +380,7 @@ export const Chat: React.FC<ChatProps> = ({ onNavigate }) => {
     setIsProcessingAction(false); 
     
     // Envia contexto das últimas msgs para a IA não ficar perdida
+    // Mapeia estritamente para o tipo esperado: role 'user' | 'model' e parts [{text: string}]
     const history = messages.slice(-10).map(m => ({
         role: m.sender === 'user' ? 'user' : 'model',
         parts: [{ text: m.text }]

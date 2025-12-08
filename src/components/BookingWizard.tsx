@@ -24,7 +24,7 @@ export const BookingWizard: React.FC<BookingWizardProps> = ({
     onSuccess 
 }) => {
     const [step, setStep] = useState(1);
-    const [wizPet, setWizPet] = useState<number | null>(null);
+    const [wizPet, setWizPet] = useState<string | null>(null); // UUID agora
     const [wizService, setWizService] = useState<Service | null>(null);
     const [wizDate, setWizDate] = useState('');
     const [isBooking, setIsBooking] = useState(false);

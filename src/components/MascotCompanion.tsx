@@ -43,7 +43,7 @@ export const MascotCompanion: React.FC<MascotCompanionProps> = ({
                 onClick={() => session ? onTriggerBooking() : onTriggerLogin()}
                 onMouseEnter={() => setShowMascotBubble(true)}
             >
-                <Dog size={32} color="white" strokeWidth={2.5} />
+                <Dog size={24} color="white" strokeWidth={2.5} />
             </div>
         </div>
     );

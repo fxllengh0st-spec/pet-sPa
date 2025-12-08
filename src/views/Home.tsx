@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Sparkles, Scissors, Droplet, Heart } from 'lucide-react';
+import { Sparkles, Scissors, Droplet, Heart, ShoppingBag } from 'lucide-react';
 import { Route } from '../types';
 import { getAvatarUrl } from '../utils/ui';
 
@@ -18,9 +18,9 @@ export const HomePage: React.FC<HomePageProps> = ({ session, onNavigate, onOpenB
       <header 
         className="hero-header reveal-on-scroll"
         style={{ 
-            background: 'linear-gradient(135deg, #FF9966 0%, #FF5E62 100%)', // Gradiente amigável
+            background: 'linear-gradient(135deg, #FF9966 0%, #FF5E62 100%)', 
             position: 'relative',
-            overflow: 'hidden' // Garante que a imagem não vaze
+            overflow: 'hidden'
         }}
       >
         <div className="hero-content">
@@ -70,10 +70,10 @@ export const HomePage: React.FC<HomePageProps> = ({ session, onNavigate, onOpenB
                     <h4>Hidratação</h4>
                 </div>
             </div>
-            <div className="service-img-card reveal-on-scroll delay-2" onClick={() => onNavigate('services')} style={{backgroundImage: `url(${BASE_STORAGE_URL}/4.jpg)`}}>
+            <div className="service-img-card reveal-on-scroll delay-2" onClick={() => onNavigate('market')} style={{backgroundImage: `url(${BASE_STORAGE_URL}/4.jpg)`}}>
                 <div className="service-overlay">
-                    <div className="service-icon-float"><Sparkles size={18}/></div>
-                    <h4>Higiene</h4>
+                    <div className="service-icon-float"><ShoppingBag size={18}/></div>
+                    <h4>Pet Shop</h4>
                 </div>
             </div>
             <div className="service-img-card reveal-on-scroll delay-3" onClick={() => onNavigate('about')} style={{backgroundImage: `url(${BASE_STORAGE_URL}/5.jpg)`}}>
