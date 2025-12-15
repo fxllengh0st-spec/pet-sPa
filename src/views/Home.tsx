@@ -16,24 +16,12 @@ interface HomePageProps {
 
 export const HomePage: React.FC<HomePageProps> = ({ session, onNavigate, onOpenBooking }) => (
     <div className="page-enter">
-      <header 
-        className="hero-header reveal-on-scroll"
-        style={{ 
-            /* Adicionada máscara escura (linear-gradient preto transparente) sobre o gradiente laranja */
-            background: `
-                linear-gradient(to bottom, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.4) 100%), 
-                linear-gradient(135deg, #FF9966 0%, #FF5E62 100%)
-            `,
-            position: 'relative',
-            overflow: 'hidden'
-        }}
-      >
+      <header className="hero-header reveal-on-scroll">
         <div className="hero-content">
-          {/* Adicionado text-shadow mais forte para contraste */}
-          <h1 className="fade-in-up" style={{ textShadow: '0 2px 10px rgba(0,0,0,0.6)' }}>
+          <h1 className="fade-in-up">
             Seu pet limpo,<br />feliz e saudável!
           </h1>
-          <p className="fade-in-up delay-1" style={{ color: 'rgba(255,255,255,0.95)', textShadow: '0 1px 4px rgba(0,0,0,0.5)' }}>
+          <p className="fade-in-up delay-1">
             Confiança, carinho e tecnologia. Agendamento inteligente com IA.
           </p>
           <div className="hero-actions fade-in-up delay-2">
@@ -46,28 +34,16 @@ export const HomePage: React.FC<HomePageProps> = ({ session, onNavigate, onOpenB
           </div>
         </div>
 
-        {/* Imagem decorativa na direita - Tamanho Reduzido pela metade */}
+        {/* Imagem decorativa controlada via CSS class .hero-pets-img */}
         <img 
             src={`${BASE_STORAGE_URL}/random.png`} 
             alt="Pet Feliz" 
-            className="fade-in-slide delay-2"
-            style={{
-                position: 'absolute',
-                right: '2%',
-                bottom: 0,
-                height: '12vh', /* Reduzido de 25vh para 12vh */
-                maxHeight: '120px', /* Limite máximo em pixels */
-                zIndex: 1,
-                objectFit: 'contain',
-                pointerEvents: 'none',
-                filter: 'drop-shadow(0 4px 12px rgba(0,0,0,0.4))'
-            }}
+            className="hero-pets-img fade-in-slide delay-2"
         />
       </header>
       
-      {/* Ajustado marginTop de -40px para -15px para abaixar o título 'Nossos Serviços' */}
-      <div className="container" style={{ marginTop: '-15px', position: 'relative', zIndex: 20 }}>
-         <h2 className="section-title reveal-on-scroll" style={{ marginTop: 0, marginBottom: 20 }}>Nossos Serviços</h2>
+      <div className="container home-content-offset">
+         <h2 className="section-title reveal-on-scroll">Nossos Serviços</h2>
          
          <div className="services-preview-grid">
             <div className="service-img-card reveal-on-scroll" onClick={() => onNavigate('services')} style={{backgroundImage: `url(${BASE_STORAGE_URL}/1.jpg)`}}>
@@ -96,7 +72,7 @@ export const HomePage: React.FC<HomePageProps> = ({ session, onNavigate, onOpenB
             </div>
          </div>
          
-         {/* Features Section - Organic PNG Images */}
+         {/* Features Section */}
          <div className="features-section mt-4">
              <h2 className="section-title reveal-on-scroll">Por que a PetSpa?</h2>
              <div className="features-grid">
@@ -139,7 +115,7 @@ export const HomePage: React.FC<HomePageProps> = ({ session, onNavigate, onOpenB
 
          {/* Promo Banner */}
          <div className="promo-banner mt-4 clickable-card reveal-on-scroll" onClick={() => session ? onOpenBooking() : onNavigate('login')}>
-            <div className="promo-content" style={{maxWidth: '65%'}}>
+            <div className="promo-content">
                 <h3>Primeira vez aqui? 🎁</h3>
                 <p>Ganhe <strong>10% OFF</strong> no primeiro banho agendando pelo app!</p>
             </div>
