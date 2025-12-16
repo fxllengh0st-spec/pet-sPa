@@ -1,6 +1,7 @@
+
 import React, { useMemo } from 'react';
-import { ChevronLeft, Plus, LayoutDashboard, Clock, TrendingUp, Sparkles, Award } from 'lucide-react';
-import { Profile, Pet, Route } from '../types';
+import { ChevronLeft, Plus, LayoutDashboard, Clock, TrendingUp, Sparkles, Award, Crown, Calendar } from 'lucide-react';
+import { Profile, Pet, Route, Subscription } from '../types';
 import { useToast } from '../context/ToastContext';
 import { getAvatarUrl, getPetAvatarUrl, formatCurrency } from '../utils/ui';
 
@@ -9,9 +10,10 @@ interface UserProfileProps {
     session: any;
     pets: Pet[];
     apps: any[];
+    subscriptions?: Subscription[];
     onNavigate: (route: Route) => void;
     setSelectedPet: (pet: Pet) => void;
-    onAddPet?: () => void; // New prop
+    onAddPet?: () => void;
 }
 
 export const UserProfileView: React.FC<UserProfileProps> = ({ 
@@ -19,6 +21,7 @@ export const UserProfileView: React.FC<UserProfileProps> = ({
     session, 
     pets, 
     apps, 
+    subscriptions = [],
     onNavigate, 
     setSelectedPet,
     onAddPet
@@ -192,6 +195,37 @@ export const UserProfileView: React.FC<UserProfileProps> = ({
               </div>
           </div>
        </div>
+
+       {/* --- NEW SECTION: ACTIVE SUBSCRIPTIONS --- */}
+       {subscriptions.length > 0 && (
+           <div className="reveal-on-scroll" style={{marginBottom: 32}}>
+               <h3 style={{marginBottom:16}}>Planos Ativos ({subscriptions.length})</h3>
+               <div style={{display:'flex', flexDirection:'column', gap: 12}}>
+                   {subscriptions.map(sub => {
+                       const pet = pets.find(p => p.id === sub.pet_id);
+                       const expireDate = new Date(sub.created_at);
+                       expireDate.setDate(expireDate.getDate() + 30);
+                       const daysLeft = Math.ceil((expireDate.getTime() - new Date().getTime()) / (1000 * 3600 * 24));
+                       
+                       return (
+                           <div key={sub.id} className="card clickable-card" style={{margin:0, padding: 16, display:'flex', alignItems:'center', gap: 16}} onClick={() => { if(pet) { setSelectedPet(pet); onNavigate('pet-details'); } }}>
+                               <div style={{width: 50, height: 50, background: 'linear-gradient(135deg, #00B894 0%, #00CEC9 100%)', borderRadius: 12, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0}}>
+                                   <Crown size={24} color="white" fill="rgba(255,255,255,0.3)" />
+                               </div>
+                               <div style={{flex:1}}>
+                                   <strong style={{display:'block', fontSize:'0.95rem'}}>{sub.packages?.title}</strong>
+                                   <div style={{display:'flex', alignItems:'center', gap: 6, fontSize:'0.8rem', color:'var(--text-muted)'}}>
+                                      <span>Pet: {pet?.name || 'Desconhecido'}</span>
+                                      <span>•</span>
+                                      <span style={{color: daysLeft < 5 ? 'var(--brand-yellow)' : 'inherit'}}>Expira em {daysLeft} dias</span>
+                                   </div>
+                               </div>
+                           </div>
+                       );
+                   })}
+               </div>
+           </div>
+       )}
 
        <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:16}} className="reveal-on-scroll">
             <h3>Meus Pets</h3>

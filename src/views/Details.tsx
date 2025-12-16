@@ -1,6 +1,7 @@
+
 import React, { useState, useMemo } from 'react';
-import { ChevronLeft, Clock, CheckCircle, Droplet, Sparkles, X, Calendar, DollarSign, Scissors, CalendarClock, AlertCircle, ChevronRight, Activity, CalendarCheck } from 'lucide-react';
-import { Appointment, Pet, Route } from '../types';
+import { ChevronLeft, Clock, CheckCircle, Droplet, Sparkles, X, Calendar, DollarSign, Scissors, CalendarClock, AlertCircle, ChevronRight, Activity, CalendarCheck, Crown, Hourglass } from 'lucide-react';
+import { Appointment, Pet, Route, Subscription } from '../types';
 import { formatCurrency, formatDate, getPetAvatarUrl } from '../utils/ui';
 import { api } from '../services/api';
 import { useToast } from '../context/ToastContext';
@@ -14,22 +15,58 @@ const BUSINESS_CONFIG = {
 interface PetDetailsProps {
     selectedPet: Pet | null;
     apps: Appointment[];
+    subscriptions?: Subscription[];
     onNavigate: (route: Route) => void;
     setSelectedAppointment: (app: Appointment) => void;
 }
 
-export const PetDetailsView: React.FC<PetDetailsProps> = ({ selectedPet, apps, onNavigate, setSelectedAppointment }) => {
+export const PetDetailsView: React.FC<PetDetailsProps> = ({ selectedPet, apps, subscriptions = [], onNavigate, setSelectedAppointment }) => {
      if (!selectedPet) return null;
      
      // Filtrar histórico
      const petHistory = apps.filter(a => a.pet_id === selectedPet.id);
      
+     // Buscar assinatura ativa
+     const activeSub = subscriptions.find(s => s.pet_id === selectedPet.id && s.status === 'active');
+
      const renderServiceIcon = (name: string) => {
         const n = (name || '').toLowerCase();
         if (n.includes('tosa')) return <Scissors size={18} />;
         if (n.includes('banho')) return <Droplet size={18} />;
         return <Sparkles size={18} />;
      };
+
+     // Subscription Metrics
+     const subMetrics = useMemo(() => {
+         if (!activeSub || !activeSub.packages) return null;
+         
+         const createdAt = new Date(activeSub.created_at);
+         const expiresAt = new Date(createdAt);
+         expiresAt.setDate(expiresAt.getDate() + 30); // 30 dias de validade
+         
+         const now = new Date();
+         const daysLeft = Math.max(0, Math.ceil((expiresAt.getTime() - now.getTime()) / (1000 * 3600 * 24)));
+         const totalBaths = activeSub.packages.bath_count;
+         
+         // Contar agendamentos realizados/agendados APÓS a criação da assinatura
+         // Lógica simples: Considerar agendamentos com data > created_at
+         // Em produção, idealmente teríamos um vínculo ID.
+         const subAppointments = apps.filter(a => 
+             a.pet_id === selectedPet.id && 
+             a.status !== 'cancelled' &&
+             new Date(a.created_at) >= createdAt
+         );
+         
+         const usedCount = subAppointments.filter(a => a.status === 'completed' || a.status === 'in_progress').length;
+         const scheduledCount = subAppointments.filter(a => a.status === 'confirmed' || a.status === 'pending').length;
+         
+         // Total "Usado/Comprometido"
+         const totalUsedOrScheduled = usedCount + scheduledCount;
+         const remaining = Math.max(0, totalBaths - totalUsedOrScheduled);
+         const progressPct = Math.min(100, (totalUsedOrScheduled / totalBaths) * 100);
+
+         return { daysLeft, totalBaths, usedCount, scheduledCount, remaining, progressPct, expiresAt };
+     }, [activeSub, apps, selectedPet]);
 
      return (
         <div className="container page-enter" style={{ paddingTop: 20 }}>
@@ -62,6 +99,45 @@ export const PetDetailsView: React.FC<PetDetailsProps> = ({ selectedPet, apps, o
                    </div>
                )}
            </div>
+
+           {/* --- NOVO: CARTÃO DE ASSINATURA ATIVA --- */}
+           {activeSub && subMetrics && (
+               <div className="card reveal-on-scroll" style={{background: 'linear-gradient(135deg, #00B894 0%, #00CEC9 100%)', color: 'white', border:'none', overflow:'hidden', position:'relative', marginBottom: 24}}>
+                   <div style={{display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom: 16}}>
+                       <div style={{display:'flex', gap: 12, alignItems:'center'}}>
+                           <div style={{background:'rgba(255,255,255,0.2)', padding: 8, borderRadius: 12}}>
+                               <Crown size={24} fill="white" />
+                           </div>
+                           <div>
+                               <h3 style={{color:'white', margin:0, fontSize:'1.1rem'}}>{activeSub.packages?.title}</h3>
+                               <p style={{color:'rgba(255,255,255,0.9)', margin:0, fontSize:'0.85rem'}}>Assinatura Ativa</p>
+                           </div>
+                       </div>
+                       <div className="tag-pill" style={{background:'rgba(255,255,255,0.2)', color:'white', border:'none', fontWeight: 700}}>
+                           {subMetrics.daysLeft} dias rest.
+                       </div>
+                   </div>
+
+                   <div style={{marginBottom: 8, display:'flex', justifyContent:'space-between', fontSize:'0.85rem', fontWeight: 600}}>
+                       <span>Utilizado: {subMetrics.usedCount + subMetrics.scheduledCount}/{subMetrics.totalBaths}</span>
+                       <span>Restam: {subMetrics.remaining}</span>
+                   </div>
+                   
+                   <div style={{background:'rgba(0,0,0,0.1)', height: 8, borderRadius: 4, overflow:'hidden', marginBottom: 16}}>
+                       <div style={{background:'white', height:'100%', width: `${subMetrics.progressPct}%`}}></div>
+                   </div>
+
+                   <div style={{display:'flex', alignItems:'center', gap: 8, fontSize: '0.8rem', color:'rgba(255,255,255,0.85)'}}>
+                       <Hourglass size={14} />
+                       Válido até {subMetrics.expiresAt.toLocaleDateString()}
+                   </div>
+
+                   {/* Background Decor */}
+                   <div style={{position:'absolute', right: -20, bottom: -30, opacity: 0.15, transform: 'rotate(-15deg)'}}>
+                       <Crown size={120} fill="white" />
+                   </div>
+               </div>
+           )}
 
            {/* CARD DE STATUS ATIVO (TRACKING) USANDO O COMPONENTE REUTILIZÁVEL */}
            <ActiveTrackingCard 

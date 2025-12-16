@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from './lib/supabase';
 import { api } from './services/api';
-import { Profile, Appointment, Pet, Service, Route, LoginStage } from './types';
+import { Profile, Appointment, Pet, Service, Route, LoginStage, Subscription } from './types';
 import { Chat } from './components/Chat';
 import { AboutUs } from './components/AboutUs';
 import { AdminPanel } from './components/Admin';
@@ -45,6 +45,7 @@ export default function App() {
   const [pets, setPets] = useState<Pet[]>([]);
   const [apps, setApps] = useState<Appointment[]>([]);
   const [services, setServices] = useState<Service[]>([]);
+  const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
 
   // Selection State
   const [selectedPet, setSelectedPet] = useState<Pet | null>(null);
@@ -102,7 +103,7 @@ export default function App() {
          }
       } else { 
           setProfile(null); 
-          setPets([]); setApps([]); 
+          setPets([]); setApps([]); setSubscriptions([]);
           if (view !== 'register' && view !== 'login') setView('home'); 
       }
     });
@@ -118,16 +119,18 @@ export default function App() {
 
   const loadUserData = async (uid: string) => {
       try {
-         const [p, a, s] = await Promise.all([
+         const [p, a, s, subs] = await Promise.all([
              api.booking.getMyPets(uid),
              api.booking.getMyAppointments(uid),
-             api.booking.getServices()
+             api.booking.getServices(),
+             api.packages.getMySubscriptions(uid)
          ]);
          setPets(p);
          setApps(a);
          setServices(s);
-         return { pets: p, apps: a };
-      } catch (e) { console.error(e); return { pets: [], apps: [] }; }
+         setSubscriptions(subs || []);
+         return { pets: p, apps: a, subscriptions: subs };
+      } catch (e) { console.error(e); return { pets: [], apps: [], subscriptions: [] }; }
   };
 
   const handleLogout = async () => {
@@ -287,8 +290,8 @@ export default function App() {
           {view === 'about' && <AboutUs onNavigate={navigateTo} />}
           {view === 'dashboard' && <Dashboard profile={profile} pets={pets} apps={apps} onNavigate={navigateTo} setSelectedPet={setSelectedPet} setSelectedAppointment={setSelectedAppointment} onOpenBooking={() => setShowBookingModal(true)} />}
           {view === 'admin' && <AdminPanel />}
-          {view === 'user-profile' && <UserProfileView profile={profile} session={session} pets={pets} apps={apps} onNavigate={navigateTo} setSelectedPet={setSelectedPet} onAddPet={() => setShowPetWizard(true)} />}
-          {view === 'pet-details' && <PetDetailsView selectedPet={selectedPet} apps={apps} onNavigate={navigateTo} setSelectedAppointment={setSelectedAppointment} />}
+          {view === 'user-profile' && <UserProfileView profile={profile} session={session} pets={pets} apps={apps} subscriptions={subscriptions} onNavigate={navigateTo} setSelectedPet={setSelectedPet} onAddPet={() => setShowPetWizard(true)} />}
+          {view === 'pet-details' && <PetDetailsView selectedPet={selectedPet} apps={apps} subscriptions={subscriptions} onNavigate={navigateTo} setSelectedAppointment={setSelectedAppointment} />}
           {view === 'appointment-details' && <AppointmentDetailsView selectedAppointment={selectedAppointment} onNavigate={navigateTo} />}
        </main>
     </div>
