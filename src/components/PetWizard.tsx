@@ -1,7 +1,9 @@
+
 import React, { useState } from 'react';
-import { X, Dog, Calendar, Weight, FileText, Camera, Upload } from 'lucide-react';
+import { X, Dog, Calendar, Weight, FileText, Camera, Upload, Loader2 } from 'lucide-react';
 import { api } from '../services/api';
 import { useToast } from '../context/ToastContext';
+import { compressImage } from '../utils/ui';
 
 interface PetWizardProps {
     onClose: () => void;
@@ -12,6 +14,7 @@ interface PetWizardProps {
 export const PetWizard: React.FC<PetWizardProps> = ({ onClose, session, onSuccess }) => {
     const [step, setStep] = useState(1);
     const [isSaving, setIsSaving] = useState(false);
+    const [isCompressing, setIsCompressing] = useState(false);
     const toast = useToast();
 
     // Form State
@@ -20,17 +23,24 @@ export const PetWizard: React.FC<PetWizardProps> = ({ onClose, session, onSucces
     const [birthDate, setBirthDate] = useState('');
     const [weight, setWeight] = useState('');
     const [notes, setNotes] = useState('');
-    const [avatarUrl, setAvatarUrl] = useState<string | null>(null); // Mockado via URL ou base64
+    const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
 
-    // Mock Image Upload (In a real app, this would upload to Storage bucket)
-    const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    // Optimized Image Upload with Compression
+    const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (file) {
-            const reader = new FileReader();
-            reader.onloadend = () => {
-                setAvatarUrl(reader.result as string);
-            };
-            reader.readAsDataURL(file);
+            setIsCompressing(true);
+            try {
+                // Comprime a imagem antes de setar no estado (Economia de Storage)
+                const compressedBase64 = await compressImage(file);
+                setAvatarUrl(compressedBase64);
+                toast.success('Foto processada e otimizada! 📸');
+            } catch (err) {
+                console.error("Erro ao comprimir imagem", err);
+                toast.error('Erro ao processar imagem. Tente outra.');
+            } finally {
+                setIsCompressing(false);
+            }
         }
     };
 
@@ -183,18 +193,21 @@ export const PetWizard: React.FC<PetWizardProps> = ({ onClose, session, onSucces
                                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                                     overflow: 'hidden', position: 'relative'
                                 }}>
-                                    {avatarUrl ? (
+                                    {isCompressing ? (
+                                        <Loader2 className="animate-spin" color="var(--primary)" size={32} />
+                                    ) : avatarUrl ? (
                                         <img src={avatarUrl} alt="Preview" style={{width:'100%', height:'100%', objectFit:'cover'}} />
                                     ) : (
                                         <Camera size={40} color="#CBD5E0" />
                                     )}
                                 </div>
                                 
-                                <label className="btn btn-sm btn-ghost mt-4" style={{cursor: 'pointer'}}>
+                                <label className={`btn btn-sm btn-ghost mt-4 ${isCompressing ? 'opacity-50 pointer-events-none' : ''}`} style={{cursor: 'pointer'}}>
                                     <Upload size={16} style={{marginRight: 6}} />
                                     {avatarUrl ? 'Trocar Foto' : 'Escolher Foto'}
-                                    <input type="file" accept="image/*" onChange={handleImageUpload} style={{display:'none'}} />
+                                    <input type="file" accept="image/*" onChange={handleImageUpload} style={{display:'none'}} disabled={isCompressing} />
                                 </label>
+                                <small style={{color:'#999', marginTop:4, fontSize:'0.75rem'}}>A foto será otimizada automaticamente.</small>
                             </div>
 
                             <div className="summary-card">
@@ -207,7 +220,7 @@ export const PetWizard: React.FC<PetWizardProps> = ({ onClose, session, onSucces
                                 <button className="btn btn-ghost" onClick={() => setStep(3)}>Voltar</button>
                                 <button 
                                   className={`btn btn-primary ${isSaving ? 'loading' : ''}`} 
-                                  disabled={isSaving} 
+                                  disabled={isSaving || isCompressing} 
                                   onClick={handleSave}
                                 >
                                     {isSaving ? 'Salvando...' : 'Finalizar Cadastro'}

@@ -1,6 +1,6 @@
 
 import React, { useState, useMemo, useEffect } from 'react';
-import { X, AlertCircle, Clock, CalendarCheck, Check, Calendar as CalendarIcon, PartyPopper } from 'lucide-react';
+import { X, AlertCircle, Clock, CalendarCheck, Check, Calendar as CalendarIcon, PartyPopper, ArrowRight } from 'lucide-react';
 import { api } from '../services/api';
 import { formatCurrency, toLocalISOString, getPetAvatarUrl, formatDate } from '../utils/ui';
 import { useToast } from '../context/ToastContext';
@@ -126,6 +126,21 @@ export const BookingWizard: React.FC<BookingWizardProps> = ({
         const dayOfWeek = new Date(`${selectedDate}T12:00:00`).getDay();
         return BUSINESS_CONFIG.WORK_DAYS.includes(dayOfWeek);
     }, [selectedDate]);
+
+    // Helper para pular para o próximo dia útil
+    const handleNextAvailableDay = () => {
+        if (!selectedDate) return;
+        const current = new Date(selectedDate);
+        current.setDate(current.getDate() + 1);
+        
+        // Se cair num domingo (0), avança mais um
+        if (current.getDay() === 0) {
+             current.setDate(current.getDate() + 1);
+        }
+        
+        setSelectedDate(current.toLocaleDateString('en-CA'));
+        setSelectedTime(null);
+    };
 
     const handleConfirm = async () => {
         if(!wizPet || !wizService || !selectedDate || !selectedTime) return;
@@ -302,8 +317,17 @@ export const BookingWizard: React.FC<BookingWizardProps> = ({
                                     </label>
                                     
                                     {timeSlots.length === 0 ? (
-                                        <div className="p-4 bg-gray-100 rounded-lg text-center text-gray-500 text-sm">
-                                            {new Date(`${selectedDate}T00:00:00`) < new Date(new Date().setHours(0,0,0,0)) ? 'Data passada.' : 'Sem horários disponíveis hoje.'}
+                                        <div className="p-4 bg-gray-50 border border-gray-200 rounded-lg text-center">
+                                            <p className="text-sm text-gray-500 mb-3">
+                                                {new Date(`${selectedDate}T00:00:00`) < new Date(new Date().setHours(0,0,0,0)) ? 'Data passada.' : 'Agenda lotada para hoje! 😓'}
+                                            </p>
+                                            <button 
+                                                className="btn btn-sm btn-ghost full-width" 
+                                                style={{color: 'var(--primary)', borderColor: 'var(--primary)'}}
+                                                onClick={handleNextAvailableDay}
+                                            >
+                                                Ver próxima data livre <ArrowRight size={14} style={{marginLeft: 4}}/>
+                                            </button>
                                         </div>
                                     ) : (
                                         <div style={{
