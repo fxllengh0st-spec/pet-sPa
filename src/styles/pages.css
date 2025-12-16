@@ -1,7 +1,5 @@
 
 
-
-
 /* =========================================
    PAGE SPECIFIC STYLES - DESKTOP ENHANCED
    ========================================= */
@@ -252,6 +250,36 @@
 @media (min-width: 768px) { .masonry-grid { column-count: 3; } }
 .masonry-item { break-inside: avoid; margin-bottom: 16px; border-radius: 16px; overflow: hidden; }
 .gallery-img { width: 100%; display: block; }
+
+/* --- USER PROFILE HEADER --- */
+.profile-header {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    background: linear-gradient(135deg, var(--primary), #8E44AD);
+    padding: 30px;
+    border-radius: 24px;
+    color: white;
+    margin-bottom: 24px;
+    box-shadow: 0 10px 30px -5px rgba(155, 89, 182, 0.3);
+}
+
+.profile-avatar {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    border: 3px solid rgba(255,255,255,0.3);
+    overflow: hidden;
+    flex-shrink: 0;
+    background: white;
+}
+
+@media (min-width: 768px) {
+    .profile-avatar {
+        width: 100px;
+        height: 100px;
+    }
+}
 
 /* --- USER PROFILE RICH STATS --- */
 .stat-grid-rich {
