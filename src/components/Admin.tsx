@@ -5,14 +5,15 @@ import { api } from '../services/api';
 import { Appointment } from '../types';
 import { formatDate, formatCurrency } from '../utils/ui';
 import { 
-  Calendar, LayoutDashboard, ListTodo, Clock, User, Phone, 
-  TrendingUp, TrendingDown, DollarSign, Users, Activity, BarChart3, PieChart
+  Calendar, LayoutDashboard, ListTodo, User, Phone, 
+  TrendingUp, DollarSign, Users, Activity, BarChart3, PieChart, Settings
 } from 'lucide-react';
 import { useToast } from '../context/ToastContext';
+import { AdminManagement } from './AdminManagement';
 
 export const AdminPanel: React.FC = () => {
   const [appointments, setAppointments] = useState<Appointment[]>([]);
-  const [view, setView] = useState<'dashboard' | 'kanban' | 'agenda'>('dashboard');
+  const [view, setView] = useState<'dashboard' | 'kanban' | 'agenda' | 'management'>('dashboard');
   const [loading, setLoading] = useState(true);
   const toast = useToast();
 
@@ -43,7 +44,6 @@ export const AdminPanel: React.FC = () => {
   // --- KPI & Data Calculation ---
   const kpis = useMemo(() => {
      const activeApps = appointments.filter(a => a.status !== 'cancelled');
-     const completedApps = appointments.filter(a => a.status === 'completed');
      
      // 1. Revenue (Estimated based on price)
      const totalRevenue = activeApps.reduce((acc, curr) => acc + (curr.services?.price || 0), 0);
@@ -290,6 +290,9 @@ export const AdminPanel: React.FC = () => {
           <button className={`tab-btn ${view === 'kanban' ? 'active' : ''}`} onClick={() => setView('kanban')}>
               <ListTodo size={16} style={{marginRight:6}}/> Fluxo (Kanban)
           </button>
+          <button className={`tab-btn ${view === 'management' ? 'active' : ''}`} onClick={() => setView('management')}>
+              <Settings size={16} style={{marginRight:6}}/> Gerenciar
+          </button>
        </div>
 
        {loading ? <div className="spinner-center"><div className="spinner"></div></div> : (
@@ -297,6 +300,7 @@ export const AdminPanel: React.FC = () => {
            {view === 'agenda' && <AgendaView />}
            {view === 'kanban' && <KanbanView />}
            {view === 'dashboard' && <DashboardView />}
+           {view === 'management' && <AdminManagement />}
          </>
        )}
     </div>

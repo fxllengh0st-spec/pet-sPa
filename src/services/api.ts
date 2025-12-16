@@ -3,43 +3,6 @@
 import { supabase } from '../lib/supabase';
 import { Appointment, Employee, Pet, Product, Profile, Service, Package } from '../types';
 
-// Mock Data para Pacotes (Simulando DB)
-const MOCK_PACKAGES: Package[] = [
-    {
-        id: 1,
-        title: "Pacote Básico",
-        description: "Ideal para manter a higiene em dia.",
-        price: 180.00,
-        original_price: 200.00,
-        bath_count: 4,
-        features: ["4 Banhos Simples", "Validade de 30 dias", "Agendamento Prioritário"],
-        color_theme: "var(--brand-cyan)",
-        highlight: false
-    },
-    {
-        id: 2,
-        title: "Clube VIP",
-        description: "O favorito dos nossos clientes!",
-        price: 250.00,
-        original_price: 320.00,
-        bath_count: 4,
-        features: ["4 Banhos Completos", "1 Hidratação Grátis", "Tosa Higiênica Inclusa", "Perfume Importado"],
-        color_theme: "var(--primary)",
-        highlight: true
-    },
-    {
-        id: 3,
-        title: "Spa Total",
-        description: "Tratamento de realeza para seu pet.",
-        price: 450.00,
-        original_price: 550.00,
-        bath_count: 8,
-        features: ["8 Banhos Premium", "2 Tosas Completas", "Taxi Dog (Busca e Leva)", "Kit Petiscos Mensal"],
-        color_theme: "var(--brand-yellow)",
-        highlight: false
-    }
-];
-
 export const api = {
   auth: {
     async getSession() {
@@ -56,12 +19,9 @@ export const api = {
       return data as Profile;
     },
     async signIn(email: string, pass: string) {
-      // Retorna o objeto de resposta completo { data, error }
-      // Isso previne o erro "Cannot read properties of undefined" no App.tsx
       return await supabase.auth.signInWithPassword({ email, password: pass });
     },
     async signUp(email: string, pass: string, name: string, phone: string) {
-      // Retorna o objeto de resposta completo { data, error }
       return await supabase.auth.signUp({
         email,
         password: pass,
@@ -138,12 +98,21 @@ export const api = {
 
   packages: {
       async getPackages() {
-          // Simulando delay de rede
-          await new Promise(resolve => setTimeout(resolve, 500));
-          return MOCK_PACKAGES;
+          // Agora busca do Supabase real
+          const { data, error } = await supabase
+            .from('packages')
+            .select('*')
+            .eq('active', true)
+            .order('price', { ascending: true });
+            
+          if (error) {
+             console.warn("Erro ao buscar pacotes, usando fallback se tabela não existir", error);
+             return [];
+          }
+          return data as Package[];
       },
       async subscribe(userId: string, packageId: number) {
-          // Aqui seria a integração com gateway de pagamento ou inserção na tabela 'subscriptions'
+          // Mock de assinatura
           await new Promise(resolve => setTimeout(resolve, 1500));
           return { success: true, message: 'Assinatura realizada com sucesso!' };
       }
@@ -166,18 +135,44 @@ export const api = {
       const { error } = await supabase.from('appointments').update(payload).eq('id', id);
       if (error) throw error;
     },
-    async getEmployees() {
-      // Simpler query logic for now
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .in('role', ['admin', 'employee']);
-      if (error) throw error;
-      return data as Profile[];
+    
+    // --- CRUD SERVICES ---
+    async getAllServicesAdmin() {
+        const { data, error } = await supabase.from('services').select('*').order('id');
+        if (error) throw error;
+        return data as Service[];
     },
-    async createProduct(prod: Partial<Product>) {
-      const { error } = await supabase.from('products').insert(prod);
-      if (error) throw error;
+    async createService(service: Omit<Service, 'id'>) {
+        const { error } = await supabase.from('services').insert(service);
+        if (error) throw error;
+    },
+    async updateService(id: number, service: Partial<Service>) {
+        const { error } = await supabase.from('services').update(service).eq('id', id);
+        if (error) throw error;
+    },
+    async deleteService(id: number) {
+        // Soft delete é melhor, mas aqui faremos hard delete ou set active=false
+        const { error } = await supabase.from('services').delete().eq('id', id);
+        if (error) throw error;
+    },
+
+    // --- CRUD PACKAGES ---
+    async getAllPackagesAdmin() {
+        const { data, error } = await supabase.from('packages').select('*').order('id');
+        if (error) throw error;
+        return data as Package[];
+    },
+    async createPackage(pkg: Omit<Package, 'id'>) {
+        const { error } = await supabase.from('packages').insert(pkg);
+        if (error) throw error;
+    },
+    async updatePackage(id: number, pkg: Partial<Package>) {
+        const { error } = await supabase.from('packages').update(pkg).eq('id', id);
+        if (error) throw error;
+    },
+    async deletePackage(id: number) {
+        const { error } = await supabase.from('packages').delete().eq('id', id);
+        if (error) throw error;
     }
   }
 };
