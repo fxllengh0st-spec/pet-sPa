@@ -5,8 +5,9 @@ import { api } from '../services/api';
 import { Appointment } from '../types';
 import { formatDate, formatCurrency } from '../utils/ui';
 import { 
-  Calendar, LayoutDashboard, ListTodo, User, Phone, 
-  TrendingUp, DollarSign, Users, Activity, BarChart3, PieChart, Settings
+  Calendar as CalendarIcon, LayoutDashboard, ListTodo, User, Phone, 
+  TrendingUp, DollarSign, Users, Activity, BarChart3, PieChart, Settings,
+  ChevronLeft, ChevronRight, Clock
 } from 'lucide-react';
 import { useToast } from '../context/ToastContext';
 import { AdminManagement } from './AdminManagement';
@@ -156,90 +157,136 @@ export const AdminPanel: React.FC = () => {
                   ))}
               </div>
           </div>
-
-          {/* Recent Transactions Table */}
-          <div className="card" style={{ gridColumn: '1 / -1', padding: 0, overflow: 'hidden' }}>
-               <div style={{ padding: '24px 24px 0' }}><h3>Últimas Transações</h3></div>
-               <div className="table-wrapper" style={{ margin: 24 }}>
-                   <table className="data-table">
-                       <thead>
-                           <tr>
-                               <th>Data</th>
-                               <th>Cliente</th>
-                               <th>Pet</th>
-                               <th>Serviço</th>
-                               <th>Valor</th>
-                               <th>Status</th>
-                           </tr>
-                       </thead>
-                       <tbody>
-                           {appointments.slice(0, 5).map(app => (
-                               <tr key={app.id}>
-                                   <td>{formatDate(app.start_time)}</td>
-                                   <td>{app.profiles?.full_name}</td>
-                                   <td>{app.pets?.name}</td>
-                                   <td>{app.services?.name}</td>
-                                   <td><strong>{formatCurrency(app.services?.price || 0)}</strong></td>
-                                   <td><span className={`status-badge tag-${app.status}`}>{app.status}</span></td>
-                               </tr>
-                           ))}
-                       </tbody>
-                   </table>
-               </div>
-          </div>
       </div>
   );
 
   const AgendaView = () => {
-      // Group by date, then sort by time
-      const grouped: Record<string, Appointment[]> = {};
-      appointments.forEach(app => {
-          const dateKey = new Date(app.start_time).toLocaleDateString();
-          if (!grouped[dateKey]) grouped[dateKey] = [];
-          grouped[dateKey].push(app);
+      // Estado para navegar nas semanas
+      const [currentDate, setCurrentDate] = useState(new Date());
+
+      // Helper para pegar o domingo da semana atual
+      const getStartOfWeek = (date: Date) => {
+          const d = new Date(date);
+          const day = d.getDay();
+          const diff = d.getDate() - day; // Ajuste para domingo
+          return new Date(d.setDate(diff));
+      };
+
+      const startOfWeek = getStartOfWeek(currentDate);
+      const weekDays = Array.from({ length: 7 }, (_, i) => {
+          const d = new Date(startOfWeek);
+          d.setDate(d.getDate() + i);
+          return d;
       });
-      const dates = Object.keys(grouped).sort(); // Basic sort
+      const endOfWeek = new Date(startOfWeek);
+      endOfWeek.setDate(endOfWeek.getDate() + 6);
+
+      // Horas do dia (08:00 as 20:00)
+      const hours = Array.from({ length: 13 }, (_, i) => i + 8);
+      const PIXELS_PER_HOUR = 60;
+
+      // Filtrar agendamentos da semana
+      const weekApps = appointments.filter(app => {
+          const d = new Date(app.start_time);
+          return d >= startOfWeek && d < new Date(endOfWeek.getTime() + 86400000);
+      });
+
+      const handlePrevWeek = () => {
+          const newDate = new Date(currentDate);
+          newDate.setDate(newDate.getDate() - 7);
+          setCurrentDate(newDate);
+      };
+
+      const handleNextWeek = () => {
+          const newDate = new Date(currentDate);
+          newDate.setDate(newDate.getDate() + 7);
+          setCurrentDate(newDate);
+      };
 
       return (
-          <div className="agenda-container fade-in">
-              {dates.length === 0 && <div className="empty-state text-center py-8">Nenhum agendamento encontrado.</div>}
-              {dates.map(date => (
-                  <div key={date} className="agenda-group">
-                      <h4 className="agenda-date-header">{date}</h4>
-                      <div className="agenda-list">
-                          {grouped[date].map(app => (
-                              <div key={app.id} className={`agenda-item border-left-${app.status}`}>
-                                  <div className="agenda-time">
-                                      {new Date(app.start_time).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
-                                  </div>
-                                  <div className="agenda-details">
-                                      <div className="agenda-main-info">
-                                          <strong>{app.pets?.name}</strong> 
-                                          <span className="agenda-service"> • {app.services?.name}</span>
-                                      </div>
-                                      <div className="agenda-client-info">
-                                          <User size={12} /> {app.profiles?.full_name} 
-                                          {app.profiles?.phone && <span style={{marginLeft:8, opacity:0.7}}><Phone size={12}/> {app.profiles.phone}</span>}
-                                      </div>
-                                  </div>
-                                  <div className="agenda-actions">
-                                      <select 
-                                          className="status-select-mini"
-                                          value={app.status} 
-                                          onChange={(e) => updateStatus(app.id, e.target.value)}
-                                      >
-                                          <option value="pending">Pendente</option>
-                                          <option value="confirmed">Confirmado</option>
-                                          <option value="in_progress">Em Andamento</option>
-                                          <option value="completed">Concluído</option>
-                                          <option value="cancelled">Cancelado</option>
-                                      </select>
-                                  </div>
-                              </div>
+          <div className="fade-in">
+              {/* Controls */}
+              <div className="calendar-wrapper">
+                  <div className="calendar-header-controls">
+                      <div style={{display:'flex', alignItems:'center', gap:12}}>
+                          <button className="btn-icon-sm" onClick={handlePrevWeek}><ChevronLeft size={20}/></button>
+                          <h3 style={{margin:0, fontSize:'1.1rem'}}>
+                              {startOfWeek.toLocaleDateString('pt-BR', {day:'2-digit', month:'short'})} - {endOfWeek.toLocaleDateString('pt-BR', {day:'2-digit', month:'short', year:'numeric'})}
+                          </h3>
+                          <button className="btn-icon-sm" onClick={handleNextWeek}><ChevronRight size={20}/></button>
+                      </div>
+                      <button className="btn btn-secondary btn-sm" onClick={() => setCurrentDate(new Date())}>Hoje</button>
+                  </div>
+
+                  {/* Calendar Grid */}
+                  <div className="calendar-grid">
+                      {/* Header Cells (Time + Days) */}
+                      <div className="cal-header-cell"><Clock size={16} style={{margin:'0 auto'}}/></div>
+                      {weekDays.map((day, i) => (
+                          <div key={i} className="cal-header-cell" style={{background: day.toDateString() === new Date().toDateString() ? '#FFF8E1' : ''}}>
+                              <div style={{fontWeight:800}}>{day.toLocaleDateString('pt-BR', {weekday:'short'})}</div>
+                              <div style={{fontSize:'1.2rem'}}>{day.getDate()}</div>
+                          </div>
+                      ))}
+
+                      {/* Time Labels Column */}
+                      <div style={{borderRight:'1px solid #eee'}}>
+                          {hours.map(h => (
+                              <div key={h} className="cal-time-cell">{h}:00</div>
                           ))}
                       </div>
+
+                      {/* Day Columns */}
+                      {weekDays.map((day, i) => {
+                          // Filtrar apps deste dia
+                          const dayApps = weekApps.filter(a => new Date(a.start_time).toDateString() === day.toDateString());
+
+                          return (
+                              <div key={i} className="cal-day-col">
+                                  {/* Grid Lines */}
+                                  {hours.map(h => <div key={h} className="cal-hour-row"></div>)}
+
+                                  {/* Events */}
+                                  {dayApps.map(app => {
+                                      const start = new Date(app.start_time);
+                                      const startHour = start.getHours();
+                                      const startMin = start.getMinutes();
+                                      
+                                      // Calcular posição top (relativo as 8:00)
+                                      // Se começa antes das 8, clamp em 0.
+                                      const minutesFrom8am = ((startHour - 8) * 60) + startMin;
+                                      const top = Math.max(0, (minutesFrom8am / 60) * PIXELS_PER_HOUR);
+                                      
+                                      // Calcular altura (duração)
+                                      const duration = app.services?.duration_minutes || 60;
+                                      const height = (duration / 60) * PIXELS_PER_HOUR;
+
+                                      return (
+                                          <div 
+                                              key={app.id} 
+                                              className={`cal-event-card cal-status-${app.status}`}
+                                              style={{ top: `${top}px`, height: `${height}px` }}
+                                              onClick={() => {
+                                                  // Quick action or view details
+                                                  const newStatus = app.status === 'pending' ? 'confirmed' : 
+                                                                    app.status === 'confirmed' ? 'in_progress' : 
+                                                                    app.status === 'in_progress' ? 'completed' : app.status;
+                                                  if(newStatus !== app.status && confirm(`Alterar status de ${app.pets?.name} para ${newStatus}?`)) {
+                                                      updateStatus(app.id, newStatus);
+                                                  }
+                                              }}
+                                              title={`${app.pets?.name} - ${app.services?.name}`}
+                                          >
+                                              <strong style={{display:'block', lineHeight:1.2}}>{app.pets?.name}</strong>
+                                              <span style={{fontSize:'0.7rem', opacity:0.8}}>{app.services?.name}</span>
+                                          </div>
+                                      );
+                                  })}
+                              </div>
+                          );
+                      })}
                   </div>
-              ))}
+              </div>
           </div>
       );
   };
@@ -285,7 +332,7 @@ export const AdminPanel: React.FC = () => {
               <LayoutDashboard size={16} style={{marginRight:6}}/> Visão Geral
           </button>
           <button className={`tab-btn ${view === 'agenda' ? 'active' : ''}`} onClick={() => setView('agenda')}>
-              <Calendar size={16} style={{marginRight:6}}/> Agenda
+              <CalendarIcon size={16} style={{marginRight:6}}/> Agenda Semanal
           </button>
           <button className={`tab-btn ${view === 'kanban' ? 'active' : ''}`} onClick={() => setView('kanban')}>
               <ListTodo size={16} style={{marginRight:6}}/> Fluxo (Kanban)
