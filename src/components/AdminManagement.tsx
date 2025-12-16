@@ -52,6 +52,10 @@ export const AdminManagement: React.FC = () => {
             if (tab === 'packages' && Array.isArray(data.features)) {
                 data.features = data.features.join('\n');
             }
+            // Garantir que color theme tenha valor
+            if (tab === 'packages' && !data.color_theme) {
+                data.color_theme = '#9B59B6';
+            }
             setFormData(data);
         } else {
             setEditingId(null);
@@ -59,7 +63,7 @@ export const AdminManagement: React.FC = () => {
             if (tab === 'services') {
                 setFormData({ name: '', price: 0, duration_minutes: 30, active: true, description: '' });
             } else {
-                setFormData({ title: '', price: 0, original_price: 0, bath_count: 1, features: '', highlight: false, color_theme: '#9B59B6' });
+                setFormData({ title: '', price: 0, original_price: 0, bath_count: 1, features: '', highlight: false, color_theme: '#9B59B6', active: true, description: '' });
             }
         }
         setIsModalOpen(true);
@@ -89,8 +93,10 @@ export const AdminManagement: React.FC = () => {
                     payload.features = payload.features.split('\n').filter((l: string) => l.trim() !== '');
                 }
                 payload.price = Number(payload.price);
-                payload.original_price = Number(payload.original_price);
+                payload.original_price = payload.original_price ? Number(payload.original_price) : null;
                 payload.bath_count = Number(payload.bath_count);
+                // Garantir cor válida se estiver vazia
+                if (!payload.color_theme) payload.color_theme = '#9B59B6';
             } else {
                 payload.price = Number(payload.price);
                 payload.duration_minutes = Number(payload.duration_minutes);
@@ -170,10 +176,10 @@ export const AdminManagement: React.FC = () => {
                                         </td>
                                         <td>
                                             {formatCurrency(p.price)} 
-                                            {p.original_price > p.price && <small style={{textDecoration:'line-through', color:'#999', marginLeft:4}}>{formatCurrency(p.original_price)}</small>}
+                                            {p.original_price && p.original_price > p.price && <small style={{textDecoration:'line-through', color:'#999', marginLeft:4}}>{formatCurrency(p.original_price)}</small>}
                                         </td>
                                         <td>{p.bath_count}</td>
-                                        <td><div style={{width:16, height:16, background: p.color_theme, borderRadius:4}}></div></td>
+                                        <td>{p.active ? <span className="status-badge tag-confirmed">Ativo</span> : <span className="status-badge tag-cancelled">Inativo</span>}</td>
                                         <td style={{textAlign:'right'}}>
                                             <button className="btn-icon-sm" onClick={() => openModal(p)}><Edit2 size={16}/></button>
                                             <button className="btn-icon-sm" onClick={() => handleDelete(p.id)} style={{color:'red'}}><Trash2 size={16}/></button>
@@ -232,7 +238,7 @@ export const AdminManagement: React.FC = () => {
                                         </div>
                                         <div className="form-group">
                                             <label>Descrição Curta</label>
-                                            <input required type="text" value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} />
+                                            <input required type="text" value={formData.description || ''} onChange={e => setFormData({...formData, description: e.target.value})} />
                                         </div>
                                         <div style={{display:'flex', gap:10}}>
                                             <div className="form-group full-width">
@@ -241,7 +247,7 @@ export const AdminManagement: React.FC = () => {
                                             </div>
                                             <div className="form-group full-width">
                                                 <label>Preço Original (R$)</label>
-                                                <input required type="number" step="0.01" value={formData.original_price} onChange={e => setFormData({...formData, original_price: e.target.value})} />
+                                                <input type="number" step="0.01" value={formData.original_price || ''} onChange={e => setFormData({...formData, original_price: e.target.value})} />
                                             </div>
                                         </div>
                                         <div style={{display:'flex', gap:10}}>
@@ -251,16 +257,24 @@ export const AdminManagement: React.FC = () => {
                                             </div>
                                             <div className="form-group full-width">
                                                 <label>Cor do Tema (Hex)</label>
-                                                <input type="color" style={{height:44, padding:4}} value={formData.color_theme} onChange={e => setFormData({...formData, color_theme: e.target.value})} />
+                                                <input type="color" style={{height:44, padding:4}} value={formData.color_theme && formData.color_theme.startsWith('#') ? formData.color_theme : '#9B59B6'} onChange={e => setFormData({...formData, color_theme: e.target.value})} />
                                             </div>
                                         </div>
                                         <div className="form-group">
                                             <label>Benefícios (Um por linha)</label>
-                                            <textarea className="input-lg" style={{padding:12, height: 100}} value={formData.features} onChange={e => setFormData({...formData, features: e.target.value})} placeholder="Ex: Banho Premium&#10;Tosa Higiênica&#10;Taxi Dog" />
+                                            <textarea className="input-lg" style={{padding:12, height: 100}} value={formData.features || ''} onChange={e => setFormData({...formData, features: e.target.value})} placeholder="Ex: Banho Premium&#10;Tosa Higiênica&#10;Taxi Dog" />
                                         </div>
-                                        <div className="form-group" style={{display:'flex', alignItems:'center', gap:8, cursor:'pointer'}} onClick={() => setFormData({...formData, highlight: !formData.highlight})}>
-                                            {formData.highlight ? <CheckSquare color="var(--primary)"/> : <Square color="#ccc"/>}
-                                            <label style={{margin:0, cursor:'pointer'}}>Destaque (Mais Popular)</label>
+                                        
+                                        <div style={{display:'flex', gap:20, marginTop:10}}>
+                                            <div className="form-group" style={{display:'flex', alignItems:'center', gap:8, cursor:'pointer'}} onClick={() => setFormData({...formData, highlight: !formData.highlight})}>
+                                                {formData.highlight ? <CheckSquare color="var(--primary)"/> : <Square color="#ccc"/>}
+                                                <label style={{margin:0, cursor:'pointer'}}>Destaque (Mais Popular)</label>
+                                            </div>
+                                            
+                                            <div className="form-group" style={{display:'flex', alignItems:'center', gap:8, cursor:'pointer'}} onClick={() => setFormData({...formData, active: !formData.active})}>
+                                                {formData.active ? <CheckSquare color="var(--primary)"/> : <Square color="#ccc"/>}
+                                                <label style={{margin:0, cursor:'pointer'}}>Ativo</label>
+                                            </div>
                                         </div>
                                     </>
                                 )}

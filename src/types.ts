@@ -69,13 +69,14 @@ export interface Employee {
 export interface Package {
     id: number;
     title: string;
-    description: string;
+    description?: string;
     price: number;
-    original_price: number; // Para mostrar o desconto (ex: De R$ 200 por R$ 150)
+    original_price?: number; // Para mostrar o desconto (ex: De R$ 200 por R$ 150)
     bath_count: number;
     features: string[];
-    highlight?: boolean; // Se é o "Mais Popular"
-    color_theme: string; // Hex ou var css
+    highlight: boolean; // Se é o "Mais Popular"
+    color_theme?: string; // Hex ou var css
+    active: boolean;
 }
 
 // UI Types

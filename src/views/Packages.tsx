@@ -73,6 +73,11 @@ export const PackagesView: React.FC<PackagesViewProps> = ({ onNavigate, session 
                 {loading ? (
                     <div className="spinner-center"><div className="spinner"></div></div>
                 ) : (
+                    packages.length === 0 ? (
+                         <div className="text-center w-full" style={{gridColumn: '1/-1', padding: 40}}>
+                            <p style={{color: '#999'}}>Nenhum pacote disponível no momento.</p>
+                         </div>
+                    ) :
                     packages.map((pkg, idx) => (
                         <div 
                             key={pkg.id} 
@@ -85,7 +90,7 @@ export const PackagesView: React.FC<PackagesViewProps> = ({ onNavigate, session 
                                 </div>
                             )}
 
-                            <div className="pkg-header" style={{ borderBottomColor: pkg.color_theme }}>
+                            <div className="pkg-header" style={{ borderBottomColor: pkg.color_theme || 'var(--primary)' }}>
                                 <h3 style={{ color: pkg.highlight ? 'var(--primary)' : 'var(--secondary)' }}>
                                     {pkg.title}
                                 </h3>
@@ -93,7 +98,9 @@ export const PackagesView: React.FC<PackagesViewProps> = ({ onNavigate, session 
                             </div>
 
                             <div className="pkg-price-area">
-                                <span className="pkg-old-price">de {formatCurrency(pkg.original_price)}</span>
+                                {pkg.original_price && pkg.original_price > pkg.price && (
+                                    <span className="pkg-old-price">de {formatCurrency(pkg.original_price)}</span>
+                                )}
                                 <div className="pkg-current-price">
                                     <small>R$</small>
                                     <strong>{pkg.price.toFixed(0)}</strong>
@@ -102,9 +109,9 @@ export const PackagesView: React.FC<PackagesViewProps> = ({ onNavigate, session 
                             </div>
 
                             <ul className="pkg-features">
-                                {pkg.features.map((feat, i) => (
+                                {(pkg.features || []).map((feat, i) => (
                                     <li key={i}>
-                                        <div className="check-icon" style={{ background: pkg.color_theme }}>
+                                        <div className="check-icon" style={{ background: pkg.color_theme || 'var(--primary)' }}>
                                             <Check size={12} color="white" strokeWidth={3} />
                                         </div>
                                         {feat}
