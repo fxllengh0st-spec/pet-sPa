@@ -2,10 +2,12 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { api } from '../services/api';
 import { botEngine, BotState, BotContext, BotOption } from '../services/bot-engine';
-import { Send, X, RefreshCw } from 'lucide-react';
+import { Send, X, RefreshCw, Bot } from 'lucide-react';
 
 // URL base do Bucket
 const BASE_STORAGE_URL = 'https://vfryefavzurwoiuznkwv.supabase.co/storage/v1/object/public/site-assets';
+// Fallback confiável para o avatar do bot
+const BOT_FALLBACK_IMG = 'https://cdn-icons-png.flaticon.com/512/4712/4712027.png';
 
 interface ChatProps {
   onNavigate: (route: string) => void;
@@ -23,7 +25,7 @@ interface Message {
 export const Chat: React.FC<ChatProps> = ({ onNavigate, onActionSuccess, onClose }) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [isTyping, setIsTyping] = useState(false);
-  const [botAvatarSrc] = useState(`${BASE_STORAGE_URL}/bt.webp`);
+  const [botAvatarSrc, setBotAvatarSrc] = useState(`${BASE_STORAGE_URL}/bt.webp`);
   
   // Layout Refs
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -132,7 +134,7 @@ export const Chat: React.FC<ChatProps> = ({ onNavigate, onActionSuccess, onClose
   };
 
   return (
-    <div className="chat-layout widget-mode" ref={chatContainerRef}>
+    <div className="chat-layout widget-mode pop-in" ref={chatContainerRef}>
       {/* Header with Close Button */}
       <div className="chat-header-modern">
         <div className="chat-header-info">
@@ -140,7 +142,11 @@ export const Chat: React.FC<ChatProps> = ({ onNavigate, onActionSuccess, onClose
              <img 
                 src={botAvatarSrc} 
                 className="bot-avatar-img" 
-                alt="Bot" 
+                alt="Bot"
+                onError={(e) => {
+                    e.currentTarget.onerror = null; // Previne loop
+                    e.currentTarget.src = BOT_FALLBACK_IMG;
+                }}
              />
           </div>
           <div className="chat-title-group">
@@ -169,7 +175,14 @@ export const Chat: React.FC<ChatProps> = ({ onNavigate, onActionSuccess, onClose
           <div key={msg.id} className={`chat-row ${msg.sender === 'user' ? 'row-user' : 'row-bot'}`}>
             {msg.sender === 'bot' && (
                 <div className="chat-msg-avatar">
-                   <img src={botAvatarSrc} alt="bot" />
+                   <img 
+                    src={botAvatarSrc} 
+                    alt="bot"
+                    onError={(e) => {
+                        e.currentTarget.onerror = null;
+                        e.currentTarget.src = BOT_FALLBACK_IMG;
+                    }} 
+                   />
                 </div>
             )}
             
@@ -180,7 +193,7 @@ export const Chat: React.FC<ChatProps> = ({ onNavigate, onActionSuccess, onClose
                 </div>
                 
                 {msg.sender === 'bot' && msg.options && msg.options.length > 0 && (
-                  <div className="chat-options-grid delay-options">
+                  <div className="chat-options-grid">
                     {msg.options.map((opt, idx) => (
                       <button key={idx} className="chat-chip-btn" onClick={() => handleOptionClick(opt)}>
                         {opt.label}
@@ -194,7 +207,7 @@ export const Chat: React.FC<ChatProps> = ({ onNavigate, onActionSuccess, onClose
 
         {isTyping && (
            <div className="chat-row row-bot">
-             <div className="chat-msg-avatar"><img src={botAvatarSrc} alt="bot" /></div>
+             <div className="chat-msg-avatar"><img src={botAvatarSrc} alt="bot" onError={(e) => { e.currentTarget.src = BOT_FALLBACK_IMG; }}/></div>
              <div className="chat-bubble bubble-bot typing-bubble">
                <span className="dot"></span><span className="dot"></span><span className="dot"></span>
              </div>
