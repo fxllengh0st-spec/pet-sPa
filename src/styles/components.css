@@ -50,6 +50,40 @@
     min-height: 140px;
 }
 
+/* Header Compact Variant */
+.active-status-card.header-compact {
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 12px;
+    min-height: auto;
+    height: 44px;
+    padding: 4px 16px 4px 6px;
+    border-radius: 30px;
+    margin-bottom: 0;
+    width: auto;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    animation: slideUp 0.4s ease-out backwards;
+}
+
+.compact-icon-box {
+    width: 32px; height: 32px;
+    background: rgba(255,255,255,0.25);
+    backdrop-filter: blur(4px);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+}
+.compact-info {
+    display: flex; flex-direction: column;
+    line-height: 1.1;
+}
+.compact-pet-name {
+    font-size: 0.85rem; font-weight: 800;
+}
+.compact-status-text {
+    font-size: 0.65rem; opacity: 0.9; text-transform: uppercase; font-weight: 600;
+}
+
 .status-bg-pending {
     background: linear-gradient(135deg, #F39C12, #F1C40F);
     box-shadow: 0 10px 20px rgba(243, 156, 18, 0.3);

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { supabase } from './lib/supabase';
 import { api } from './services/api';
@@ -16,6 +15,7 @@ import { LoginFlowOverlay } from './components/LoginFlowOverlay';
 import { MascotCompanion } from './components/MascotCompanion';
 import { BookingWizard } from './components/BookingWizard';
 import { PetWizard } from './components/PetWizard'; 
+import { ActiveTrackingCard } from './components/ActiveTrackingCard';
 
 // Views
 import { HomePage } from './views/Home';
@@ -242,7 +242,18 @@ export default function App() {
 
        {/* DESKTOP NAV */}
        <header className="desktop-nav">
-          <Logo height={36} onClick={() => navigateTo('home')} />
+          <div style={{display:'flex', alignItems:'center', gap: 20}}>
+              <Logo height={36} onClick={() => navigateTo('home')} />
+              
+              {/* DESKTOP HEADER COMPACT TRACKING CARD */}
+              <ActiveTrackingCard 
+                 appointments={apps} 
+                 onNavigate={navigateTo} 
+                 setSelectedAppointment={setSelectedAppointment} 
+                 variant="header" 
+              />
+          </div>
+
           <nav className="nav-links-desktop">
              <a href="#" className={`nav-link-item ${view === 'home' && 'active'}`} onClick={() => navigateTo('home')}>Início</a>
              <a href="#" className={`nav-link-item ${view === 'services' && 'active'}`} onClick={() => navigateTo('services')}>Serviços</a>

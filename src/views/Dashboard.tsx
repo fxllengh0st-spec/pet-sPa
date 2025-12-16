@@ -1,8 +1,8 @@
-
 import React from 'react';
 import { Appointment, Pet, Profile, Route } from '../types';
 import { getAvatarUrl, getPetAvatarUrl } from '../utils/ui';
 import { LayoutDashboard } from 'lucide-react';
+import { ActiveTrackingCard } from '../components/ActiveTrackingCard';
 
 interface DashboardProps {
     profile: Profile | null;
@@ -84,6 +84,14 @@ export const Dashboard: React.FC<DashboardProps> = ({
 
          {/* Right Column: Actions & History */}
          <div className="dash-col-right">
+            
+            {/* NOVO: Active Tracking (Aparece se tiver agendamento ativo) */}
+            <ActiveTrackingCard 
+                appointments={apps} 
+                onNavigate={onNavigate} 
+                setSelectedAppointment={setSelectedAppointment}
+            />
+
             {/* Call to Action - Booking */}
             <div className="card cta-card-gradient reveal-on-scroll">
                 <div>

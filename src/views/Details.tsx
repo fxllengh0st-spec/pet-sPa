@@ -4,6 +4,7 @@ import { Appointment, Pet, Route } from '../types';
 import { formatCurrency, formatDate, getPetAvatarUrl } from '../utils/ui';
 import { api } from '../services/api';
 import { useToast } from '../context/ToastContext';
+import { ActiveTrackingCard } from '../components/ActiveTrackingCard';
 
 // Config (Duplicated for simplicity in this file scope)
 const BUSINESS_CONFIG = {
@@ -23,21 +24,6 @@ export const PetDetailsView: React.FC<PetDetailsProps> = ({ selectedPet, apps, o
      // Filtrar histórico
      const petHistory = apps.filter(a => a.pet_id === selectedPet.id);
      
-     // Buscar agendamento ATIVO (o mais relevante para o usuário ver agora)
-     // Prioridade: Em progresso > Confirmado > Pendente
-     const activeApp = useMemo(() => {
-         const inProgress = petHistory.find(a => a.status === 'in_progress');
-         if (inProgress) return inProgress;
-         
-         const confirmed = petHistory.filter(a => a.status === 'confirmed')
-             .sort((a,b) => new Date(a.start_time).getTime() - new Date(b.start_time).getTime())[0];
-         if (confirmed) return confirmed;
-
-         const pending = petHistory.filter(a => a.status === 'pending')
-             .sort((a,b) => new Date(a.start_time).getTime() - new Date(b.start_time).getTime())[0];
-         return pending;
-     }, [petHistory]);
-
      const renderServiceIcon = (name: string) => {
         const n = (name || '').toLowerCase();
         if (n.includes('tosa')) return <Scissors size={18} />;
@@ -77,39 +63,13 @@ export const PetDetailsView: React.FC<PetDetailsProps> = ({ selectedPet, apps, o
                )}
            </div>
 
-           {/* CARD DE STATUS ATIVO (TRACKING) */}
-           {activeApp && (
-               <div className="reveal-on-scroll" onClick={() => { setSelectedAppointment(activeApp); onNavigate('appointment-details'); }} style={{cursor:'pointer'}}>
-                   <h3 className="section-title" style={{marginTop:0, fontSize:'1.1rem', marginBottom: 12}}>Status Atual</h3>
-                   
-                   <div className={`active-status-card status-bg-${activeApp.status}`}>
-                       <div className="active-status-header">
-                           <div className="active-status-badge">
-                               {activeApp.status === 'in_progress' && <><Activity size={14} className="pulse-animation"/> Em Atendimento</>}
-                               {activeApp.status === 'confirmed' && <><CalendarCheck size={14}/> Confirmado</>}
-                               {activeApp.status === 'pending' && <><Clock size={14}/> Aguardando Aprovação</>}
-                           </div>
-                           <div style={{background:'rgba(255,255,255,0.2)', borderRadius:'50%', width:32, height:32, display:'flex', alignItems:'center', justifyContent:'center'}}>
-                               <ChevronRight size={18} color="white"/>
-                           </div>
-                       </div>
-                       
-                       <div className="active-status-content">
-                           <h3>{activeApp.services?.name}</h3>
-                           <p>
-                               {activeApp.status === 'in_progress' 
-                                 ? 'Seu pet está recebendo cuidados agora mesmo! 🛁' 
-                                 : `${new Date(activeApp.start_time).toLocaleDateString()} às ${new Date(activeApp.start_time).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}`}
-                           </p>
-                       </div>
-                       
-                       {/* Decorative Icon Background */}
-                       <div style={{position:'absolute', right: -10, bottom: -20, opacity: 0.15}}>
-                           {activeApp.status === 'in_progress' ? <Droplet size={100} fill="white"/> : <Calendar size={100} fill="white"/>}
-                       </div>
-                   </div>
-               </div>
-           )}
+           {/* CARD DE STATUS ATIVO (TRACKING) USANDO O COMPONENTE REUTILIZÁVEL */}
+           <ActiveTrackingCard 
+                appointments={apps} 
+                filterPetId={selectedPet.id}
+                onNavigate={onNavigate}
+                setSelectedAppointment={setSelectedAppointment}
+           />
 
            <h3 className="section-title reveal-on-scroll" style={{marginTop: 32}}>Histórico Completo</h3>
            <div className="card reveal-on-scroll" style={{padding: 0, overflow:'hidden'}}>
