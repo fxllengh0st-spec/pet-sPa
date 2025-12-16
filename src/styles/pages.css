@@ -645,6 +645,18 @@
     border-bottom: 1px solid #eee;
 }
 
+/* Legend Styles */
+.calendar-legend {
+    display: flex; gap: 16px; flex-wrap: wrap; margin-top: 8px;
+    justify-content: flex-end;
+}
+.legend-item { display: flex; align-items: center; gap: 6px; font-size: 0.75rem; color: #666; font-weight: 600; }
+.legend-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+.dot-pending { background: var(--status-pending-text); }
+.dot-confirmed { background: var(--status-confirmed-text); }
+.dot-in_progress { background: var(--status-progress-text); }
+.dot-completed { background: var(--status-completed-text); }
+
 .calendar-grid {
     display: grid;
     grid-template-columns: 60px repeat(7, 1fr); /* Time Column + 7 Days */
@@ -663,14 +675,14 @@
 }
 
 .cal-time-cell {
-    height: 60px; /* 1 hora = 60px de altura */
+    height: 50px; /* Reduced height for fit screen */
     border-bottom: 1px solid #f0f0f0;
     border-right: 1px solid #eee;
     font-size: 0.75rem;
     color: #999;
     text-align: center;
     position: relative;
-    top: -10px; /* Alinha o texto com a linha */
+    top: -10px;
 }
 
 .cal-day-col {
@@ -680,8 +692,13 @@
 }
 .cal-day-col:last-child { border-right: none; }
 
+/* Highlight Today Column */
+.cal-day-col.today-col {
+    background-color: #FFFDE7; /* Suave Amarelo */
+}
+
 .cal-hour-row {
-    height: 60px;
+    height: 50px; /* Matched with cal-time-cell */
     border-bottom: 1px solid #f5f5f5;
 }
 
@@ -711,4 +728,3 @@
 .cal-status-in_progress { border-left-color: var(--status-progress-text); background: #E0F7FA; }
 .cal-status-completed { border-left-color: var(--status-completed-text); background: #F3E5F5; }
 .cal-status-cancelled { border-left-color: var(--status-cancelled-text); background: #FFEBEE; opacity: 0.6; }
-

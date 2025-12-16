@@ -183,7 +183,8 @@ export const AdminPanel: React.FC = () => {
 
       // Horas do dia (08:00 as 20:00)
       const hours = Array.from({ length: 13 }, (_, i) => i + 8);
-      const PIXELS_PER_HOUR = 60;
+      // Ajustado para 50px para caber na tela sem scroll excessivo
+      const PIXELS_PER_HOUR = 50;
 
       // Filtrar agendamentos da semana
       const weekApps = appointments.filter(app => {
@@ -215,7 +216,15 @@ export const AdminPanel: React.FC = () => {
                           </h3>
                           <button className="btn-icon-sm" onClick={handleNextWeek}><ChevronRight size={20}/></button>
                       </div>
-                      <button className="btn btn-secondary btn-sm" onClick={() => setCurrentDate(new Date())}>Hoje</button>
+                      <div style={{display:'flex', gap:16, alignItems:'center'}}>
+                         <div className="calendar-legend">
+                             <div className="legend-item"><span className="legend-dot dot-pending"></span> Pendente</div>
+                             <div className="legend-item"><span className="legend-dot dot-confirmed"></span> Confirmado</div>
+                             <div className="legend-item"><span className="legend-dot dot-in_progress"></span> Andamento</div>
+                             <div className="legend-item"><span className="legend-dot dot-completed"></span> Concluído</div>
+                         </div>
+                         <button className="btn btn-secondary btn-sm" onClick={() => setCurrentDate(new Date())}>Hoje</button>
+                      </div>
                   </div>
 
                   {/* Calendar Grid */}
@@ -223,7 +232,7 @@ export const AdminPanel: React.FC = () => {
                       {/* Header Cells (Time + Days) */}
                       <div className="cal-header-cell"><Clock size={16} style={{margin:'0 auto'}}/></div>
                       {weekDays.map((day, i) => (
-                          <div key={i} className="cal-header-cell" style={{background: day.toDateString() === new Date().toDateString() ? '#FFF8E1' : ''}}>
+                          <div key={i} className="cal-header-cell" style={{background: day.toDateString() === new Date().toDateString() ? '#FFFDE7' : ''}}>
                               <div style={{fontWeight:800}}>{day.toLocaleDateString('pt-BR', {weekday:'short'})}</div>
                               <div style={{fontSize:'1.2rem'}}>{day.getDate()}</div>
                           </div>
@@ -240,9 +249,10 @@ export const AdminPanel: React.FC = () => {
                       {weekDays.map((day, i) => {
                           // Filtrar apps deste dia
                           const dayApps = weekApps.filter(a => new Date(a.start_time).toDateString() === day.toDateString());
+                          const isToday = day.toDateString() === new Date().toDateString();
 
                           return (
-                              <div key={i} className="cal-day-col">
+                              <div key={i} className={`cal-day-col ${isToday ? 'today-col' : ''}`}>
                                   {/* Grid Lines */}
                                   {hours.map(h => <div key={h} className="cal-hour-row"></div>)}
 
