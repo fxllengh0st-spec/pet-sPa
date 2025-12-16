@@ -1,4 +1,5 @@
 
+
 /* =========================================
    UI COMPONENTS
    ========================================= */
@@ -9,7 +10,8 @@
   border-radius: var(--radius-md);
   padding: 20px; /* Reduced from 32px */
   box-shadow: var(--shadow-card);
-  border: 1px solid rgba(255,255,255,0.8); 
+  /* AJUSTE DE CONTRASTE: Borda sutil em vez de borda branca invisível */
+  border: 1px solid rgba(0,0,0,0.06); 
   margin-bottom: 16px;
   transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.3s ease;
   position: relative;
@@ -18,7 +20,8 @@
 }
 .card:hover {
     transform: translateY(-2px);
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.1);
+    border-color: rgba(155, 89, 182, 0.15); /* Leve roxo no hover */
 }
 .clickable-card { cursor: pointer; }
 .clickable-card:active { transform: scale(0.98); }
@@ -129,8 +132,9 @@
     width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; 
     cursor: pointer; transition: all 0.2s;
     background: white; box-shadow: var(--shadow-sm); color: var(--secondary);
+    border: 1px solid #eee; /* Added border for contrast */
 }
-.btn-icon-sm:hover { transform: scale(1.08); color: var(--primary); box-shadow: var(--shadow-card); }
+.btn-icon-sm:hover { transform: scale(1.08); color: var(--primary); box-shadow: var(--shadow-card); border-color: var(--primary); }
 .btn-icon-brand { background: var(--accent); color: var(--primary); }
 
 /* Inputs */

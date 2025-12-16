@@ -1,17 +1,56 @@
 
-import React, { useState, useEffect } from 'react';
-import { Product, Route } from '../types';
-import { ShoppingBag, X, Plus, Trash2, ShoppingCart, ChevronLeft } from 'lucide-react';
-import { formatCurrency } from '../utils/ui';
-import { useToast } from '../context/ToastContext';
+import React from 'react';
+import { Route } from '../types';
+import { HeartHandshake, ChevronLeft, ExternalLink, Heart, MapPin, Info } from 'lucide-react';
 
-const PRODUCTS_DB: Product[] = [
-    { id: 1, name: 'Ração Premium Adulto', category: 'food', price: 149.90, stock_quantity: 10, image: 'https://images.unsplash.com/photo-1589924691195-41432c84c161?auto=format&fit=crop&w=400&q=80', description: 'Sabor Frango.' },
-    { id: 2, name: 'Mordedor Resistente', category: 'toys', price: 39.90, stock_quantity: 10, image: 'https://images.unsplash.com/photo-1576201836106-db1758fd1c97?auto=format&fit=crop&w=400&q=80', description: 'Borracha natural.' },
-    { id: 3, name: 'Shampoo Hipoalergênico', category: 'hygiene', price: 45.00, stock_quantity: 10, image: 'https://images.unsplash.com/photo-1583947581924-860bda6a26df?auto=format&fit=crop&w=400&q=80', description: 'Aveia. 500ml.' },
-    { id: 4, name: 'Coleira de Couro', category: 'accessories', price: 89.90, stock_quantity: 10, image: 'https://images.unsplash.com/photo-1605631088190-799d5eb6cc5e?auto=format&fit=crop&w=400&q=80', description: 'Tamanho M.' },
-    { id: 5, name: 'Petiscos Naturais', category: 'food', price: 19.90, stock_quantity: 20, image: 'https://images.unsplash.com/photo-1581888227599-779811985422?auto=format&fit=crop&w=400&q=80', description: 'Carne e Vegetais' },
-    { id: 6, name: 'Caminha Nuvem', category: 'accessories', price: 129.90, stock_quantity: 5, image: 'https://images.unsplash.com/photo-1591946614720-90a587da4a36?auto=format&fit=crop&w=400&q=80', description: 'Conforto total para seu pet' }
+// Dados Mockados de ONGs e Pets para Adoção
+const NGOS = [
+    {
+        id: 1,
+        name: 'Ampara Animal',
+        description: 'A maior organização de proteção animal do Brasil. Lutamos contra o abandono e maus-tratos.',
+        image: 'https://images.unsplash.com/photo-1548199973-03cce0bbc87b?auto=format&fit=crop&w=400&q=80',
+        link: 'https://amparanimal.org.br/doe/',
+        color: '#F1C40F'
+    },
+    {
+        id: 2,
+        name: 'Instituto Luísa Mell',
+        description: 'Resgate de animais feridos ou em risco, recuperação e adoção. Ajude a manter o abrigo.',
+        image: 'https://images.unsplash.com/photo-1599443015574-be5fe8a05783?auto=format&fit=crop&w=400&q=80',
+        link: 'https://ilm.org.br/',
+        color: '#9B59B6'
+    }
+];
+
+const ADOPTION_PETS = [
+    {
+        id: 1,
+        name: 'Paçoca',
+        age: '2 anos',
+        breed: 'SRD',
+        img: 'https://images.unsplash.com/photo-1518717758536-85ae29035b6d?auto=format&fit=crop&w=400&q=80',
+        gender: 'Macho',
+        status: 'Disponível'
+    },
+    {
+        id: 2,
+        name: 'Luna',
+        age: '5 meses',
+        breed: 'Siamesa',
+        img: 'https://images.unsplash.com/photo-1513245543132-31f507417b26?auto=format&fit=crop&w=400&q=80',
+        gender: 'Fêmea',
+        status: 'Urgente'
+    },
+    {
+        id: 3,
+        name: 'Thor',
+        age: '4 anos',
+        breed: 'Pitbull (Dócil)',
+        img: 'https://images.unsplash.com/photo-1583511655857-d19b40a7a54e?auto=format&fit=crop&w=400&q=80',
+        gender: 'Macho',
+        status: 'Apadrinhar'
+    }
 ];
 
 interface MarketplaceProps {
@@ -19,114 +58,101 @@ interface MarketplaceProps {
 }
 
 export const Marketplace: React.FC<MarketplaceProps> = ({ onNavigate }) => {
-  const [cart, setCart] = useState<Product[]>([]);
-  const [category, setCategory] = useState<string>('all');
-  const [isCartOpen, setIsCartOpen] = useState(false);
-  const toast = useToast();
-
-  useEffect(() => {
-    const saved = localStorage.getItem('petspa_cart');
-    if (saved) setCart(JSON.parse(saved));
-  }, []);
-
-  const addToCart = (p: Product) => {
-    const newCart = [...cart, p];
-    setCart(newCart);
-    localStorage.setItem('petspa_cart', JSON.stringify(newCart));
-    setIsCartOpen(true);
-    toast.success('Produto adicionado à sacola!');
-  };
-
-  const removeFromCart = (idx: number) => {
-    const newCart = [...cart];
-    newCart.splice(idx, 1);
-    setCart(newCart);
-    localStorage.setItem('petspa_cart', JSON.stringify(newCart));
-  };
-
-  const filtered = category === 'all' ? PRODUCTS_DB : PRODUCTS_DB.filter(p => p.category === category);
-  const total = cart.reduce((acc, item) => acc + item.price, 0);
-
-  const handleCheckout = () => {
-    toast.success('Pedido realizado com sucesso! 🎉');
-    setCart([]);
-    localStorage.removeItem('petspa_cart');
-    setIsCartOpen(false);
-  };
-
   return (
     <div className="container page-enter" style={{ paddingTop: 20 }}>
       {/* Header com Navegação */}
-      <div className="nav-header market-header-nav">
+      <div className="nav-header">
          <div style={{display:'flex', alignItems:'center', gap: 10}}>
              <button className="btn-icon-sm" onClick={() => onNavigate('home')}>
                 <ChevronLeft size={22} />
              </button>
              <div>
-                <h2 style={{margin:0, fontSize:'1.2rem', lineHeight:1}}>Loja</h2>
+                <h2 style={{margin:0, fontSize:'1.2rem', lineHeight:1}}>Causa Animal</h2>
+                <span style={{fontSize:'0.8rem', color:'#666'}}>Ajudar faz bem ao coração ❤️</span>
              </div>
          </div>
-         <button className="btn-icon-sm" onClick={() => setIsCartOpen(true)} style={{ position: 'relative' }}>
-             <ShoppingBag size={20} />
-             {cart.length > 0 && <span id="cart-count-badge">{cart.length}</span>}
-         </button>
       </div>
 
-      <div className="category-filters scroll-hidden delay-100 scroll-visible" style={{ display: 'flex', gap: 10, overflowX: 'auto', paddingBottom: 10 }}>
-         {['all', 'food', 'toys', 'hygiene', 'accessories'].map(cat => (
-           <button key={cat} className={`filter-btn ${category === cat ? 'active' : ''}`} onClick={() => setCategory(cat)}>
-             {cat === 'all' ? 'Todos' : cat === 'food' ? 'Alimentos' : cat === 'toys' ? 'Brinquedos' : cat === 'hygiene' ? 'Higiene' : 'Acessórios'}
-           </button>
-         ))}
-      </div>
-
-      <div className="product-grid">
-         {filtered.map((p, idx) => (
-           <div key={p.id} className="card product-card reveal-on-scroll">
-             <div className="product-img-wrapper">
-               <img src={p.image} alt={p.name} className="product-img" />
-               <span className="product-cat-badge">{p.category}</span>
-             </div>
-             <div className="product-info">
-               <h4 className="product-title">{p.name}</h4>
-               <p className="product-desc">{p.description}</p>
-               <div className="product-bottom">
-                 <strong className="product-price">{formatCurrency(p.price)}</strong>
-                 <button className="btn-add-cart" onClick={() => addToCart(p)}><Plus size={16}/></button>
-               </div>
-             </div>
+      {/* Hero Banner Social */}
+      <div className="card cta-card-gradient reveal-on-scroll" style={{marginBottom: 32, background: 'linear-gradient(135deg, #FF7675, #fab1a0)'}}>
+           <div style={{paddingRight: '30%'}}>
+               <h3 style={{color:'white', marginBottom:8}}>Não vendemos produtos,<br/>espalhamos amor.</h3>
+               <p style={{color:'rgba(255,255,255,0.95)', fontSize:'0.95rem'}}>
+                   A PetSpa apoia a adoção responsável. Conheça nossos parceiros e ajude quem precisa de um lar.
+               </p>
            </div>
-         ))}
+           {/* Decorative Icon */}
+           <div style={{position:'absolute', right: 20, bottom: 20, opacity: 0.2}}>
+               <Heart size={80} fill="white" color="white" />
+           </div>
       </div>
 
-      {/* Cart Modal/Sidebar */}
-      <div className={`cart-overlay ${isCartOpen ? 'open' : ''}`} onClick={() => setIsCartOpen(false)} />
-      <div className={`cart-sidebar ${isCartOpen ? 'open' : ''}`} id="cart-sidebar">
-         <div className="cart-header">
-           <h3>Meu Carrinho</h3>
-           <button className="btn-icon-sm" onClick={() => setIsCartOpen(false)}><X size={20} /></button>
-         </div>
-         <div className="cart-items">
-           {cart.length === 0 ? (
-             <div className="empty-cart"><ShoppingCart size={48} strokeWidth={1.5} /><p>Sua sacola está vazia</p></div>
-           ) : (
-             cart.map((item, i) => (
-               <div key={i} className="cart-item slide-in">
-                  <img src={item.image} className="cart-item-img" alt="" />
-                  <div className="cart-item-info">
-                     <div className="cart-item-title">{item.name}</div>
-                     <div className="cart-item-price">{formatCurrency(item.price)}</div>
+      <h3 className="section-title reveal-on-scroll">ONGs Parceiras</h3>
+      <p className="reveal-on-scroll" style={{marginBottom: 20}}>Doe diretamente pelo site oficial das instituições:</p>
+      
+      <div className="ngo-grid reveal-on-scroll" style={{display:'grid', gap: 16}}>
+          {NGOS.map(ngo => (
+              <div key={ngo.id} className="card ngo-card" style={{display:'flex', gap: 16, alignItems:'center', padding: 16}}>
+                  <div style={{width: 80, height: 80, borderRadius: 12, overflow:'hidden', flexShrink:0}}>
+                      <img src={ngo.image} alt={ngo.name} style={{width:'100%', height:'100%', objectFit:'cover'}} />
                   </div>
-                  <button className="btn-remove-item" onClick={() => removeFromCart(i)}><Trash2 size={16}/></button>
-               </div>
-             ))
-           )}
-         </div>
-         <div className="cart-footer">
-            <div className="cart-total-row"><span>Total</span><strong>{formatCurrency(total)}</strong></div>
-            <button className="btn btn-primary full-width" disabled={cart.length === 0} onClick={handleCheckout}>Finalizar Compra</button>
-         </div>
+                  <div style={{flex:1}}>
+                      <h4 style={{margin:0, color: 'var(--secondary)'}}>{ngo.name}</h4>
+                      <p style={{fontSize:'0.85rem', margin:'4px 0 12px', lineHeight:1.4}}>{ngo.description}</p>
+                      <a 
+                        href={ngo.link} 
+                        target="_blank" 
+                        rel="noreferrer" 
+                        className="btn btn-sm btn-ghost" 
+                        style={{color: 'var(--primary)', borderColor: 'var(--primary)', height: 32, fontSize:'0.8rem'}}
+                      >
+                          Visitar & Doar <ExternalLink size={14} style={{marginLeft:4}}/>
+                      </a>
+                  </div>
+              </div>
+          ))}
       </div>
+
+      <div style={{margin: '40px 0'}}>
+          <div style={{display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom: 16}}>
+              <h3 className="section-title" style={{margin:0}}>Mural de Adoção</h3>
+              <span className="tag-pill">3 Pets Próximos</span>
+          </div>
+          
+          <div className="adoption-scroll" style={{display:'flex', gap: 16, overflowX: 'auto', paddingBottom: 16}}>
+              {ADOPTION_PETS.map(pet => (
+                  <div key={pet.id} className="card adoption-card" style={{minWidth: 200, padding: 0, overflow:'hidden', border:'1px solid rgba(0,0,0,0.05)'}}>
+                      <div style={{height: 140, overflow:'hidden', position:'relative'}}>
+                          <img src={pet.img} alt={pet.name} style={{width:'100%', height:'100%', objectFit:'cover'}} />
+                          <span className={`status-badge ${pet.status === 'Urgente' ? 'tag-cancelled' : 'tag-confirmed'}`} style={{position:'absolute', top: 8, right: 8}}>
+                              {pet.status}
+                          </span>
+                      </div>
+                      <div style={{padding: 12}}>
+                          <div style={{display:'flex', justifyContent:'space-between', alignItems:'center'}}>
+                              <strong style={{fontSize:'1.1rem'}}>{pet.name}</strong>
+                              <Heart size={16} color="var(--primary)" />
+                          </div>
+                          <p style={{fontSize:'0.85rem', color:'#666', margin:'4px 0 8px'}}>{pet.breed} • {pet.age}</p>
+                          <div style={{display:'flex', alignItems:'center', gap: 4, fontSize:'0.75rem', color:'#999', marginBottom: 12}}>
+                              <MapPin size={12} /> São Paulo, SP
+                          </div>
+                          <button className="btn btn-primary full-width btn-sm" onClick={() => window.open('https://api.whatsapp.com/send?phone=5511999999999&text=Ola,%20vi%20o%20pet%20' + pet.name + '%20no%20app%20e%20quero%20adotar!', '_blank')}>
+                              Quero Adotar
+                          </button>
+                      </div>
+                  </div>
+              ))}
+          </div>
+      </div>
+
+      <div className="card reveal-on-scroll" style={{background: '#F0F2F5', border:'none', textAlign:'center', padding: 24}}>
+          <Info size={32} color="var(--secondary-light)" style={{margin:'0 auto 12px'}} />
+          <p style={{fontSize:'0.85rem', color:'#666'}}>
+              A PetSpa atua apenas como divulgadora. Todo processo de doação ou adoção é de responsabilidade das ONGs parceiras.
+          </p>
+      </div>
+
     </div>
   );
 };

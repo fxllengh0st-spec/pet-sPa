@@ -1,5 +1,4 @@
 
-
 import React, { useState, useEffect } from 'react';
 import { supabase } from './lib/supabase';
 import { api } from './services/api';
@@ -10,7 +9,7 @@ import { AdminPanel } from './components/Admin';
 import { Logo } from './components/Logo';
 import { Marketplace } from './components/Marketplace';
 import { useToast } from './context/ToastContext';
-import { Home, MessageCircle, User, Shield, ShoppingBag } from 'lucide-react';
+import { Home, MessageCircle, User, Shield, HeartHandshake } from 'lucide-react';
 
 // Modules
 import { LoginFlowOverlay } from './components/LoginFlowOverlay';
@@ -47,7 +46,7 @@ const MASCOT_COMMENTS: Partial<Record<Route, string[]>> = {
     'home': ['Pronto para um dia de spa? 🛁', 'Seu pet merece o melhor!', 'Toque em Agendar para começar!', ...CARE_TIPS],
     'services': ['O Banho Premium é divino! ✨', 'Temos hidratação com cheirinho de morango 🍓', 'Corte de unhas? Deixa com a gente!', ...CARE_TIPS],
     'packages': ['Economia inteligente! 💰', 'Seu pet limpo o mês todo.', 'O Clube VIP é imperdível!'],
-    'market': ['Os brinquedos novos chegaram! 🎾', 'Essa ração é top de linha.', 'Seu pet vai amar esses mimos.'],
+    'market': ['Adotar é um ato de amor! ❤️', 'Ajude quem precisa 🐾', 'Conheça nossos parceiros de resgate.'], // Atualizado para Social
     'about': ['A Ana e o João são incríveis ❤️', 'Essa história me emociona...', 'Olha eu nas fotos! 📸'],
     'dashboard': ['Sua agenda organizada 📅', 'Não esqueça dos compromissos!', 'Tudo sob controle aqui.', ...CARE_TIPS],
     'user-profile': ['Que perfil chique! 💅', 'Seus pets são lindos!', 'Mantenha os dados atualizados.'],
@@ -261,7 +260,7 @@ export default function App() {
                 <Home size={20}/>
              </button>
              <button className={`header-icon-btn ${view === 'market' ? 'active' : ''}`} onClick={() => navigateTo('market')}>
-                <ShoppingBag size={20}/>
+                <HeartHandshake size={20}/>
              </button>
              <button className={`header-icon-btn ${view === 'chat' ? 'active' : ''}`} onClick={() => navigateTo('chat')}>
                 <MessageCircle size={20}/>
@@ -285,7 +284,7 @@ export default function App() {
              <a href="#" className={`nav-link-item ${view === 'home' && 'active'}`} onClick={() => navigateTo('home')}>Início</a>
              <a href="#" className={`nav-link-item ${view === 'services' && 'active'}`} onClick={() => navigateTo('services')}>Serviços</a>
              <a href="#" className={`nav-link-item ${view === 'packages' && 'active'}`} onClick={() => navigateTo('packages')}>Pacotes</a>
-             <a href="#" className={`nav-link-item ${view === 'market' && 'active'}`} onClick={() => navigateTo('market')}>Loja</a>
+             <a href="#" className={`nav-link-item ${view === 'market' && 'active'}`} onClick={() => navigateTo('market')}>Social</a>
              <a href="#" className={`nav-link-item ${view === 'about' && 'active'}`} onClick={() => navigateTo('about')}>Sobre Nós</a>
              <a href="#" className={`nav-link-item nav-link-cta ${view === 'chat' && 'active'}`} onClick={() => navigateTo('chat')}>Assistente IA</a>
              {session ? (

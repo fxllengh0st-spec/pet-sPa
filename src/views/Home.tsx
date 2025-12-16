@@ -1,7 +1,6 @@
 
-
 import React from 'react';
-import { Sparkles, Scissors, Droplet, Heart, ShoppingBag, Crown } from 'lucide-react';
+import { Sparkles, Scissors, Droplet, Heart, HeartHandshake, Crown } from 'lucide-react';
 import { Route } from '../types';
 import { getAvatarUrl } from '../utils/ui';
 
@@ -58,10 +57,11 @@ export const HomePage: React.FC<HomePageProps> = ({ session, onNavigate, onOpenB
                     <h4>Hidratação</h4>
                 </div>
             </div>
+            {/* CARD ATUALIZADO: De Loja para Social */}
             <div className="service-img-card reveal-on-scroll delay-2" onClick={() => onNavigate('market')} style={{backgroundImage: `url(${BASE_STORAGE_URL}/4.jpg)`}}>
                 <div className="service-overlay">
-                    <div className="service-icon-float"><ShoppingBag size={18}/></div>
-                    <h4>Pet Shop</h4>
+                    <div className="service-icon-float"><HeartHandshake size={18}/></div>
+                    <h4>Adoção & Ajuda</h4>
                 </div>
             </div>
             <div className="service-img-card reveal-on-scroll delay-3" onClick={() => onNavigate('about')} style={{backgroundImage: `url(${BASE_STORAGE_URL}/5.jpg)`}}>

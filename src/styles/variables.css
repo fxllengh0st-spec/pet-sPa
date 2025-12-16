@@ -1,4 +1,5 @@
 
+
 /* =========================================
    TOKENS (Design System) - VIBRANT BRAND UPDATE
    ========================================= */
@@ -27,7 +28,8 @@
   --accent: #FDF2FA;        /* Roxo muito pálido para fundos de ícones */
   --surface: #FFFFFF;
   
-  --bg-app: #F4F6F8;        /* Cinza neutro moderno */
+  /* AJUSTE DE CONTRASTE: Fundo levemente mais escuro para destacar cards brancos */
+  --bg-app: #EEF2F6;        
   --bg-input: #F0F2F5;      
   
   --text-main: #2D3436;
@@ -47,9 +49,9 @@
   --radius-lg: 24px;
   --radius-pill: 999px;     
   
-  /* Sombras */
-  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.03);
-  --shadow-card: 0 4px 20px rgba(155, 89, 182, 0.08), 0 2px 6px rgba(0,0,0,0.02); /* Sombra levemente roxa */
+  /* Sombras - Intensificadas levemente para contraste */
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.04);
+  --shadow-card: 0 4px 20px rgba(140, 100, 170, 0.12), 0 1px 3px rgba(0,0,0,0.05);
   --shadow-float: 0 10px 25px -5px rgba(155, 89, 182, 0.3); 
   --shadow-inner: inset 0 1px 3px rgba(0,0,0,0.03);
   

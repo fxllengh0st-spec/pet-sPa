@@ -144,6 +144,8 @@
     cursor: pointer;
     box-shadow: var(--shadow-card);
     transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+    /* Borda para contraste */
+    border: 1px solid rgba(0,0,0,0.05);
 }
 @media (min-width: 768px) {
     .service-img-card { height: 220px; } /* Mais alto no desktop */
@@ -199,6 +201,7 @@
     display: flex;
     align-items: center;
     padding: 20px;
+    border: 1px solid rgba(0,0,0,0.06);
 }
 .feature-item:hover { transform: translateY(-4px); box-shadow: var(--shadow-card); }
 
@@ -299,7 +302,8 @@
 .testimonial-card {
     background: white; padding: 24px; border-radius: 20px;
     min-width: 0; 
-    box-shadow: var(--shadow-sm); border: 1px solid rgba(0,0,0,0.03);
+    box-shadow: var(--shadow-sm); 
+    border: 1px solid rgba(0,0,0,0.06);
     transition: transform 0.3s;
     display: flex; flex-direction: column; justify-content: center;
 }
@@ -331,11 +335,13 @@
 .pet-card { 
     padding: 16px; 
     border-radius: 16px;
-    background: #F8F9FA;
+    /* AJUSTE: Mudado para branco com borda para contraste */
+    background: white;
     transition: background 0.2s;
-    border: 1px solid transparent;
+    border: 1px solid rgba(0,0,0,0.06);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.02);
 }
-.pet-card:hover { background: white; box-shadow: var(--shadow-card); border-color: rgba(0,0,0,0.05); }
+.pet-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-card); border-color: rgba(155, 89, 182, 0.1); }
 
 .pet-avatar-3d {
     width: 60px; height: 60px; object-fit: contain;
@@ -355,20 +361,24 @@
     font-size: 2rem;
 }
 .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-.stat-card { padding: 20px; }
+.stat-card { padding: 20px; border: 1px solid rgba(0,0,0,0.06); }
 .stat-value { font-size: 1.5rem; }
 
 .history-item { 
     padding: 16px; 
     border-radius: 12px;
-    border: 1px solid transparent;
     transition: background 0.2s;
     margin-bottom: 4px;
-    border-bottom: none;
     display: flex; justify-content: space-between; align-items: center;
+    /* AJUSTE: Fundo branco e borda suave */
     background: white;
+    border: 1px solid rgba(0,0,0,0.06);
 }
-.history-item:hover { background: #F8F9FA; box-shadow: var(--shadow-sm); }
+.history-item:hover { 
+    background: #FDF2FA; /* Levemente roxo no hover */
+    border-color: rgba(155, 89, 182, 0.1);
+    box-shadow: var(--shadow-sm); 
+}
 .history-meta { font-size: 0.8rem; color: #999; margin-top: 4px; }
 
 /* --- SERVICES PAGE --- */
@@ -380,6 +390,7 @@
 .service-card-detailed { 
     display: flex; align-items: flex-start; gap: 20px; padding: 24px; 
     height: 100%;
+    background: white; /* Garante fundo branco */
 }
 .service-icon-large { 
     width: 64px; height: 64px; border-radius: 16px; 
@@ -410,6 +421,7 @@
     min-height: 420px;
     position: relative;
     padding: 24px !important;
+    background: white; /* Garante fundo branco */
 }
 
 .highlight-pkg {
@@ -469,6 +481,16 @@
 }
 .masonry-item { margin-bottom: 16px; border-radius: 16px; }
 
+/* --- SOCIAL IMPACT PAGE --- */
+.ngo-grid { margin-bottom: 40px; }
+.ngo-card { transition: transform 0.2s, box-shadow 0.2s; background: white; border: 1px solid rgba(0,0,0,0.06); }
+.ngo-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-card); border-color: rgba(155, 89, 182, 0.1); }
+
+.adoption-scroll {
+    /* Styles for horizontal scroll handled in inline styles for now, but adding specific item hover */
+}
+.adoption-card { background: white; transition: all 0.2s; }
+.adoption-card:hover { transform: scale(1.02); box-shadow: var(--shadow-card); }
 
 /* =========================================
    ADMIN PANEL STYLES
@@ -524,10 +546,10 @@
 }
 .kpi-card {
     background: white; padding: 20px; border-radius: 16px;
-    box-shadow: var(--shadow-sm); border: 1px solid rgba(0,0,0,0.03);
+    box-shadow: var(--shadow-sm); border: 1px solid rgba(0,0,0,0.06);
     transition: transform 0.2s;
 }
-.kpi-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-card); }
+.kpi-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-card); border-color: rgba(155, 89, 182, 0.1); }
 .kpi-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; }
 .kpi-icon {
     width: 40px; height: 40px; border-radius: 10px;
