@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { api } from '../services/api';
 import { Service, Package } from '../types';
 import { useToast } from '../context/ToastContext';
-import { Plus, Edit2, Trash2, X, Package as PackageIcon, Scissors, CheckSquare, Square } from 'lucide-react';
+import { Plus, Edit2, Trash2, X, Package as PackageIcon, Scissors, CheckSquare, Square, ChevronDown } from 'lucide-react';
 import { formatCurrency } from '../utils/ui';
 
 type Tab = 'services' | 'packages';
@@ -20,6 +20,10 @@ export const AdminManagement: React.FC = () => {
     
     // Form States (Combined for simplicity, though could be separated)
     const [formData, setFormData] = useState<any>({});
+    
+    // "Create Service on the fly" State
+    const [isCreatingNewService, setIsCreatingNewService] = useState(false);
+    const [newServiceName, setNewServiceName] = useState('');
 
     const toast = useToast();
 
@@ -49,8 +53,12 @@ export const AdminManagement: React.FC = () => {
             setEditingId(item.id);
             // Se for pacote, converter features array para string para edição textarea
             const data = { ...item };
-            if (tab === 'packages' && Array.isArray(data.features)) {
-                data.features = data.features.join('\n');
+            if (tab === 'packages') {
+                if (Array.isArray(data.features)) {
+                    data.features = data.features.join('\n');
+                }
+                // Handle service mapping logic if needed
+                setIsCreatingNewService(false);
             }
             // Garantir que color theme tenha valor
             if (tab === 'packages' && !data.color_theme) {
@@ -63,7 +71,14 @@ export const AdminManagement: React.FC = () => {
             if (tab === 'services') {
                 setFormData({ name: '', price: 0, duration_minutes: 30, active: true, description: '' });
             } else {
-                setFormData({ title: '', price: 0, original_price: 0, bath_count: 1, features: '', highlight: false, color_theme: '#9B59B6', active: true, description: '' });
+                setFormData({ 
+                    title: '', price: 0, original_price: 0, 
+                    bath_count: 1, features: '', highlight: false, 
+                    color_theme: '#9B59B6', active: true, description: '',
+                    service_id: '' // Start empty
+                });
+                setIsCreatingNewService(false);
+                setNewServiceName('');
             }
         }
         setIsModalOpen(true);
@@ -97,6 +112,31 @@ export const AdminManagement: React.FC = () => {
                 payload.bath_count = Number(payload.bath_count);
                 // Garantir cor válida se estiver vazia
                 if (!payload.color_theme) payload.color_theme = '#9B59B6';
+                
+                // --- SMART SERVICE CREATION LOGIC ---
+                // Se o usuário escolheu "CRIAR NOVO" (service_id === 'NEW')
+                if (payload.service_id === 'NEW') {
+                    if (!newServiceName) {
+                        toast.error("Digite o nome do novo serviço.");
+                        return;
+                    }
+                    // 1. Criar o serviço primeiro
+                    const createdService = await api.admin.createService({
+                        name: newServiceName,
+                        price: 0, // Placeholder, admin deve editar depois
+                        duration_minutes: 30, // Default
+                        active: true,
+                        description: 'Serviço criado automaticamente via Pacote'
+                    });
+                    
+                    // 2. Usar o ID do novo serviço
+                    payload.service_id = createdService.id;
+                    toast.success(`Serviço "${newServiceName}" criado!`);
+                    
+                    // Refresh services list for future use without page reload
+                    const srvs = await api.admin.getAllServicesAdmin();
+                    setServices(srvs || []);
+                }
             } else {
                 payload.price = Number(payload.price);
                 payload.duration_minutes = Number(payload.duration_minutes);
@@ -149,7 +189,7 @@ export const AdminManagement: React.FC = () => {
                                     <th>ID</th>
                                     <th>Nome/Título</th>
                                     <th>Preço</th>
-                                    {tab === 'services' ? <th>Duração</th> : <th>Banhos</th>}
+                                    {tab === 'services' ? <th>Duração</th> : <th>Banhos / Serviço</th>}
                                     <th>Status</th>
                                     <th style={{textAlign:'right'}}>Ações</th>
                                 </tr>
@@ -167,25 +207,31 @@ export const AdminManagement: React.FC = () => {
                                             <button className="btn-icon-sm" onClick={() => handleDelete(s.id)} style={{color:'red'}}><Trash2 size={16}/></button>
                                         </td>
                                     </tr>
-                                )) : packages.map(p => (
-                                    <tr key={p.id}>
-                                        <td>#{p.id}</td>
-                                        <td>
-                                            <strong>{p.title}</strong>
-                                            {p.highlight && <span style={{marginLeft:6, fontSize:'0.7rem'}} className="tag-pill">⭐ Destaque</span>}
-                                        </td>
-                                        <td>
-                                            {formatCurrency(Number(p.price))} 
-                                            {p.original_price && Number(p.original_price) > Number(p.price) && <small style={{textDecoration:'line-through', color:'#999', marginLeft:4}}>{formatCurrency(Number(p.original_price))}</small>}
-                                        </td>
-                                        <td>{p.bath_count}</td>
-                                        <td>{p.active ? <span className="status-badge tag-confirmed">Ativo</span> : <span className="status-badge tag-cancelled">Inativo</span>}</td>
-                                        <td style={{textAlign:'right'}}>
-                                            <button className="btn-icon-sm" onClick={() => openModal(p)}><Edit2 size={16}/></button>
-                                            <button className="btn-icon-sm" onClick={() => handleDelete(p.id)} style={{color:'red'}}><Trash2 size={16}/></button>
-                                        </td>
-                                    </tr>
-                                ))}
+                                )) : packages.map(p => {
+                                    const linkedService = services.find(s => s.id === p.service_id);
+                                    return (
+                                        <tr key={p.id}>
+                                            <td>#{p.id}</td>
+                                            <td>
+                                                <strong>{p.title}</strong>
+                                                {p.highlight && <span style={{marginLeft:6, fontSize:'0.7rem'}} className="tag-pill">⭐ Destaque</span>}
+                                            </td>
+                                            <td>
+                                                {formatCurrency(Number(p.price))} 
+                                                {p.original_price && Number(p.original_price) > Number(p.price) && <small style={{textDecoration:'line-through', color:'#999', marginLeft:4}}>{formatCurrency(Number(p.original_price))}</small>}
+                                            </td>
+                                            <td>
+                                                {p.bath_count}x 
+                                                {linkedService && <span style={{display:'inline-block', marginLeft:6, fontSize:'0.75rem', color:'var(--primary)', fontWeight:600}}>{linkedService.name}</span>}
+                                            </td>
+                                            <td>{p.active ? <span className="status-badge tag-confirmed">Ativo</span> : <span className="status-badge tag-cancelled">Inativo</span>}</td>
+                                            <td style={{textAlign:'right'}}>
+                                                <button className="btn-icon-sm" onClick={() => openModal(p)}><Edit2 size={16}/></button>
+                                                <button className="btn-icon-sm" onClick={() => handleDelete(p.id)} style={{color:'red'}}><Trash2 size={16}/></button>
+                                            </td>
+                                        </tr>
+                                    );
+                                })}
                             </tbody>
                         </table>
                         {((tab === 'services' && services.length === 0) || (tab === 'packages' && packages.length === 0)) && (
@@ -236,10 +282,43 @@ export const AdminManagement: React.FC = () => {
                                             <label>Título do Pacote</label>
                                             <input required type="text" value={formData.title} onChange={e => setFormData({...formData, title: e.target.value})} />
                                         </div>
+
+                                        {/* SMART SERVICE SELECTION */}
                                         <div className="form-group">
-                                            <label>Descrição Curta</label>
-                                            <input required type="text" value={formData.description || ''} onChange={e => setFormData({...formData, description: e.target.value})} />
+                                            <label>Tipo de Serviço Vinculado</label>
+                                            <select 
+                                                className="input-lg"
+                                                value={formData.service_id || ''} 
+                                                onChange={(e) => {
+                                                    const val = e.target.value;
+                                                    setFormData({...formData, service_id: val === '' ? null : val === 'NEW' ? 'NEW' : Number(val)});
+                                                }}
+                                            >
+                                                <option value="">Selecione um serviço...</option>
+                                                {services.map(s => (
+                                                    <option key={s.id} value={s.id}>{s.name} ({s.duration_minutes} min)</option>
+                                                ))}
+                                                <option value="NEW" style={{fontWeight:'bold', color:'var(--primary)'}}>+ Criar Novo Serviço</option>
+                                            </select>
                                         </div>
+
+                                        {/* CREATE NEW SERVICE INPUT (CONDITIONAL) */}
+                                        {formData.service_id === 'NEW' && (
+                                            <div className="form-group fade-in-up" style={{background:'#F3E5F5', padding:12, borderRadius:12}}>
+                                                <label style={{color:'var(--primary)'}}>Nome do Novo Serviço</label>
+                                                <input 
+                                                    type="text" 
+                                                    placeholder="Ex: Banho Premium Plus" 
+                                                    value={newServiceName} 
+                                                    onChange={e => setNewServiceName(e.target.value)}
+                                                    autoFocus
+                                                />
+                                                <small style={{display:'block', marginTop:4, color:'#666'}}>
+                                                    O serviço será criado com preço R$ 0,00 e 30min de duração. Edite-o depois na aba Serviços.
+                                                </small>
+                                            </div>
+                                        )}
+
                                         <div style={{display:'flex', gap:10}}>
                                             <div className="form-group full-width">
                                                 <label>Preço Final (R$)</label>

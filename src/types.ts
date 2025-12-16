@@ -1,5 +1,4 @@
 
-
 export type UserRole = 'client' | 'admin' | 'employee';
 
 export interface Profile {
@@ -78,6 +77,7 @@ export interface Package {
     highlight: boolean; // Se é o "Mais Popular"
     color_theme?: string; // Hex ou var css
     active: boolean;
+    service_id?: number; // Link to the specific service type (e.g., Bath)
 }
 
 export interface Subscription {

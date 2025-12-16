@@ -1,3 +1,4 @@
+
 import { supabase } from '../lib/supabase';
 import { Appointment, Employee, Pet, Product, Profile, Service, Package, Subscription } from '../types';
 
@@ -138,7 +139,6 @@ export const api = {
         if (error) throw error;
     },
     // NOVO MÉTODO: Verifica colisão de horários (Overlapping)
-    // Regra: (StartA < EndB) and (EndA > StartB)
     async checkAvailability(startIso: string, endIso: string) {
         const { data, error } = await supabase
             .from('appointments')
@@ -150,6 +150,46 @@ export const api = {
         if (error) throw error;
         // Se array vazio, está livre. Se tiver itens, tem conflito.
         return data.length === 0;
+    },
+    // NOVO MÉTODO: Verifica conflito semanal de pacote
+    async checkWeeklyPackageConflict(petId: string, date: string): Promise<boolean> {
+        // 1. Verifica se o pet tem assinatura ativa
+        const { data: subscription } = await supabase
+            .from('subscriptions')
+            .select('id')
+            .eq('pet_id', petId)
+            .eq('status', 'active')
+            .maybeSingle();
+
+        // Se não tem assinatura, não há conflito de "pacote semanal"
+        if (!subscription) return false;
+
+        // 2. Calcula intervalo da semana (Domingo a Sábado) da data escolhida
+        const targetDate = new Date(date);
+        const day = targetDate.getDay();
+        const diffToSunday = targetDate.getDate() - day;
+        
+        const startOfWeek = new Date(targetDate);
+        startOfWeek.setDate(diffToSunday);
+        startOfWeek.setHours(0,0,0,0);
+
+        const endOfWeek = new Date(startOfWeek);
+        endOfWeek.setDate(startOfWeek.getDate() + 6);
+        endOfWeek.setHours(23,59,59,999);
+
+        // 3. Verifica se existe agendamento nesta semana para este pet
+        const { data: appointments, error } = await supabase
+            .from('appointments')
+            .select('id')
+            .eq('pet_id', petId)
+            .neq('status', 'cancelled')
+            .gte('start_time', startOfWeek.toISOString())
+            .lte('start_time', endOfWeek.toISOString());
+
+        if (error) throw error;
+
+        // Se encontrou agendamento, há conflito com a lógica de "1 banho por semana do pacote"
+        return appointments && appointments.length > 0;
     },
     async getMyAppointments(userId: string) {
       const { data, error } = await supabase
@@ -228,18 +268,18 @@ export const api = {
           if (error) throw error;
 
           // 3. AUTO-SCHEDULE LOGIC
-          // Vamos agendar os banhos do pacote automaticamente
           try {
-              // Simular busca do serviço "Banho" (Assumindo ID 1 ou o primeiro da lista)
-              // Em produção, o pacote teria um linked service_id. Aqui vamos usar um serviço dummy de Banho.
+              // Busca o serviço vinculado ao pacote ou fallback para o primeiro "Banho" encontrado
               const services = await api.booking.getServices();
-              const bathService = services.find(s => s.name.toLowerCase().includes('banho')) || services[0];
+              const linkedService = pkg.service_id 
+                  ? services.find(s => s.id === pkg.service_id)
+                  : services.find(s => s.name.toLowerCase().includes('banho')) || services[0];
               
-              if (!bathService) return { success: true, message: 'Assinatura criada, mas erro ao agendar banhos.' };
+              if (!linkedService) return { success: true, message: 'Assinatura criada, mas erro ao agendar banhos.' };
 
               const totalBaths = pkg.bath_count;
               const intervalDays = Math.floor(30 / totalBaths); // Ex: 4 banhos = cada 7 dias
-              const duration = bathService.duration_minutes;
+              const duration = linkedService.duration_minutes;
 
               const firstDate = new Date(firstBathStartIso);
 
@@ -250,14 +290,13 @@ export const api = {
                   targetDate.setDate(targetDate.getDate() + (i * intervalDays));
 
                   // Se for o primeiro, usa a hora exata escolhida. 
-                  // Se for subsequente, tenta manter a hora, mas ajusta se necessário.
                   const validStartDate = await findNextValidSlot(targetDate, duration);
                   const validEndDate = new Date(validStartDate.getTime() + duration * 60000);
 
                   await api.booking.createAppointment(
                       userId,
                       petId,
-                      bathService.id,
+                      linkedService.id,
                       validStartDate.toISOString(),
                       validEndDate.toISOString()
                   );
@@ -265,7 +304,6 @@ export const api = {
 
           } catch (scheduleError) {
               console.error("Erro no agendamento automático:", scheduleError);
-              // Não falha a assinatura, mas avisa
               return { success: true, warning: 'Assinatura ativa, mas verifique os agendamentos.' };
           }
 
@@ -308,8 +346,9 @@ export const api = {
         return data as Service[];
     },
     async createService(service: Omit<Service, 'id'>) {
-        const { error } = await supabase.from('services').insert(service);
+        const { data, error } = await supabase.from('services').insert(service).select().single();
         if (error) throw error;
+        return data as Service; // Returns the created service
     },
     async updateService(id: number, service: Partial<Service>) {
         const { error } = await supabase.from('services').update(service).eq('id', id);

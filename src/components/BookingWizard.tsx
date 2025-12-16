@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo, useEffect } from 'react';
 import { X, AlertCircle, Clock, CalendarCheck, Check, Calendar as CalendarIcon, PartyPopper } from 'lucide-react';
 import { api } from '../services/api';
@@ -133,13 +134,22 @@ export const BookingWizard: React.FC<BookingWizardProps> = ({
             setIsBooking(true);
             setValidationError(null);
 
+            // 1. Weekly Package Conflict Check
+            const hasWeeklyConflict = await api.booking.checkWeeklyPackageConflict(wizPet, selectedDate);
+            if (hasWeeklyConflict) {
+                 setValidationError("Este pet já possui um banho do pacote agendado para esta semana.");
+                 toast.warning("Use seus créditos do pacote ou escolha outra semana. 📅");
+                 setIsBooking(false);
+                 return;
+            }
+
             // Montar ISO String final
             const startIso = `${selectedDate}T${selectedTime}:00`;
             const start = new Date(startIso);
             const duration = wizService.duration_minutes;
             const end = new Date(start.getTime() + duration * 60000);
 
-            // 1. Check Availability with Backend (Collision Detection)
+            // 2. Check Availability with Backend (Collision Detection)
             const isAvailable = await api.booking.checkAvailability(start.toISOString(), end.toISOString());
             
             if (!isAvailable) {
@@ -149,7 +159,7 @@ export const BookingWizard: React.FC<BookingWizardProps> = ({
                 return;
             }
 
-            // 2. Create Appointment (Success)
+            // 3. Create Appointment (Success)
             await api.booking.createAppointment(session.user.id, wizPet, wizService.id, start.toISOString(), end.toISOString());
             
             // Prepare Success Data View
