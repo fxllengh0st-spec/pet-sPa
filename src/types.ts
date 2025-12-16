@@ -1,4 +1,5 @@
 
+
 export type UserRole = 'client' | 'admin' | 'employee';
 
 export interface Profile {
@@ -65,7 +66,19 @@ export interface Employee {
   profiles?: Profile;
 }
 
+export interface Package {
+    id: number;
+    title: string;
+    description: string;
+    price: number;
+    original_price: number; // Para mostrar o desconto (ex: De R$ 200 por R$ 150)
+    bath_count: number;
+    features: string[];
+    highlight?: boolean; // Se é o "Mais Popular"
+    color_theme: string; // Hex ou var css
+}
+
 // UI Types
-export type Route = 'home' | 'services' | 'about' | 'chat' | 'login' | 'register' | 'dashboard' | 'profile' | 'admin' | 'tracker' | 'user-profile' | 'pet-details' | 'appointment-details' | 'booking-wizard' | 'market';
+export type Route = 'home' | 'services' | 'about' | 'chat' | 'login' | 'register' | 'dashboard' | 'profile' | 'admin' | 'tracker' | 'user-profile' | 'pet-details' | 'appointment-details' | 'booking-wizard' | 'market' | 'packages';
 
 export type LoginStage = 'idle' | 'authenticating' | 'welcome' | 'insight';

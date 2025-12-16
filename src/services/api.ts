@@ -1,6 +1,44 @@
 
+
 import { supabase } from '../lib/supabase';
-import { Appointment, Employee, Pet, Product, Profile, Service } from '../types';
+import { Appointment, Employee, Pet, Product, Profile, Service, Package } from '../types';
+
+// Mock Data para Pacotes (Simulando DB)
+const MOCK_PACKAGES: Package[] = [
+    {
+        id: 1,
+        title: "Pacote Básico",
+        description: "Ideal para manter a higiene em dia.",
+        price: 180.00,
+        original_price: 200.00,
+        bath_count: 4,
+        features: ["4 Banhos Simples", "Validade de 30 dias", "Agendamento Prioritário"],
+        color_theme: "var(--brand-cyan)",
+        highlight: false
+    },
+    {
+        id: 2,
+        title: "Clube VIP",
+        description: "O favorito dos nossos clientes!",
+        price: 250.00,
+        original_price: 320.00,
+        bath_count: 4,
+        features: ["4 Banhos Completos", "1 Hidratação Grátis", "Tosa Higiênica Inclusa", "Perfume Importado"],
+        color_theme: "var(--primary)",
+        highlight: true
+    },
+    {
+        id: 3,
+        title: "Spa Total",
+        description: "Tratamento de realeza para seu pet.",
+        price: 450.00,
+        original_price: 550.00,
+        bath_count: 8,
+        features: ["8 Banhos Premium", "2 Tosas Completas", "Taxi Dog (Busca e Leva)", "Kit Petiscos Mensal"],
+        color_theme: "var(--brand-yellow)",
+        highlight: false
+    }
+];
 
 export const api = {
   auth: {
@@ -96,6 +134,19 @@ export const api = {
       if (error) throw error;
       return data as unknown as Appointment[];
     }
+  },
+
+  packages: {
+      async getPackages() {
+          // Simulando delay de rede
+          await new Promise(resolve => setTimeout(resolve, 500));
+          return MOCK_PACKAGES;
+      },
+      async subscribe(userId: string, packageId: number) {
+          // Aqui seria a integração com gateway de pagamento ou inserção na tabela 'subscriptions'
+          await new Promise(resolve => setTimeout(resolve, 1500));
+          return { success: true, message: 'Assinatura realizada com sucesso!' };
+      }
   },
 
   admin: {

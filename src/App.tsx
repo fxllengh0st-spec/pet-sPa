@@ -1,4 +1,5 @@
 
+
 import React, { useState, useEffect } from 'react';
 import { supabase } from './lib/supabase';
 import { api } from './services/api';
@@ -20,6 +21,7 @@ import { PetWizard } from './components/PetWizard'; // Importado
 // Views
 import { HomePage } from './views/Home';
 import { ServicesPage } from './views/Services';
+import { PackagesView } from './views/Packages'; // Importado
 import { LoginPage, RegisterPage } from './views/Login';
 import { Dashboard } from './views/Dashboard';
 import { UserProfileView } from './views/Profile';
@@ -44,6 +46,7 @@ const CARE_TIPS = [
 const MASCOT_COMMENTS: Partial<Record<Route, string[]>> = {
     'home': ['Pronto para um dia de spa? 🛁', 'Seu pet merece o melhor!', 'Toque em Agendar para começar!', ...CARE_TIPS],
     'services': ['O Banho Premium é divino! ✨', 'Temos hidratação com cheirinho de morango 🍓', 'Corte de unhas? Deixa com a gente!', ...CARE_TIPS],
+    'packages': ['Economia inteligente! 💰', 'Seu pet limpo o mês todo.', 'O Clube VIP é imperdível!'],
     'market': ['Os brinquedos novos chegaram! 🎾', 'Essa ração é top de linha.', 'Seu pet vai amar esses mimos.'],
     'about': ['A Ana e o João são incríveis ❤️', 'Essa história me emociona...', 'Olha eu nas fotos! 📸'],
     'dashboard': ['Sua agenda organizada 📅', 'Não esqueça dos compromissos!', 'Tudo sob controle aqui.', ...CARE_TIPS],
@@ -281,6 +284,7 @@ export default function App() {
           <nav className="nav-links-desktop">
              <a href="#" className={`nav-link-item ${view === 'home' && 'active'}`} onClick={() => navigateTo('home')}>Início</a>
              <a href="#" className={`nav-link-item ${view === 'services' && 'active'}`} onClick={() => navigateTo('services')}>Serviços</a>
+             <a href="#" className={`nav-link-item ${view === 'packages' && 'active'}`} onClick={() => navigateTo('packages')}>Pacotes</a>
              <a href="#" className={`nav-link-item ${view === 'market' && 'active'}`} onClick={() => navigateTo('market')}>Loja</a>
              <a href="#" className={`nav-link-item ${view === 'about' && 'active'}`} onClick={() => navigateTo('about')}>Sobre Nós</a>
              <a href="#" className={`nav-link-item nav-link-cta ${view === 'chat' && 'active'}`} onClick={() => navigateTo('chat')}>Assistente IA</a>
@@ -312,6 +316,10 @@ export default function App() {
                 onOpenBooking={() => setShowBookingModal(true)} 
                 session={session} 
             />
+          )}
+
+          {view === 'packages' && (
+             <PackagesView onNavigate={navigateTo} session={session} />
           )}
 
           {view === 'market' && (

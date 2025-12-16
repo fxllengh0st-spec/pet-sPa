@@ -1,7 +1,7 @@
 
 
 import React from 'react';
-import { Sparkles, Scissors, Droplet, Heart, ShoppingBag } from 'lucide-react';
+import { Sparkles, Scissors, Droplet, Heart, ShoppingBag, Crown } from 'lucide-react';
 import { Route } from '../types';
 import { getAvatarUrl } from '../utils/ui';
 
@@ -70,6 +70,36 @@ export const HomePage: React.FC<HomePageProps> = ({ session, onNavigate, onOpenB
                     <h4>Sobre Nós</h4>
                 </div>
             </div>
+         </div>
+
+         {/* NOVO: Banner de Pacotes */}
+         <div className="card clickable-card reveal-on-scroll" 
+              onClick={() => onNavigate('packages')}
+              style={{
+                  background: 'linear-gradient(135deg, #00B894 0%, #00CEC9 100%)',
+                  color: 'white',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  marginBottom: 24,
+                  border: 'none',
+                  position: 'relative',
+                  overflow: 'hidden'
+              }}
+         >
+             <div style={{position:'relative', zIndex:2}}>
+                 <div style={{display:'flex', alignItems:'center', gap: 8, marginBottom: 8}}>
+                    <Crown size={24} fill="#FDCB6E" color="#FDCB6E" />
+                    <span style={{fontWeight: 800, textTransform:'uppercase', fontSize:'0.85rem', letterSpacing:'0.05em', color:'#FDCB6E'}}>Clube de Assinatura</span>
+                 </div>
+                 <h3 style={{color:'white', margin:0, fontSize:'1.4rem'}}>Pacotes de Banho</h3>
+                 <p style={{color:'rgba(255,255,255,0.9)', margin:0}}>Economize até 30% e garanta horários VIP.</p>
+             </div>
+             <div style={{background: 'rgba(255,255,255,0.2)', padding: '10px 16px', borderRadius: 20, fontWeight: 700, whiteSpace:'nowrap', zIndex:2}}>
+                 Ver Planos
+             </div>
+             {/* Decorative Circle */}
+             <div style={{position:'absolute', right: -20, bottom: -40, width: 140, height: 140, borderRadius:'50%', background:'rgba(255,255,255,0.1)'}}></div>
          </div>
          
          {/* Features Section */}
