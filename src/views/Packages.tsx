@@ -1,7 +1,7 @@
 
 
 import React, { useEffect, useState } from 'react';
-import { ChevronLeft, Check, Crown, Star, ShieldCheck, Dog, X, Plus } from 'lucide-react';
+import { ChevronLeft, Check, Crown, Star, ShieldCheck, Dog, X, Plus, Trash2, Settings } from 'lucide-react';
 import { Package, Route, Subscription, Pet } from '../types';
 import { api } from '../services/api';
 import { formatCurrency, getPetAvatarUrl } from '../utils/ui';
@@ -18,16 +18,19 @@ export const PackagesView: React.FC<PackagesViewProps> = ({ onNavigate, session 
     const [myPets, setMyPets] = useState<Pet[]>([]);
     
     const [loading, setLoading] = useState(true);
-    const [subscribingId, setSubscribingId] = useState<number | null>(null);
+    const [processingId, setProcessingId] = useState<number | null>(null);
+    
+    // Modais
     const [showPetSelector, setShowPetSelector] = useState<{pkg: Package} | null>(null);
+    const [showManageModal, setShowManageModal] = useState<{pkg: Package} | null>(null);
     
     const toast = useToast();
 
-    // Função para carregar dados de forma resiliente
+    // Função para carregar dados
     const loadData = async () => {
         setLoading(true);
         try {
-            // 1. Carrega PACOTES (Tabela 'packages' que existe)
+            // 1. Carrega Pacotes
             try {
                 const dataPackages = await api.packages.getPackages();
                 setPackages(dataPackages || []);
@@ -36,23 +39,18 @@ export const PackagesView: React.FC<PackagesViewProps> = ({ onNavigate, session 
                 toast.error("Erro ao carregar catálogo de planos.");
             }
             
-            // 2. Carrega DADOS DO USUÁRIO (Pets e Assinaturas)
-            // Fazemos isso separadamente para que, se a tabela 'subscriptions' não existir,
-            // o resto da página ainda funcione.
+            // 2. Carrega Dados do Usuário
             if (session) {
-                // Carrega Pets
                 try {
                     const petsData = await api.booking.getMyPets(session.user.id);
                     setMyPets(petsData || []);
                 } catch (e) { console.error("Erro ao carregar pets", e); }
 
-                // Carrega Assinaturas (Pode falhar se tabela não existir)
                 try {
                     const subData = await api.packages.getMySubscriptions(session.user.id);
                     setActiveSubscriptions(subData || []);
                 } catch (e: any) {
-                    // Silencioso na UI para não assustar o usuário, mas loga para o dev
-                    console.warn("Aviso: Não foi possível carregar assinaturas. Verifique se a tabela 'subscriptions' existe no Supabase.", e.message);
+                    console.warn("Aviso tabela subscriptions:", e.message);
                 }
             }
 
@@ -67,17 +65,29 @@ export const PackagesView: React.FC<PackagesViewProps> = ({ onNavigate, session 
         loadData();
     }, [session]);
 
-    // Inicia fluxo de assinatura
-    const initiateSubscribe = (pkg: Package) => {
+    // --- LÓGICA DE SELEÇÃO E ESTADO ---
+
+    // Pets que NÃO tem nenhuma assinatura ativa
+    const getUnsubscribedPets = () => {
+        const subscribedPetIds = activeSubscriptions.map(s => s.pet_id);
+        return myPets.filter(p => !subscribedPetIds.includes(p.id));
+    };
+
+    // Pets que tem assinatura DESTE pacote específico
+    const getPetsOnPackage = (pkgId: number) => {
+        return activeSubscriptions.filter(s => s.package_id === pkgId);
+    };
+
+    // --- AÇÕES ---
+
+    const handleInitiateSubscribe = (pkg: Package) => {
         if (!session) {
             toast.info('Faça login para assinar um pacote.');
             onNavigate('login');
             return;
         }
 
-        // Filtra pets que JÁ tem assinatura ativa (qualquer plano)
-        const subscribedPetIds = activeSubscriptions.map(s => s.pet_id);
-        const availablePets = myPets.filter(p => !subscribedPetIds.includes(p.id));
+        const availablePets = getUnsubscribedPets();
 
         if (myPets.length === 0) {
             toast.info('Você precisa cadastrar um pet primeiro!');
@@ -86,11 +96,10 @@ export const PackagesView: React.FC<PackagesViewProps> = ({ onNavigate, session 
         }
 
         if (availablePets.length === 0) {
-            toast.warning('Todos os seus pets já possuem um plano ativo! 🎉');
+            toast.warning('Todos os seus pets já possuem um plano ativo! 🐶');
             return;
         }
 
-        // Abre modal para escolher qual pet
         setShowPetSelector({ pkg });
     };
 
@@ -98,44 +107,75 @@ export const PackagesView: React.FC<PackagesViewProps> = ({ onNavigate, session 
         if (!showPetSelector) return;
         const pkg = showPetSelector.pkg;
 
-        setSubscribingId(pkg.id);
-        setShowPetSelector(null); // Fecha modal
+        setProcessingId(pkg.id);
+        setShowPetSelector(null);
 
         try {
             await api.packages.subscribe(session.user.id, pkg.id, petId);
-            
-            toast.success(`Sucesso! O plano ${pkg.title} foi ativado. 🎉`);
-            await loadData(); // Recarrega para atualizar a UI
-
+            toast.success(`Parabéns! Plano ${pkg.title} ativado! 🎉`);
+            await loadData(); 
         } catch (e: any) {
             console.error(e);
-            if (e.message?.includes('subscriptions')) {
-                toast.error('Erro de configuração no servidor (Tabela ausente).');
-            } else {
-                toast.error(e.message || 'Erro ao processar assinatura.');
-            }
+            toast.error(e.message || 'Erro ao processar assinatura.');
         } finally {
-            setSubscribingId(null);
+            setProcessingId(null);
         }
     };
 
-    // Renderiza badge com as fotos dos pets que tem esse plano
-    const renderSubscribedPets = (pkgId: number) => {
-        const subs = activeSubscriptions.filter(s => s.package_id === pkgId);
-        if (subs.length === 0) return null;
+    const handleCancelSubscription = async (subId: number) => {
+        if (!window.confirm("Tem certeza que deseja cancelar esta assinatura? Os benefícios serão encerrados imediatamente.")) return;
+        
+        try {
+            // Loading visual local se quisesse, mas vamos usar toast
+            toast.info("Processando cancelamento...");
+            await api.packages.cancelSubscription(subId);
+            toast.success("Assinatura cancelada com sucesso.");
+            setShowManageModal(null);
+            loadData();
+        } catch (e) {
+            toast.error("Erro ao cancelar assinatura.");
+        }
+    };
+
+    // --- RENDERIZADORES ---
+
+    const renderButton = (pkg: Package) => {
+        const availablePets = getUnsubscribedPets();
+        const petsOnThisPlan = getPetsOnPackage(pkg.id);
+        const hasSomePetOnThisPlan = petsOnThisPlan.length > 0;
+        
+        // Se todos os meus pets já tem planos (qualquer plano)
+        const allPetsProtected = myPets.length > 0 && availablePets.length === 0;
+
+        if (allPetsProtected) {
+            // Se todos os meus pets estão neste plano específico
+            if (hasSomePetOnThisPlan && petsOnThisPlan.length === myPets.length) {
+                return (
+                    <button className="btn full-width btn-secondary" disabled style={{opacity: 0.8}}>
+                        Todos Protegidos <Check size={16} />
+                    </button>
+                );
+            }
+             // Se estão protegidos mas nem todos neste plano
+            return (
+                <button className="btn full-width btn-secondary" disabled style={{opacity: 0.8}}>
+                   Seus pets já possuem planos
+                </button>
+            );
+        }
 
         return (
-            <div className="subscribed-pets-avatars fade-in">
-                {subs.map(s => {
-                    const petName = s.pets?.name || 'Pet';
-                    return (
-                        <div key={s.id} className="sub-pet-chip" title={`${petName} tem este plano`}>
-                            <img src={getPetAvatarUrl(petName)} alt={petName} />
-                            <span>{petName}</span>
-                        </div>
-                    );
-                })}
-            </div>
+            <button 
+                className={`btn full-width ${processingId === pkg.id ? 'loading' : ''}`}
+                style={pkg.highlight ? { 
+                    background: 'linear-gradient(135deg, var(--primary), #8E44AD)',
+                    color: 'white'
+                } : {}}
+                onClick={() => handleInitiateSubscribe(pkg)}
+                disabled={processingId !== null}
+            >
+                {processingId === pkg.id ? 'Processando...' : 'Assinar Agora'}
+            </button>
         );
     };
 
@@ -152,7 +192,8 @@ export const PackagesView: React.FC<PackagesViewProps> = ({ onNavigate, session 
 
             <div className="text-center mb-4 reveal-on-scroll">
                 <p style={{ maxWidth: 500, margin: '0 auto', color: '#666' }}>
-                    Assinaturas individuais por pet. Garanta banhos e cuidados o mês todo com desconto.
+                    Saúde e higiene recorrente para seu pet. <br/>
+                    <strong>Cada pet precisa de sua própria assinatura.</strong>
                 </p>
             </div>
 
@@ -163,9 +204,9 @@ export const PackagesView: React.FC<PackagesViewProps> = ({ onNavigate, session 
                 ) : (
                     packages.length === 0 ? (
                          <div className="text-center w-full" style={{gridColumn: '1/-1', padding: 60, background: '#f8f9fa', borderRadius: 16}}>
-                            <div style={{marginBottom:16, opacity: 0.5}}><ShieldCheck size={48} color="#999"/></div>
-                            <h3 style={{color: '#666', fontSize:'1.1rem'}}>Nenhum plano disponível</h3>
-                            <p style={{color: '#999', fontSize:'0.9rem'}}>O administrador ainda não cadastrou pacotes de assinatura na tabela 'packages'.</p>
+                            <ShieldCheck size={48} color="#999" style={{marginBottom:16, opacity: 0.5}}/>
+                            <h3 style={{color: '#666'}}>Nenhum plano disponível</h3>
+                            <p style={{color: '#999'}}>O catálogo de assinaturas está vazio no momento.</p>
                             {session?.user?.email?.includes('admin') && (
                                 <button className="btn btn-secondary btn-sm mt-4" onClick={() => onNavigate('admin')}>Cadastrar no Admin</button>
                             )}
@@ -174,22 +215,23 @@ export const PackagesView: React.FC<PackagesViewProps> = ({ onNavigate, session 
                     packages.map((pkg, idx) => {
                         const price = Number(pkg.price);
                         const originalPrice = pkg.original_price ? Number(pkg.original_price) : null;
-                        
-                        // Verifica se este usuário tem alguma assinatura neste plano
-                        const hasThisPlan = activeSubscriptions.some(s => s.package_id === pkg.id);
+                        const petsOnThisPlan = getPetsOnPackage(pkg.id);
+                        const hasSubs = petsOnThisPlan.length > 0;
                         
                         return (
                         <div 
                             key={pkg.id} 
-                            className={`card package-card reveal-on-scroll ${pkg.highlight ? 'highlight-pkg' : ''} ${hasThisPlan ? 'active-plan-card' : ''}`}
+                            className={`card package-card reveal-on-scroll ${pkg.highlight ? 'highlight-pkg' : ''} ${hasSubs ? 'active-plan-card' : ''}`}
                             style={{ transitionDelay: `${idx * 0.1}s` }}
                         >
+                            {/* Badges */}
                             {pkg.highlight && (
                                 <div className="pkg-badge">
-                                    <Crown size={14} fill="white" /> MAIS POPULAR
+                                    <Crown size={14} fill="white" /> POPULAR
                                 </div>
                             )}
-
+                            
+                            {/* Cabeçalho */}
                             <div className="pkg-header" style={{ borderBottomColor: pkg.color_theme || 'var(--primary)' }}>
                                 <h3 style={{ color: pkg.highlight ? 'var(--primary)' : 'var(--secondary)' }}>
                                     {pkg.title}
@@ -197,9 +239,27 @@ export const PackagesView: React.FC<PackagesViewProps> = ({ onNavigate, session 
                                 <p className="pkg-desc">{pkg.description}</p>
                             </div>
                             
-                            {/* Lista de pets inscritos neste plano */}
-                            {renderSubscribedPets(pkg.id)}
+                            {/* Pets Ativos neste Plano */}
+                            {hasSubs && (
+                                <div className="subscribed-section fade-in">
+                                    <div className="subscribed-avatars-row">
+                                        {petsOnThisPlan.map(s => (
+                                            <img 
+                                                key={s.id} 
+                                                src={getPetAvatarUrl(s.pets?.name || '')} 
+                                                alt={s.pets?.name} 
+                                                title={`${s.pets?.name} tem este plano`}
+                                                className="sub-avatar-mini"
+                                            />
+                                        ))}
+                                    </div>
+                                    <button className="btn-manage-link" onClick={() => setShowManageModal({pkg})}>
+                                        <Settings size={12} /> Gerenciar
+                                    </button>
+                                </div>
+                            )}
 
+                            {/* Preço */}
                             <div className="pkg-price-area">
                                 {originalPrice && originalPrice > price && (
                                     <span className="pkg-old-price">de {formatCurrency(originalPrice)}</span>
@@ -211,6 +271,7 @@ export const PackagesView: React.FC<PackagesViewProps> = ({ onNavigate, session 
                                 </div>
                             </div>
 
+                            {/* Lista de Features */}
                             <ul className="pkg-features">
                                 {(pkg.features || []).map((feat, i) => (
                                     <li key={i}>
@@ -222,17 +283,10 @@ export const PackagesView: React.FC<PackagesViewProps> = ({ onNavigate, session 
                                 ))}
                             </ul>
 
-                            <button 
-                                className={`btn full-width ${subscribingId === pkg.id ? 'loading' : ''}`}
-                                style={pkg.highlight ? { 
-                                    background: 'linear-gradient(135deg, var(--primary), #8E44AD)',
-                                    color: 'white',
-                                    marginTop: 'auto'
-                                } : { marginTop: 'auto' }}
-                                onClick={() => initiateSubscribe(pkg)}
-                            >
-                                {subscribingId === pkg.id ? 'Processando...' : 'Assinar'}
-                            </button>
+                            {/* Botão de Ação */}
+                            <div style={{marginTop: 'auto'}}>
+                                {renderButton(pkg)}
+                            </div>
                         </div>
                     )})
                 )}
@@ -242,53 +296,86 @@ export const PackagesView: React.FC<PackagesViewProps> = ({ onNavigate, session 
                 <div style={{display:'flex', gap: 12}}>
                     <Star color="#FBC02D" fill="#FBC02D" />
                     <div>
-                        <strong style={{color: '#F57F17'}}>Assinatura por Pet</strong>
+                        <strong style={{color: '#F57F17'}}>Benefício Exclusivo</strong>
                         <p style={{fontSize:'0.9rem', margin:0, color:'#5d4037'}}>
-                            Cada animalzinho precisa de sua própria assinatura. Você pode misturar planos diferentes para cada pet!
+                            Assinantes têm prioridade na agenda de finais de semana e feriados!
                         </p>
                     </div>
                 </div>
             </div>
 
-            {/* Modal de Seleção de Pet */}
+            {/* --- MODAL: SELEÇÃO DE PET PARA ASSINAR --- */}
             {showPetSelector && (
                 <div className="modal-overlay">
                     <div className="modal-content" style={{maxWidth: 400}}>
                         <div className="modal-header">
-                            <h3>Escolha o Pet</h3>
+                            <h3>Vincular Pet</h3>
                             <button onClick={() => setShowPetSelector(null)} className="btn-icon-sm"><X size={20}/></button>
                         </div>
                         <div className="wizard-body" style={{padding: '24px 20px'}}>
-                            <p className="text-center mb-4">
-                                Quem vai aproveitar o plano <strong>{showPetSelector.pkg.title}</strong>?
-                            </p>
+                            <div className="text-center mb-4">
+                                <div style={{background: showPetSelector.pkg.color_theme || 'var(--primary)', color:'white', display:'inline-block', padding:'4px 12px', borderRadius:20, fontSize:'0.8rem', fontWeight:700, marginBottom:12}}>
+                                    {showPetSelector.pkg.title}
+                                </div>
+                                <p>Quem será o sortudo que vai ganhar este plano?</p>
+                            </div>
                             
                             <div className="pet-selection-list">
-                                {myPets
-                                    // Mostra apenas pets que NÃO tem assinatura
-                                    .filter(p => !activeSubscriptions.some(s => s.pet_id === p.id))
-                                    .map(p => (
+                                {getUnsubscribedPets().map(p => (
                                     <div 
                                         key={p.id} 
                                         className="pet-select-item clickable-card"
                                         onClick={() => confirmSubscription(p.id)}
                                     >
                                         <img src={getPetAvatarUrl(p.name)} alt={p.name} />
-                                        <div>
+                                        <div style={{flex:1}}>
                                             <strong>{p.name}</strong>
-                                            <small>{p.breed || 'Pet Amado'}</small>
+                                            <small style={{display:'block', color:'#666'}}>{p.breed || 'Pet Amado'}</small>
                                         </div>
-                                        <div className="select-arrow"><Plus size={18} /></div>
+                                        <div className="select-arrow" style={{background: 'var(--brand-green)', border:'none'}}>
+                                            <Check size={18} color="white" />
+                                        </div>
                                     </div>
                                 ))}
                             </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* --- MODAL: GERENCIAR ASSINATURA --- */}
+            {showManageModal && (
+                <div className="modal-overlay">
+                    <div className="modal-content" style={{maxWidth: 400}}>
+                        <div className="modal-header">
+                            <h3>Gerenciar: {showManageModal.pkg.title}</h3>
+                            <button onClick={() => setShowManageModal(null)} className="btn-icon-sm"><X size={20}/></button>
+                        </div>
+                        <div className="wizard-body" style={{padding: '20px'}}>
+                            <p style={{fontSize:'0.9rem', color:'#666', marginBottom: 16}}>
+                                Abaixo estão os pets inscritos neste plano. Você pode cancelar a assinatura individualmente.
+                            </p>
                             
-                            {myPets.filter(p => !activeSubscriptions.some(s => s.pet_id === p.id)).length === 0 && (
-                                <div className="empty-state text-center">
-                                    <p>Todos os seus pets já têm planos!</p>
-                                    <button className="btn btn-ghost btn-sm" onClick={() => setShowPetSelector(null)}>Voltar</button>
-                                </div>
-                            )}
+                            <div style={{display:'flex', flexDirection:'column', gap: 10}}>
+                                {getPetsOnPackage(showManageModal.pkg.id).map(sub => (
+                                    <div key={sub.id} className="card" style={{padding: 12, display:'flex', alignItems:'center', justifyContent:'space-between', border:'1px solid #eee', marginBottom:0}}>
+                                        <div style={{display:'flex', alignItems:'center', gap: 10}}>
+                                            <img src={getPetAvatarUrl(sub.pets?.name || '')} style={{width:40, height:40, borderRadius:'50%', objectFit:'cover'}} />
+                                            <div>
+                                                <strong style={{display:'block', lineHeight:1.2}}>{sub.pets?.name}</strong>
+                                                <span className="status-badge tag-confirmed">Ativo</span>
+                                            </div>
+                                        </div>
+                                        <button 
+                                            className="btn btn-sm btn-ghost" 
+                                            style={{color:'#D63031', borderColor:'#D63031', height: 32, padding: '0 10px'}}
+                                            onClick={() => handleCancelSubscription(sub.id)}
+                                        >
+                                            Cancelar
+                                        </button>
+                                    </div>
+                                ))}
+                            </div>
                         </div>
                     </div>
                 </div>

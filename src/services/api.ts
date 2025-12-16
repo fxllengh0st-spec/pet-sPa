@@ -1,6 +1,5 @@
 
 
-
 import { supabase } from '../lib/supabase';
 import { Appointment, Employee, Pet, Product, Profile, Service, Package, Subscription } from '../types';
 
@@ -109,13 +108,12 @@ export const api = {
           return data as Package[];
       },
       
-      // Alterado para trazer ARRAY de subscriptions, pois agora é por PET
       async getMySubscriptions(userId: string) {
           const { data, error } = await supabase
              .from('subscriptions')
              .select('*, packages(*), pets(name)')
              .eq('user_id', userId)
-             .eq('status', 'active');
+             .eq('status', 'active'); // Traz apenas as ativas
              
           if (error) throw error;
           return data as Subscription[];
@@ -131,7 +129,7 @@ export const api = {
               .maybeSingle();
 
           if (existing) {
-              throw new Error("Este pet já possui um plano ativo. Cancele o anterior ou escolha outro pet.");
+              throw new Error("Este pet já possui um plano ativo. Cancele o anterior para trocar.");
           }
 
           // 2. Cria a assinatura vinculada ao Pet
@@ -144,6 +142,16 @@ export const api = {
 
           if (error) throw error;
           return { success: true, message: 'Assinatura realizada com sucesso!' };
+      },
+
+      async cancelSubscription(subscriptionId: number) {
+          const { error } = await supabase
+              .from('subscriptions')
+              .update({ status: 'cancelled' })
+              .eq('id', subscriptionId);
+          
+          if (error) throw error;
+          return { success: true };
       }
   },
 
@@ -180,7 +188,6 @@ export const api = {
         if (error) throw error;
     },
     async deleteService(id: number) {
-        // Soft delete é melhor, mas aqui faremos hard delete ou set active=false
         const { error } = await supabase.from('services').delete().eq('id', id);
         if (error) throw error;
     },
