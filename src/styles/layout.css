@@ -1,4 +1,5 @@
 
+
 /* =========================================
    LAYOUT & NAVIGATION
    ========================================= */
@@ -109,7 +110,14 @@
     background: linear-gradient(135deg, var(--primary), #8E44AD);
     box-shadow: 0 4px 10px rgba(155, 89, 182, 0.3);
 }
-.nav-link-cta:hover { transform: translateY(-1px); box-shadow: 0 6px 14px rgba(155, 89, 182, 0.4); }
+
+/* Fix: Specific hover state to maintain gradient background and white text */
+.nav-link-item.nav-link-cta:hover { 
+    background: linear-gradient(135deg, #8E44AD, var(--primary)); 
+    color: white !important;
+    transform: translateY(-1px); 
+    box-shadow: 0 6px 14px rgba(155, 89, 182, 0.4); 
+}
 
 .logout-link { color: #999; font-weight: 600; transition: color 0.2s; cursor: pointer; }
 .logout-link:hover { color: #d63031; }
