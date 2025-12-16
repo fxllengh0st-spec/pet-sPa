@@ -5,17 +5,18 @@
    ========================================= */
 
 /* --- AUTH PAGE --- */
-/* Novo estilo para o container de Auth para não ficar branco no branco */
+/* Gradiente mais suave e moderno para login */
 .auth-container {
-    background: radial-gradient(circle at center top, #F0E6F5 0%, var(--bg-app) 70%);
+    background: linear-gradient(135deg, #FDFBFD 0%, #F2F0F7 100%);
     width: 100% !important;
     max-width: 100% !important;
     padding: 20px;
 }
 
 .auth-card {
-    border: 1px solid rgba(155, 89, 182, 0.1);
-    box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+    /* Destaca o card no login */
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    box-shadow: 0 20px 40px rgba(155, 89, 182, 0.1);
 }
 
 .auth-error-banner {
@@ -125,7 +126,7 @@
 }
 @media (min-width: 1024px) { .service-img-card { height: 240px; } }
 
-.service-img-card:hover { transform: translateY(-6px); box-shadow: var(--shadow-card); }
+.service-img-card:hover { transform: translateY(-6px); box-shadow: var(--shadow-float); }
 .service-overlay {
     position: absolute; inset: 0;
     background: linear-gradient(to top, rgba(0,0,0,0.7) 0%, transparent 100%);
@@ -230,7 +231,7 @@
     border: 1px solid var(--border-light);
     text-align: center; transition: all 0.2s;
 }
-.pet-card:hover { border-color: var(--primary); transform: translateY(-2px); }
+.pet-card:hover { border-color: var(--primary); transform: translateY(-2px); box-shadow: var(--shadow-card); }
 .pet-avatar-3d { width: 60px; height: 60px; object-fit: cover; margin-bottom: 8px; border-radius: 50%; }
 
 /* --- ABOUT US --- */
@@ -487,7 +488,7 @@
 }
 .package-card:hover {
     transform: translateY(-8px);
-    box-shadow: 0 16px 32px rgba(0,0,0,0.08);
+    box-shadow: 0 16px 32px rgba(155, 89, 182, 0.15); /* Sombra roxa no hover */
     border-color: #CBD5E0;
 }
 
@@ -497,7 +498,7 @@
     background: linear-gradient(to bottom, #fff, #FDF2FA);
     transform: scale(1.02);
     z-index: 2;
-    box-shadow: 0 10px 30px rgba(155, 89, 182, 0.15);
+    box-shadow: 0 10px 30px rgba(155, 89, 182, 0.2);
 }
 .package-card.highlight-pkg:hover {
     transform: scale(1.04) translateY(-8px);

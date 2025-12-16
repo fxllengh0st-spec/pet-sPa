@@ -9,8 +9,8 @@
   border-radius: var(--radius-md);
   padding: 20px; 
   box-shadow: var(--shadow-card);
-  /* CONTRASTE: Borda sólida em vez de transparente */
-  border: 1px solid var(--border-light); 
+  /* Borda sutil para definição em telas de baixa qualidade */
+  border: 1px solid rgba(226, 232, 240, 0.8); 
   margin-bottom: 16px;
   transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.3s ease, border-color 0.3s ease;
   position: relative;
@@ -18,9 +18,9 @@
   will-change: transform;
 }
 .card:hover {
-    transform: translateY(-2px);
+    transform: translateY(-3px);
     box-shadow: var(--shadow-float);
-    border-color: rgba(155, 89, 182, 0.3); /* Roxo visível no hover */
+    border-color: rgba(155, 89, 182, 0.4); /* Roxo sutil no hover */
 }
 .clickable-card { cursor: pointer; }
 .clickable-card:active { transform: scale(0.98); }
@@ -30,7 +30,7 @@
     color: white; border: none;
     display: flex; flex-direction: column; justify-content: space-between;
     min-height: 140px; 
-    box-shadow: 0 10px 20px rgba(155, 89, 182, 0.25); /* Sombra colorida */
+    box-shadow: 0 10px 25px rgba(155, 89, 182, 0.3); /* Sombra colorida forte */
 }
 
 /* Buttons */
@@ -52,14 +52,14 @@
 .btn-primary { 
     background: linear-gradient(135deg, var(--primary), #8E44AD); 
     color: white; 
-    box-shadow: 0 4px 6px -1px rgba(155, 89, 182, 0.4);
-    border: 1px solid rgba(0,0,0,0.05); /* Definição extra */
+    box-shadow: 0 4px 10px rgba(155, 89, 182, 0.3);
+    border: 1px solid rgba(255,255,255,0.1);
 }
 .btn-primary:disabled { filter: grayscale(1); cursor: not-allowed; box-shadow: none; opacity: 0.7; }
 .btn-primary:hover:not(:disabled) { 
     filter: brightness(1.1);
-    box-shadow: 0 10px 15px -3px rgba(155, 89, 182, 0.4);
-    transform: translateY(-1px);
+    box-shadow: 0 12px 20px -5px rgba(155, 89, 182, 0.5);
+    transform: translateY(-2px);
 }
 
 .btn.loading {
@@ -102,14 +102,15 @@
 .btn-white {
     background: white; color: var(--primary);
     font-weight: 800;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
 }
 .cta-card-gradient .btn-white {
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
 }
 
 .btn-ghost { 
     background: transparent; color: var(--secondary); 
-    border: 1px solid #CBD5E0; /* Mais visível que antes */
+    border: 1px solid #CBD5E0; 
 }
 .btn-ghost:hover { 
     border-color: var(--secondary); 
@@ -146,28 +147,28 @@
 .form-group { margin-bottom: 16px; }
 label { display: block; font-weight: 700; margin-bottom: 6px; color: var(--secondary); font-size: 0.85rem; margin-left: 4px; }
 input, select, textarea {
-  width: 100%; height: 44px;
+  width: 100%; height: 48px; /* Aumentado para melhor toque no mobile */
   padding: 0 16px;
-  /* CONTRASTE: Borda visível nos inputs */
+  /* Borda mais visível e fundo com contraste contra o card branco */
   border: 1px solid #CBD5E1; 
-  border-radius: var(--radius-pill);
+  border-radius: 12px; /* Reduzido de 'pill' para rounded-lg para parecer mais profissional */
   background: var(--bg-input); 
   font-family: 'Inter', sans-serif; font-size: 0.95rem; color: var(--text-main);
   transition: all 0.2s ease;
-  box-shadow: var(--shadow-inner);
+  box-shadow: inset 0 2px 4px rgba(0,0,0,0.02); /* Sombra interna sutil */
   caret-color: var(--primary);
 }
-.input-lg { height: 50px; font-size: 1rem; }
+.input-lg { height: 54px; font-size: 1rem; }
 input:focus, select:focus, textarea:focus { 
     outline: none; background: white; 
     border-color: var(--primary); 
-    box-shadow: 0 0 0 3px var(--primary-glow);
+    box-shadow: 0 0 0 4px var(--primary-glow);
 }
 input::placeholder { color: #A0AEC0; opacity: 1; }
 
 /* Badges & Tags */
 .status-badge {
-    padding: 4px 10px; border-radius: var(--radius-pill);
+    padding: 4px 10px; border-radius: 8px;
     font-size: 0.7rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em;
     display: inline-block; white-space: nowrap;
 }

@@ -27,21 +27,25 @@
   --accent: #FDF2FA;        /* Roxo muito pálido para fundos de ícones */
   --surface: #FFFFFF;
   
-  /* AJUSTE DE CONTRASTE: Fundo mais escuro (Cool Gray) para destacar os cards brancos */
-  --bg-app: #EFF3F8;        
-  --bg-input: #F8FAFC;      /* Input mais claro para diferenciar do fundo app, mas distinto do branco */
-  --border-light: #E2E8F0;  /* Borda padrão sólida para definição */
+  /* AJUSTE DE DESIGN: Fundo com personalidade e Cards definidos */
+  /* Um cinza muito levemente tintado de roxo/azul para modernidade */
+  --bg-app: #F2F4F8;        
+  
+  /* Input mais escuro que o background do app para contraste dentro do card branco */
+  --bg-input: #F1F5F9;      
+  
+  --border-light: #E2E8F0;  
   
   --text-main: #2D3436;
-  --text-body: #566573;     /* Texto um pouco mais escuro para leitura */
+  --text-body: #566573;     
   --text-muted: #95a5a6;
   
-  /* Status Colors (Updated to match Brand Palette) */
-  --status-pending-bg: #FFF8E1; --status-pending-text: #F39C12; /* Amarelo/Laranja */
-  --status-confirmed-bg: #E0F2F1; --status-confirmed-text: #00B894; /* Verde Marca */
-  --status-progress-bg: #E0F7FA; --status-progress-text: #00CEC9; /* Ciano Marca */
-  --status-completed-bg: #F3E5F5; --status-completed-text: #9B59B6; /* Roxo Marca */
-  --status-cancelled-bg: #FFEBEE; --status-cancelled-text: #FF7675; /* Vermelho Suave */
+  /* Status Colors */
+  --status-pending-bg: #FFF8E1; --status-pending-text: #F39C12; 
+  --status-confirmed-bg: #E0F2F1; --status-confirmed-text: #00B894; 
+  --status-progress-bg: #E0F7FA; --status-progress-text: #00CEC9; 
+  --status-completed-bg: #F3E5F5; --status-completed-text: #9B59B6; 
+  --status-cancelled-bg: #FFEBEE; --status-cancelled-text: #FF7675; 
 
   /* Formas */
   --radius-sm: 8px;
@@ -49,11 +53,12 @@
   --radius-lg: 24px;
   --radius-pill: 999px;     
   
-  /* Sombras - Intensificadas para profundidade */
-  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.1);
-  --shadow-card: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-  --shadow-float: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-  --shadow-inner: inset 0 2px 4px 0 rgba(0, 0, 0, 0.06);
+  /* Sombras - Coloridas para visual "Premium" */
+  --shadow-sm: 0 2px 4px rgba(155, 89, 182, 0.05);
+  /* Sombra principal do card: Leve tom roxo para integrar com o fundo */
+  --shadow-card: 0 4px 20px -2px rgba(45, 52, 54, 0.08), 0 0 0 1px rgba(0,0,0,0.02);
+  --shadow-float: 0 20px 30px -5px rgba(155, 89, 182, 0.15);
+  --shadow-inner: inset 0 2px 4px 0 rgba(0, 0, 0, 0.03);
   
   /* Z-Index Hierarchy */
   --z-back: 0;
