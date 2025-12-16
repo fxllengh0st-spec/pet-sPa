@@ -1,6 +1,6 @@
 
 import React, { useMemo } from 'react';
-import { Activity, CalendarCheck, Clock, ChevronRight, Droplet, Calendar, CheckCircle } from 'lucide-react';
+import { Activity, CalendarCheck, Clock, ChevronRight, Droplet, Calendar } from 'lucide-react';
 import { Appointment } from '../types';
 
 interface ActiveTrackingCardProps {
@@ -21,27 +21,25 @@ export const ActiveTrackingCard: React.FC<ActiveTrackingCardProps> = ({
     
     // Lógica para encontrar TODOS os agendamentos ativos/relevantes
     const activeApps = useMemo(() => {
-        let relevantApps = appointments;
-        
-        // Filtra por Pet se necessário
-        if (filterPetId) {
-            relevantApps = relevantApps.filter(a => a.pet_id === filterPetId);
-        }
-
         const now = new Date();
 
-        // Critérios:
-        // 1. Em Progresso (Sempre mostra)
-        // 2. Confirmado (Apenas Futuros ou Hoje)
-        // 3. Pendente (Apenas Futuros ou Hoje)
-        return relevantApps.filter(a => {
-            if (a.status === 'in_progress') return true;
-            if (a.status === 'cancelled' || a.status === 'completed') return false;
+        return appointments.filter(a => {
+            // 0. Filtro Opcional de Pet
+            if (filterPetId && a.pet_id !== filterPetId) return false;
+
+            // 1. REGRA CRÍTICA: Nunca mostrar Finalizados ou Cancelados no Rastreio
+            if (a.status === 'completed' || a.status === 'cancelled') return false;
             
-            // Para confirmados/pendentes, verificar se data fim > agora
+            // 2. Em Progresso (Sempre mostra, pois está acontecendo agora)
+            if (a.status === 'in_progress') return true;
+
+            // 3. Confirmados ou Pendentes (Apenas se ainda não tiver passado o horário de fim)
+            // Se o horário final já passou e não foi marcado como completed/in_progress, escondemos do tracker 
+            // (assume-se que já acabou ou foi esquecido, não é mais "ativo" para o usuário monitorar)
             return new Date(a.end_time) > now;
+
         }).sort((a,b) => {
-            // Ordenação: Em andamento primeiro, depois por data mais próxima
+            // Ordenação: Em andamento primeiro (topo), depois por data mais próxima
             if (a.status === 'in_progress' && b.status !== 'in_progress') return -1;
             if (b.status === 'in_progress' && a.status !== 'in_progress') return 1;
             return new Date(a.start_time).getTime() - new Date(b.start_time).getTime();
