@@ -1,15 +1,17 @@
-import React, { useState, useMemo } from 'react';
-import { X, AlertCircle, Clock, CalendarCheck, Check } from 'lucide-react';
+import React, { useState, useMemo, useEffect } from 'react';
+import { X, AlertCircle, Clock, CalendarCheck, Check, Calendar as CalendarIcon } from 'lucide-react';
 import { api } from '../services/api';
 import { formatCurrency, toLocalISOString, getPetAvatarUrl } from '../utils/ui';
 import { useToast } from '../context/ToastContext';
 import { Pet, Service } from '../types';
 
-// Business Rules Configuration (Pode vir do banco no futuro)
+// Configuração de Negócio
 const BUSINESS_CONFIG = {
-    OPEN_HOUR: 9,
-    CLOSE_HOUR: 18,
-    WORK_DAYS: [1, 2, 3, 4, 5, 6], // 0=Sun, 1=Mon, ..., 6=Sat (Fechado aos domingos)
+    OPEN_HOUR: 9, // 09:00
+    CLOSE_HOUR: 18, // 18:00 (Último agendamento deve terminar antes ou começar antes?) 
+                    // Vamos assumir que fecha as 18h, então ultimo slot de 30min seria 17:30
+    WORK_DAYS: [1, 2, 3, 4, 5, 6], // 0=Dom (Fechado)
+    SLOT_INTERVAL: 30 // minutos
 };
 
 interface BookingWizardProps {
@@ -30,74 +32,100 @@ export const BookingWizard: React.FC<BookingWizardProps> = ({
     onSuccess 
 }) => {
     const [step, setStep] = useState(1);
+    
+    // Selection States
     const [wizPet, setWizPet] = useState<string | null>(null);
     const [wizService, setWizService] = useState<Service | null>(null);
-    const [wizDate, setWizDate] = useState('');
+    
+    // Date & Time States (Separados para melhor UX)
+    const [selectedDate, setSelectedDate] = useState<string>(''); // YYYY-MM-DD
+    const [selectedTime, setSelectedTime] = useState<string | null>(null); // HH:mm
+    
     const [isBooking, setIsBooking] = useState(false);
     const [validationError, setValidationError] = useState<string | null>(null);
+    
     const toast = useToast();
 
-    // Reset error when user changes date
-    const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        setWizDate(e.target.value);
-        setValidationError(null);
-    };
+    // Inicializa a data com hoje
+    useEffect(() => {
+        const today = new Date();
+        setSelectedDate(today.toISOString().split('T')[0]);
+    }, []);
 
-    // Advanced Validation Logic (Frontend Check)
-    const validateTimeRules = (dateStr: string): string | null => {
-        if (!dateStr) return "Selecione uma data.";
-        
-        const date = new Date(dateStr);
+    // Gera os slots de tempo baseados na data selecionada
+    const timeSlots = useMemo(() => {
+        if (!selectedDate) return [];
+
+        const slots: string[] = [];
         const now = new Date();
+        const isToday = selectedDate === now.toISOString().split('T')[0];
         
-        // 1. Past Date Check
-        if (date < now) {
-            return "Não podemos voltar no tempo! Selecione uma data futura.";
-        }
+        // Loop das 09:00 até as 17:30 (considerando fechar as 18:00)
+        // Se o serviço for longo (ex: 60min), talvez devêssemos limitar o ultimo slot, 
+        // mas para UX simples, vamos listar os slots de inicio.
+        
+        let currentHour = BUSINESS_CONFIG.OPEN_HOUR;
+        let currentMinute = 0;
 
-        // 2. Business Days Check
-        const day = date.getDay();
-        if (!BUSINESS_CONFIG.WORK_DAYS.includes(day)) {
-            return "Estamos fechados aos domingos. Que tal segunda-feira?";
-        }
+        while (currentHour < BUSINESS_CONFIG.CLOSE_HOUR) {
+            // Formatar HH:mm
+            const timeStr = `${currentHour.toString().padStart(2, '0')}:${currentMinute.toString().padStart(2, '0')}`;
+            
+            // Validação de "Passado" para o dia de hoje
+            let isValid = true;
+            if (isToday) {
+                const slotDate = new Date(`${selectedDate}T${timeStr}`);
+                if (slotDate < now) isValid = false;
+            }
 
-        // 3. Business Hours Check
-        const hour = date.getHours();
-        if (hour < BUSINESS_CONFIG.OPEN_HOUR || hour >= BUSINESS_CONFIG.CLOSE_HOUR) {
-            return `Nosso horário é das ${BUSINESS_CONFIG.OPEN_HOUR}h às ${BUSINESS_CONFIG.CLOSE_HOUR}h.`;
-        }
+            if (isValid) {
+                slots.push(timeStr);
+            }
 
-        return null;
-    };
+            // Incremento
+            currentMinute += BUSINESS_CONFIG.SLOT_INTERVAL;
+            if (currentMinute >= 60) {
+                currentHour++;
+                currentMinute = 0;
+            }
+        }
+        return slots;
+    }, [selectedDate]);
+
+    // Validação de Dia da Semana (Domingo)
+    const isDayValid = useMemo(() => {
+        if (!selectedDate) return false;
+        const dt = new Date(selectedDate);
+        // getDay: 0 = Domingo. Ajuste de fuso pode ser tricky, mas YYYY-MM-DD costuma ser UTC ou local dependendo do browser.
+        // Vamos forçar o parse correto adicionando T12:00 para evitar problemas de timezone shift
+        const dayOfWeek = new Date(`${selectedDate}T12:00:00`).getDay();
+        return BUSINESS_CONFIG.WORK_DAYS.includes(dayOfWeek);
+    }, [selectedDate]);
 
     const handleConfirm = async () => {
-        if(!wizPet || !wizService || !wizDate) return;
-
-        // 1. Run local validation (Business Rules)
-        const localError = validateTimeRules(wizDate);
-        if (localError) {
-            setValidationError(localError);
-            toast.warning(localError);
-            return;
-        }
+        if(!wizPet || !wizService || !selectedDate || !selectedTime) return;
 
         try {
             setIsBooking(true);
-            const start = new Date(wizDate);
+            setValidationError(null);
+
+            // Montar ISO String final
+            const startIso = `${selectedDate}T${selectedTime}:00`;
+            const start = new Date(startIso);
             const duration = wizService.duration_minutes;
             const end = new Date(start.getTime() + duration * 60000);
 
-            // 2. Check Availability with Backend (Collision Detection)
+            // 1. Check Availability with Backend (Collision Detection)
             const isAvailable = await api.booking.checkAvailability(start.toISOString(), end.toISOString());
             
             if (!isAvailable) {
-                setValidationError("Já existe um agendamento neste horário. Por favor, escolha outro.");
+                setValidationError("Este horário já está reservado. Por favor, escolha outro slot.");
                 toast.error("Horário indisponível! 😓");
                 setIsBooking(false);
                 return;
             }
 
-            // 3. Create Appointment (Success)
+            // 2. Create Appointment (Success)
             await api.booking.createAppointment(session.user.id, wizPet, wizService.id, start.toISOString(), end.toISOString());
             
             await onSuccess();
@@ -113,11 +141,11 @@ export const BookingWizard: React.FC<BookingWizardProps> = ({
 
     // Calculate dynamic end time for preview
     const endTimePreview = useMemo(() => {
-        if (!wizDate || !wizService) return '';
-        const start = new Date(wizDate);
+        if (!selectedDate || !selectedTime || !wizService) return '';
+        const start = new Date(`${selectedDate}T${selectedTime}:00`);
         const end = new Date(start.getTime() + wizService.duration_minutes * 60000);
         return end.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
-    }, [wizDate, wizService]);
+    }, [selectedDate, selectedTime, wizService]);
 
     return (
         <div className="modal-overlay">
@@ -136,6 +164,7 @@ export const BookingWizard: React.FC<BookingWizardProps> = ({
                 </div>
 
                 <div className="wizard-body page-enter">
+                    {/* STEP 1: PET SELECTION */}
                     {step === 1 && (
                         <div className="fade-in-up">
                             <h4 className="text-center mb-4">Quem vai receber cuidados hoje?</h4>
@@ -167,6 +196,7 @@ export const BookingWizard: React.FC<BookingWizardProps> = ({
                         </div>
                     )}
 
+                    {/* STEP 2: SERVICE SELECTION */}
                     {step === 2 && (
                         <div className="fade-in-up">
                             <h4 className="text-center mb-4">Qual serviço?</h4>
@@ -190,46 +220,93 @@ export const BookingWizard: React.FC<BookingWizardProps> = ({
                         </div>
                     )}
 
+                    {/* STEP 3: DATE & SLOT SELECTION (UPDATED) */}
                     {step === 3 && (
                         <div className="fade-in-up">
-                            <h4 className="text-center mb-4">Quando?</h4>
+                            <h4 className="text-center mb-2">Quando?</h4>
                             
-                            <div className="card" style={{padding: '16px', background: '#F8FAFC', border: '1px solid #E2E8F0', marginBottom: 20}}>
-                                <div style={{fontSize:'0.85rem', color:'#666', marginBottom:12, display:'flex', alignItems:'center', gap:6}}>
-                                    <CalendarCheck size={16} />
-                                    <span>Horário: <strong>Seg-Sáb, 09:00 às 18:00</strong></span>
-                                </div>
-                                <div className="form-group" style={{marginBottom:0}}>
-                                    <label>Data e Hora de Início</label>
-                                    <input 
-                                        type="datetime-local" 
-                                        className={`input-lg ${validationError ? 'border-red-500' : ''}`}
-                                        value={wizDate} 
-                                        onChange={handleDateChange} 
-                                        min={toLocalISOString(new Date())}
-                                        style={validationError ? {borderColor: '#ef4444', backgroundColor: '#FEF2F2'} : {}}
-                                    />
-                                </div>
-                                {validationError && (
-                                    <div className="text-red-500 text-sm mt-3 flex items-start gap-2 animate-pulse">
-                                        <AlertCircle size={16} style={{marginTop:2}}/> 
-                                        <span>{validationError}</span>
+                            {/* Date Picker Customizado */}
+                            <div className="form-group" style={{marginBottom:16}}>
+                                <label style={{display:'flex', alignItems:'center', gap:6}}>
+                                    <CalendarIcon size={14}/> Selecione o Dia
+                                </label>
+                                <input 
+                                    type="date" 
+                                    className="input-lg"
+                                    value={selectedDate} 
+                                    min={new Date().toISOString().split('T')[0]}
+                                    onChange={(e) => {
+                                        setSelectedDate(e.target.value);
+                                        setSelectedTime(null); // Reset time on date change
+                                        setValidationError(null);
+                                    }}
+                                />
+                                {!isDayValid && selectedDate && (
+                                    <div className="text-red-500 text-sm mt-2 flex items-center gap-2">
+                                        <AlertCircle size={14}/> Fechado aos domingos!
                                     </div>
                                 )}
                             </div>
+
+                            {/* Time Slot Grid */}
+                            {isDayValid && selectedDate && (
+                                <div className="fade-in">
+                                    <label style={{display:'block', marginBottom:8, fontWeight:700, fontSize:'0.85rem', color:'var(--secondary)'}}>
+                                        Horários Disponíveis ({timeSlots.length})
+                                    </label>
+                                    
+                                    {timeSlots.length === 0 ? (
+                                        <div className="p-4 bg-gray-100 rounded-lg text-center text-gray-500 text-sm">
+                                            Não há mais horários para hoje. Tente outra data.
+                                        </div>
+                                    ) : (
+                                        <div style={{
+                                            display: 'grid', 
+                                            gridTemplateColumns: 'repeat(4, 1fr)', 
+                                            gap: 8,
+                                            maxHeight: 180,
+                                            overflowY: 'auto',
+                                            paddingRight: 4
+                                        }}>
+                                            {timeSlots.map(time => (
+                                                <button
+                                                    key={time}
+                                                    onClick={() => { setSelectedTime(time); setValidationError(null); }}
+                                                    className={`
+                                                        py-2 px-1 rounded-lg text-sm font-bold border transition-all
+                                                        ${selectedTime === time 
+                                                            ? 'bg-purple-600 text-white border-purple-600 shadow-md transform scale-105' 
+                                                            : 'bg-white text-gray-700 border-gray-200 hover:border-purple-300 hover:bg-purple-50'}
+                                                    `}
+                                                >
+                                                    {time}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+
+                            {/* Error Banner */}
+                            {validationError && (
+                                <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-600 text-sm flex items-start gap-2 animate-pulse">
+                                    <AlertCircle size={16} style={{marginTop:2, flexShrink:0}}/> 
+                                    <span>{validationError}</span>
+                                </div>
+                            )}
                             
-                            {wizPet && wizService && wizDate && !validationError && (
+                            {/* Summary & Actions */}
+                            {wizPet && wizService && selectedDate && selectedTime && !validationError && (
                                 <div className="summary-card pop-in">
-                                    <h5 style={{margin:'0 0 10px 0', borderBottom:'1px solid #ddd', paddingBottom:6, color:'var(--secondary)'}}>Resumo do Pedido</h5>
+                                    <h5 style={{margin:'0 0 10px 0', borderBottom:'1px solid #ddd', paddingBottom:6, color:'var(--secondary)'}}>Resumo</h5>
                                     <div className="summary-row"><span>Pet:</span> <strong>{pets.find(p=>p.id===wizPet)?.name}</strong></div>
                                     <div className="summary-row"><span>Serviço:</span> <strong>{wizService.name}</strong></div>
                                     <div className="summary-row"><span>Valor:</span> <strong style={{color:'var(--primary)'}}>{formatCurrency(wizService.price)}</strong></div>
                                     <div className="summary-row" style={{marginTop:8, paddingTop:8, borderTop:'1px dashed #ddd'}}>
-                                        <span>Horário Previsto:</span> 
+                                        <span>Horário:</span> 
                                         <strong>
-                                            {new Date(wizDate).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})} 
-                                            <span style={{color:'#666', margin:'0 4px'}}>➝</span> 
-                                            {endTimePreview}
+                                            {selectedTime}
+                                            <span style={{color:'#666', margin:'0 4px', fontSize:'0.8em'}}>➝ {endTimePreview}</span>
                                         </strong>
                                     </div>
                                 </div>
@@ -239,10 +316,10 @@ export const BookingWizard: React.FC<BookingWizardProps> = ({
                                 <button className="btn btn-ghost" onClick={() => setStep(2)}>Voltar</button>
                                 <button 
                                   className={`btn btn-primary ${isBooking ? 'loading' : ''}`} 
-                                  disabled={!wizDate || isBooking || !!validationError} 
+                                  disabled={!selectedTime || isBooking || !!validationError} 
                                   onClick={handleConfirm}
                                 >
-                                    {isBooking ? 'Verificando...' : 'Confirmar Agendamento'}
+                                    {isBooking ? 'Reservando...' : 'Confirmar'}
                                 </button>
                             </div>
                         </div>
