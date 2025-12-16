@@ -109,7 +109,7 @@ export const api = {
       const { error } = await supabase.from('pets').insert({ ...pet, owner_id: userId });
       if (error) throw error;
     },
-    async createAppointment(userId: string, petId: string, serviceId: number, start: string, end: string) {
+    async createAppointment(userId: string, petId: string, serviceId: string | number, start: string, end: string) {
       const { error } = await supabase.from('appointments').insert({
         client_id: userId,
         pet_id: petId,
@@ -350,11 +350,11 @@ export const api = {
         if (error) throw error;
         return data as Service; // Returns the created service
     },
-    async updateService(id: number, service: Partial<Service>) {
+    async updateService(id: number | string, service: Partial<Service>) {
         const { error } = await supabase.from('services').update(service).eq('id', id);
         if (error) throw error;
     },
-    async deleteService(id: number) {
+    async deleteService(id: number | string) {
         const { error } = await supabase.from('services').delete().eq('id', id);
         if (error) throw error;
     },

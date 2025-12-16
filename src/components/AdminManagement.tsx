@@ -16,13 +16,12 @@ export const AdminManagement: React.FC = () => {
     const [isModalOpen, setIsModalOpen] = useState(false);
     
     // Edit State
-    const [editingId, setEditingId] = useState<number | null>(null);
+    const [editingId, setEditingId] = useState<number | string | null>(null);
     
     // Form States (Combined for simplicity, though could be separated)
     const [formData, setFormData] = useState<any>({});
     
     // "Create Service on the fly" State
-    const [isCreatingNewService, setIsCreatingNewService] = useState(false);
     const [newServiceName, setNewServiceName] = useState('');
     const [newServicePrice, setNewServicePrice] = useState('');
     const [newServiceDuration, setNewServiceDuration] = useState('30');
@@ -59,8 +58,6 @@ export const AdminManagement: React.FC = () => {
                 if (Array.isArray(data.features)) {
                     data.features = data.features.join('\n');
                 }
-                // Handle service mapping logic if needed
-                setIsCreatingNewService(false);
             }
             // Garantir que color theme tenha valor
             if (tab === 'packages' && !data.color_theme) {
@@ -79,7 +76,6 @@ export const AdminManagement: React.FC = () => {
                     color_theme: '#9B59B6', active: true, description: '',
                     service_id: '' // Start empty
                 });
-                setIsCreatingNewService(false);
                 setNewServiceName('');
                 setNewServicePrice('');
                 setNewServiceDuration('30');
@@ -88,11 +84,11 @@ export const AdminManagement: React.FC = () => {
         setIsModalOpen(true);
     };
 
-    const handleDelete = async (id: number) => {
+    const handleDelete = async (id: number | string) => {
         if (!window.confirm('Tem certeza que deseja excluir este item?')) return;
         try {
             if (tab === 'services') await api.admin.deleteService(id);
-            else await api.admin.deletePackage(id);
+            else await api.admin.deletePackage(Number(id));
             toast.success('Item excluído com sucesso.');
             fetchData();
         } catch (e) {
@@ -105,61 +101,70 @@ export const AdminManagement: React.FC = () => {
         try {
             const payload = { ...formData };
             
-            // Tratamento específico para Pacotes
+            // --- PACKAGE LOGIC ---
             if (tab === 'packages') {
-                // Converter features string de volta para array
+                // 1. Tratamento de Arrays/Strings
                 if (typeof payload.features === 'string') {
                     payload.features = payload.features.split('\n').filter((l: string) => l.trim() !== '');
                 }
+                
+                // 2. Converter valores numéricos do Pacote
                 payload.price = Number(payload.price);
                 payload.original_price = payload.original_price ? Number(payload.original_price) : null;
                 payload.bath_count = Number(payload.bath_count);
-                // Garantir cor válida se estiver vazia
                 if (!payload.color_theme) payload.color_theme = '#9B59B6';
                 
-                // --- SMART SERVICE CREATION LOGIC ---
-                // Se o usuário escolheu "CRIAR NOVO" (service_id === 'NEW')
+                // 3. LOGICA CRÍTICA: CRIAR NOVO SERVIÇO ON-THE-FLY
                 if (payload.service_id === 'NEW') {
                     if (!newServiceName) {
-                        toast.error("Digite o nome do novo serviço.");
+                        toast.error("Nome do serviço é obrigatório.");
                         return;
                     }
-                    // 1. Criar o serviço primeiro
+
+                    // A: Inserir na tabela services
                     const createdService = await api.admin.createService({
                         name: newServiceName,
                         price: Number(newServicePrice) || 0,
                         duration_minutes: Number(newServiceDuration) || 30,
                         active: true,
-                        description: 'Serviço criado automaticamente via Pacote'
+                        description: `Serviço criado via Pacote: ${payload.title}`
                     });
                     
-                    // 2. Usar o ID do novo serviço
+                    if (!createdService || !createdService.id) {
+                        throw new Error("Falha ao criar serviço vinculado.");
+                    }
+
+                    // B: Usar o ID retornado
                     payload.service_id = createdService.id;
-                    toast.success(`Serviço "${newServiceName}" criado!`);
+                    toast.success(`Serviço "${newServiceName}" criado e vinculado!`);
                     
-                    // Refresh services list for future use without page reload
+                    // Refresh silent na lista de serviços
                     const srvs = await api.admin.getAllServicesAdmin();
                     setServices(srvs || []);
                 }
             } else {
+                // --- SERVICE LOGIC ---
                 payload.price = Number(payload.price);
                 payload.duration_minutes = Number(payload.duration_minutes);
             }
 
+            // --- FINAL SAVE (Insert/Update) ---
             if (editingId) {
                 if (tab === 'services') await api.admin.updateService(editingId, payload);
-                else await api.admin.updatePackage(editingId, payload);
+                else await api.admin.updatePackage(Number(editingId), payload);
                 toast.success('Atualizado com sucesso!');
             } else {
                 if (tab === 'services') await api.admin.createService(payload);
                 else await api.admin.createPackage(payload);
                 toast.success('Criado com sucesso!');
             }
+            
             setIsModalOpen(false);
             fetchData();
+
         } catch (error) {
             console.error(error);
-            toast.error('Erro ao salvar.');
+            toast.error('Erro ao salvar. Verifique os dados.');
         }
     };
 
@@ -201,7 +206,7 @@ export const AdminManagement: React.FC = () => {
                             <tbody>
                                 {tab === 'services' ? services.map(s => (
                                     <tr key={s.id}>
-                                        <td>#{s.id}</td>
+                                        <td style={{fontSize:'0.75rem', fontFamily:'monospace'}} title={String(s.id)}>#{String(s.id).slice(0,6)}...</td>
                                         <td><strong>{s.name}</strong></td>
                                         <td>{formatCurrency(Number(s.price))}</td>
                                         <td>{s.duration_minutes} min</td>
@@ -292,69 +297,73 @@ export const AdminManagement: React.FC = () => {
                                             <label>Tipo de Serviço Vinculado</label>
                                             <select 
                                                 className="input-lg"
-                                                value={formData.service_id || ''} 
+                                                value={formData.service_id ?? ''} 
                                                 onChange={(e) => {
                                                     const val = e.target.value;
-                                                    setFormData({...formData, service_id: val === '' ? null : val === 'NEW' ? 'NEW' : Number(val)});
+                                                    setFormData({...formData, service_id: val === '' ? null : val});
                                                 }}
                                             >
                                                 <option value="">Selecione um serviço...</option>
                                                 {services.map(s => (
                                                     <option key={s.id} value={s.id}>{s.name} ({s.duration_minutes} min)</option>
                                                 ))}
-                                                <option value="NEW" style={{fontWeight:'bold', color:'var(--primary)'}}>+ Criar Novo Serviço</option>
+                                                <option value="NEW" style={{fontWeight:'bold', color:'var(--primary)'}}>+ Criar Novo Serviço (Automático)</option>
                                             </select>
                                         </div>
 
                                         {/* CREATE NEW SERVICE INPUT (CONDITIONAL) */}
                                         {formData.service_id === 'NEW' && (
-                                            <div className="form-group fade-in-up" style={{background:'#F3E5F5', padding:12, borderRadius:12}}>
+                                            <div className="form-group fade-in-up" style={{background:'#F3E5F5', padding:16, borderRadius:12, border: '1px dashed var(--primary)'}}>
+                                                <h4 style={{marginTop:0, marginBottom:12, color:'var(--primary)', fontSize:'0.9rem'}}>Dados do Novo Serviço</h4>
                                                 <div className="form-group">
-                                                    <label style={{color:'var(--primary)'}}>Nome do Novo Serviço</label>
+                                                    <label>Nome do Serviço</label>
                                                     <input 
                                                         type="text" 
                                                         placeholder="Ex: Banho Premium Plus" 
                                                         value={newServiceName} 
                                                         onChange={e => setNewServiceName(e.target.value)}
                                                         autoFocus
+                                                        style={{background:'white'}}
                                                     />
                                                 </div>
                                                 
                                                 <div style={{display:'flex', gap:10}}>
                                                     <div className="form-group full-width">
-                                                        <label style={{color:'var(--primary)'}}>Preço Base (R$)</label>
+                                                        <label>Preço do Serviço (R$)</label>
                                                         <input 
                                                             type="number" 
                                                             step="0.01"
                                                             value={newServicePrice} 
                                                             onChange={e => setNewServicePrice(e.target.value)}
                                                             placeholder="0,00"
+                                                            style={{background:'white'}}
                                                         />
                                                     </div>
                                                     <div className="form-group full-width">
-                                                        <label style={{color:'var(--primary)'}}>Duração (min)</label>
+                                                        <label>Duração (min)</label>
                                                         <input 
                                                             type="number" 
                                                             value={newServiceDuration} 
                                                             onChange={e => setNewServiceDuration(e.target.value)}
+                                                            style={{background:'white'}}
                                                         />
                                                     </div>
                                                 </div>
 
-                                                <small style={{display:'block', marginTop:0, color:'#666'}}>
-                                                    O serviço será criado e vinculado automaticamente a este pacote.
+                                                <small style={{display:'block', color:'#666'}}>
+                                                    ℹ️ Este serviço será cadastrado automaticamente na tabela de serviços.
                                                 </small>
                                             </div>
                                         )}
 
                                         <div style={{display:'flex', gap:10}}>
                                             <div className="form-group full-width">
-                                                <label>Preço Final (R$)</label>
+                                                <label>Preço do Pacote (R$)</label>
                                                 <input required type="number" step="0.01" value={formData.price} onChange={e => setFormData({...formData, price: e.target.value})} />
                                             </div>
                                             <div className="form-group full-width">
                                                 <label>Preço Original (R$)</label>
-                                                <input type="number" step="0.01" value={formData.original_price || ''} onChange={e => setFormData({...formData, original_price: e.target.value})} />
+                                                <input type="number" step="0.01" value={formData.original_price || ''} onChange={e => setFormData({...formData, original_price: e.target.value})} placeholder="Para mostrar desconto" />
                                             </div>
                                         </div>
                                         <div style={{display:'flex', gap:10}}>
@@ -363,7 +372,7 @@ export const AdminManagement: React.FC = () => {
                                                 <input required type="number" value={formData.bath_count} onChange={e => setFormData({...formData, bath_count: e.target.value})} />
                                             </div>
                                             <div className="form-group full-width">
-                                                <label>Cor do Tema (Hex)</label>
+                                                <label>Cor do Tema</label>
                                                 <input type="color" style={{height:44, padding:4}} value={formData.color_theme && formData.color_theme.startsWith('#') ? formData.color_theme : '#9B59B6'} onChange={e => setFormData({...formData, color_theme: e.target.value})} />
                                             </div>
                                         </div>

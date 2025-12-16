@@ -1,3 +1,4 @@
+
 import React, { useMemo } from 'react';
 import { Activity, CalendarCheck, Clock, ChevronRight, Droplet, Calendar, CheckCircle } from 'lucide-react';
 import { Appointment } from '../types';
@@ -18,8 +19,8 @@ export const ActiveTrackingCard: React.FC<ActiveTrackingCardProps> = ({
     variant = 'full'
 }) => {
     
-    // Lógica centralizada de prioridade
-    const activeApp = useMemo(() => {
+    // Lógica para encontrar TODOS os agendamentos ativos/relevantes
+    const activeApps = useMemo(() => {
         let relevantApps = appointments;
         
         // Filtra por Pet se necessário
@@ -27,91 +28,107 @@ export const ActiveTrackingCard: React.FC<ActiveTrackingCardProps> = ({
             relevantApps = relevantApps.filter(a => a.pet_id === filterPetId);
         }
 
-        // 1. Em Progresso (Maior prioridade)
-        const inProgress = relevantApps.find(a => a.status === 'in_progress');
-        if (inProgress) return inProgress;
-        
-        // 2. Confirmado (Próximo no futuro)
-        // Filtra apenas futuros ou hoje
         const now = new Date();
-        const confirmed = relevantApps
-            .filter(a => a.status === 'confirmed' && new Date(a.end_time) > now)
-            .sort((a,b) => new Date(a.start_time).getTime() - new Date(b.start_time).getTime())[0];
-        if (confirmed) return confirmed;
 
-        // 3. Pendente (Futuros)
-        const pending = relevantApps
-            .filter(a => a.status === 'pending' && new Date(a.end_time) > now)
-            .sort((a,b) => new Date(a.start_time).getTime() - new Date(b.start_time).getTime())[0];
-        
-        return pending;
+        // Critérios:
+        // 1. Em Progresso (Sempre mostra)
+        // 2. Confirmado (Apenas Futuros ou Hoje)
+        // 3. Pendente (Apenas Futuros ou Hoje)
+        return relevantApps.filter(a => {
+            if (a.status === 'in_progress') return true;
+            if (a.status === 'cancelled' || a.status === 'completed') return false;
+            
+            // Para confirmados/pendentes, verificar se data fim > agora
+            return new Date(a.end_time) > now;
+        }).sort((a,b) => {
+            // Ordenação: Em andamento primeiro, depois por data mais próxima
+            if (a.status === 'in_progress' && b.status !== 'in_progress') return -1;
+            if (b.status === 'in_progress' && a.status !== 'in_progress') return 1;
+            return new Date(a.start_time).getTime() - new Date(b.start_time).getTime();
+        });
+
     }, [appointments, filterPetId]);
 
-    if (!activeApp) return null;
+    if (!activeApps || activeApps.length === 0) return null;
 
-    const handleClick = () => {
-        setSelectedAppointment(activeApp);
+    const handleClick = (app: Appointment) => {
+        setSelectedAppointment(app);
         onNavigate('appointment-details');
     };
 
-    // RENDERIZAÇÃO COMPACTA PARA HEADER
+    // --- RENDERIZAÇÃO COMPACTA PARA HEADER (Lista Horizontal) ---
     if (variant === 'header') {
         return (
-            <div 
-                className={`active-status-card header-compact status-bg-${activeApp.status} clickable-card`}
-                onClick={handleClick}
-            >
-                <div className="compact-icon-box">
-                    {activeApp.status === 'in_progress' && <Activity size={16} className="pulse-animation" />}
-                    {activeApp.status === 'confirmed' && <CalendarCheck size={16} />}
-                    {activeApp.status === 'pending' && <Clock size={16} />}
-                </div>
-                <div className="compact-info">
-                    <span className="compact-pet-name">{activeApp.pets?.name}</span>
-                    <span className="compact-status-text">
-                        {activeApp.status === 'in_progress' ? 'Em Banho' : activeApp.status === 'confirmed' ? 'Confirmado' : 'Solicitado'}
-                    </span>
-                </div>
+            <div style={{display:'flex', gap: 12, overflowX: 'auto', paddingBottom: 4, maxWidth: '100%'}} className="no-scrollbar">
+                {activeApps.map(app => (
+                    <div 
+                        key={app.id}
+                        className={`active-status-card header-compact status-bg-${app.status} clickable-card`}
+                        onClick={() => handleClick(app)}
+                        style={{flexShrink: 0}}
+                    >
+                        <div className="compact-icon-box">
+                            {app.status === 'in_progress' && <Activity size={16} className="pulse-animation" />}
+                            {app.status === 'confirmed' && <CalendarCheck size={16} />}
+                            {app.status === 'pending' && <Clock size={16} />}
+                        </div>
+                        <div className="compact-info">
+                            <span className="compact-pet-name">{app.pets?.name}</span>
+                            <span className="compact-status-text">
+                                {app.status === 'in_progress' ? 'Em Banho' : app.status === 'confirmed' ? 'Confirmado' : 'Solicitado'}
+                            </span>
+                        </div>
+                    </div>
+                ))}
             </div>
         );
     }
 
-    // RENDERIZAÇÃO PADRÃO (CARD FULL)
+    // --- RENDERIZAÇÃO PADRÃO (CARD FULL - Lista Vertical) ---
     return (
-        <div className="reveal-on-scroll" onClick={handleClick} style={{cursor:'pointer', marginBottom: 24}}>
+        <div className="reveal-on-scroll" style={{marginBottom: 24}}>
             <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom: 12}}>
                 <h3 className="section-title" style={{margin:0, fontSize:'1.1rem'}}>
-                    {filterPetId ? 'Status Atual' : 'Acompanhamento'}
+                    {filterPetId ? 'Status Atual' : `Acompanhamento (${activeApps.length})`}
                 </h3>
             </div>
             
-            <div className={`active-status-card status-bg-${activeApp.status}`}>
-                <div className="active-status-header">
-                    <div className="active-status-badge">
-                        {activeApp.status === 'in_progress' && <><Activity size={14} className="pulse-animation"/> Em Atendimento</>}
-                        {activeApp.status === 'confirmed' && <><CalendarCheck size={14}/> Confirmado</>}
-                        {activeApp.status === 'pending' && <><Clock size={14}/> Aguardando Aprovação</>}
+            <div style={{display:'flex', flexDirection:'column', gap: 16}}>
+                {activeApps.map(app => (
+                    <div 
+                        key={app.id} 
+                        className={`active-status-card status-bg-${app.status} clickable-card`} 
+                        onClick={() => handleClick(app)}
+                        style={{marginBottom: 0}} // Remove margem individual pois usamos gap no container
+                    >
+                        <div className="active-status-header">
+                            <div className="active-status-badge">
+                                {app.status === 'in_progress' && <><Activity size={14} className="pulse-animation"/> Em Atendimento</>}
+                                {app.status === 'confirmed' && <><CalendarCheck size={14}/> Confirmado</>}
+                                {app.status === 'pending' && <><Clock size={14}/> Aguardando Aprovação</>}
+                            </div>
+                            <div style={{background:'rgba(255,255,255,0.2)', borderRadius:'50%', width:32, height:32, display:'flex', alignItems:'center', justifyContent:'center'}}>
+                                <ChevronRight size={18} color="white"/>
+                            </div>
+                        </div>
+                        
+                        <div className="active-status-content">
+                            <h3 style={{display:'flex', alignItems:'center', gap: 8}}>
+                                {app.pets?.name} <span style={{fontSize:'0.6em', opacity:0.8}}>• {app.services?.name}</span>
+                            </h3>
+                            <p>
+                                {app.status === 'in_progress' 
+                                    ? 'Seu pet está recebendo cuidados agora mesmo! 🛁' 
+                                    : `${new Date(app.start_time).toLocaleDateString()} às ${new Date(app.start_time).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}`}
+                            </p>
+                        </div>
+                        
+                        {/* Decorative Icon Background */}
+                        <div style={{position:'absolute', right: -10, bottom: -20, opacity: 0.15}}>
+                            {app.status === 'in_progress' ? <Droplet size={100} fill="white"/> : <Calendar size={100} fill="white"/>}
+                        </div>
                     </div>
-                    <div style={{background:'rgba(255,255,255,0.2)', borderRadius:'50%', width:32, height:32, display:'flex', alignItems:'center', justifyContent:'center'}}>
-                        <ChevronRight size={18} color="white"/>
-                    </div>
-                </div>
-                
-                <div className="active-status-content">
-                    <h3 style={{display:'flex', alignItems:'center', gap: 8}}>
-                        {activeApp.pets?.name} <span style={{fontSize:'0.6em', opacity:0.8}}>• {activeApp.services?.name}</span>
-                    </h3>
-                    <p>
-                        {activeApp.status === 'in_progress' 
-                            ? 'Seu pet está recebendo cuidados agora mesmo! 🛁' 
-                            : `${new Date(activeApp.start_time).toLocaleDateString()} às ${new Date(activeApp.start_time).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}`}
-                    </p>
-                </div>
-                
-                {/* Decorative Icon Background */}
-                <div style={{position:'absolute', right: -10, bottom: -20, opacity: 0.15}}>
-                    {activeApp.status === 'in_progress' ? <Droplet size={100} fill="white"/> : <Calendar size={100} fill="white"/>}
-                </div>
+                ))}
             </div>
         </div>
     );

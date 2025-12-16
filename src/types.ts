@@ -10,7 +10,7 @@ export interface Profile {
 }
 
 export interface Service {
-  id: number;
+  id: string | number; // Updated to support UUID
   name: string;
   description?: string;
   price: number;
@@ -19,14 +19,14 @@ export interface Service {
 }
 
 export interface Pet {
-  id: string; // Alterado de number para string (UUID)
+  id: string; // UUID
   owner_id: string;
   name: string;
   breed?: string;
   weight?: number;
-  birth_date?: string; // Adicionado conforme schema
+  birth_date?: string; 
   notes?: string;
-  avatar_url?: string; // Novo campo para foto
+  avatar_url?: string; 
 }
 
 export type AppointmentStatus = 'pending' | 'confirmed' | 'in_progress' | 'completed' | 'cancelled';
@@ -35,16 +35,15 @@ export interface Appointment {
   id: number;
   created_at: string;
   client_id: string;
-  pet_id: string; // Alterado para string para dar match com Pet
-  service_id: number;
+  pet_id: string; 
+  service_id: string | number; // Updated to support UUID
   employee_id?: string | null;
   start_time: string;
   end_time: string;
   status: AppointmentStatus;
-  // Joins - Alterado para Partial para suportar selects parciais do Supabase
   pets?: Partial<Pet>;
   services?: Partial<Service>;
-  profiles?: Partial<Profile>; // Client profile
+  profiles?: Partial<Profile>; 
 }
 
 export interface Product {
@@ -71,20 +70,20 @@ export interface Package {
     title: string;
     description?: string;
     price: number;
-    original_price?: number; // Para mostrar o desconto (ex: De R$ 200 por R$ 150)
+    original_price?: number; 
     bath_count: number;
     features: string[];
-    highlight: boolean; // Se é o "Mais Popular"
-    color_theme?: string; // Hex ou var css
+    highlight: boolean; 
+    color_theme?: string; 
     active: boolean;
-    service_id?: number; // Link to the specific service type (e.g., Bath)
+    service_id?: string | number; // Updated to support UUID
 }
 
 export interface Subscription {
     id: number;
     user_id: string;
     package_id: number;
-    pet_id?: string; // Novo campo para vincular ao pet
+    pet_id?: string; 
     status: 'active' | 'cancelled' | 'expired';
     created_at: string;
     packages?: Package;
