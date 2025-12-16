@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { X, Dog } from 'lucide-react';
 import { LoginStage, Route } from '../types';
@@ -11,8 +10,7 @@ interface MascotCompanionProps {
     mascotMessage: string;
     showMascotBubble: boolean;
     setShowMascotBubble: (show: boolean) => void;
-    onTriggerBooking: () => void;
-    onTriggerLogin: () => void;
+    onOpenChat: () => void;
 }
 
 export const MascotCompanion: React.FC<MascotCompanionProps> = ({
@@ -23,9 +21,9 @@ export const MascotCompanion: React.FC<MascotCompanionProps> = ({
     mascotMessage,
     showMascotBubble,
     setShowMascotBubble,
-    onTriggerBooking,
-    onTriggerLogin
+    onOpenChat
 }) => {
+    // Se o modal estiver aberto, ou já estiver no chat, ou no fluxo de login, esconde o mascote
     if (showBookingModal || view === 'chat' || loginStage !== 'idle') return null;
     
     return (
@@ -40,8 +38,9 @@ export const MascotCompanion: React.FC<MascotCompanionProps> = ({
             )}
             <div 
                 className="mascot-icon-wrapper"
-                onClick={() => session ? onTriggerBooking() : onTriggerLogin()}
+                onClick={onOpenChat}
                 onMouseEnter={() => setShowMascotBubble(true)}
+                title="Falar com Assistente IA"
             >
                 <Dog size={24} color="white" strokeWidth={2.5} />
             </div>

@@ -196,8 +196,7 @@ export default function App() {
           mascotMessage={mascotMessage}
           showMascotBubble={showMascotBubble}
           setShowMascotBubble={setShowMascotBubble}
-          onTriggerBooking={() => setShowBookingModal(true)}
-          onTriggerLogin={() => navigateTo('login')}
+          onOpenChat={() => navigateTo('chat')}
        />
 
        {/* MOBILE TOP BAR (Logo Only) */}
