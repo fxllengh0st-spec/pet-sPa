@@ -1,7 +1,5 @@
-
-
-import React, { useEffect, useState } from 'react';
-import { ChevronLeft, Check, Crown, Star, ShieldCheck, Dog, X, Plus, Trash2, Settings } from 'lucide-react';
+import React, { useEffect, useState, useMemo } from 'react';
+import { ChevronLeft, Check, Crown, Star, ShieldCheck, Dog, X, Settings, Calendar, Clock, AlertCircle } from 'lucide-react';
 import { Package, Route, Subscription, Pet } from '../types';
 import { api } from '../services/api';
 import { formatCurrency, getPetAvatarUrl } from '../utils/ui';
@@ -12,6 +10,14 @@ interface PackagesViewProps {
     session: any;
 }
 
+// Configuração de Negócio (Duplicada para UI)
+const BUSINESS_CONFIG = {
+    OPEN_HOUR: 9, 
+    CLOSE_HOUR: 18,
+    WORK_DAYS: [1, 2, 3, 4, 5, 6], 
+    SLOT_INTERVAL: 30
+};
+
 export const PackagesView: React.FC<PackagesViewProps> = ({ onNavigate, session }) => {
     const [packages, setPackages] = useState<Package[]>([]);
     const [activeSubscriptions, setActiveSubscriptions] = useState<Subscription[]>([]);
@@ -21,10 +27,16 @@ export const PackagesView: React.FC<PackagesViewProps> = ({ onNavigate, session 
     const [processingId, setProcessingId] = useState<number | null>(null);
     
     // Modais
-    const [showPetSelector, setShowPetSelector] = useState<{pkg: Package} | null>(null);
+    const [showSubscribeWizard, setShowSubscribeWizard] = useState<{pkg: Package} | null>(null);
     const [showManageModal, setShowManageModal] = useState<{pkg: Package} | null>(null);
     
     const toast = useToast();
+
+    // --- STATE DO WIZARD DE ASSINATURA ---
+    const [wizStep, setWizStep] = useState(1);
+    const [wizPetId, setWizPetId] = useState<string | null>(null);
+    const [wizDate, setWizDate] = useState('');
+    const [wizTime, setWizTime] = useState<string | null>(null);
 
     // Função para carregar dados
     const loadData = async () => {
@@ -65,7 +77,56 @@ export const PackagesView: React.FC<PackagesViewProps> = ({ onNavigate, session 
         loadData();
     }, [session]);
 
-    // --- LÓGICA DE SELEÇÃO E ESTADO ---
+    // --- LÓGICA DE SLOTS (Mini version) ---
+    const timeSlots = useMemo(() => {
+        if (!wizDate) return [];
+        const slots: string[] = [];
+        const now = new Date();
+        const isToday = wizDate === now.toLocaleDateString('en-CA');
+        
+        let currentHour = BUSINESS_CONFIG.OPEN_HOUR;
+        let currentMinute = 0;
+        // Assumindo banho médio de 60min para o primeiro agendamento
+        const lastStartHour = BUSINESS_CONFIG.CLOSE_HOUR - 1; 
+
+        while (currentHour < BUSINESS_CONFIG.CLOSE_HOUR) {
+            const timeStr = `${currentHour.toString().padStart(2, '0')}:${currentMinute.toString().padStart(2, '0')}`;
+            const decimalTime = currentHour + (currentMinute / 60);
+
+            if (decimalTime > lastStartHour + 0.001) break;
+
+            let isValid = true;
+            if (isToday) {
+                const slotDate = new Date(`${wizDate}T${timeStr}:00`);
+                if (slotDate < new Date(now.getTime() + 30*60000)) isValid = false;
+            }
+
+            if (isValid) slots.push(timeStr);
+
+            currentMinute += BUSINESS_CONFIG.SLOT_INTERVAL;
+            if (currentMinute >= 60) {
+                currentHour++;
+                currentMinute = 0;
+            }
+        }
+        return slots;
+    }, [wizDate]);
+
+    // Data de validade calculada
+    const expirationDate = useMemo(() => {
+        if (!wizDate) return null;
+        const d = new Date(wizDate);
+        d.setDate(d.getDate() + 30);
+        return d.toLocaleDateString('pt-BR');
+    }, [wizDate]);
+
+    const isDayValid = useMemo(() => {
+        if (!wizDate) return false;
+        const dayOfWeek = new Date(`${wizDate}T12:00:00`).getDay();
+        return BUSINESS_CONFIG.WORK_DAYS.includes(dayOfWeek);
+    }, [wizDate]);
+
+    // --- SELEÇÃO E ESTADO ---
 
     // Pets que NÃO tem nenhuma assinatura ativa
     const getUnsubscribedPets = () => {
@@ -100,23 +161,35 @@ export const PackagesView: React.FC<PackagesViewProps> = ({ onNavigate, session 
             return;
         }
 
-        setShowPetSelector({ pkg });
+        // Reset Wizard
+        setWizStep(1);
+        setWizPetId(null);
+        setWizDate('');
+        setWizTime(null);
+        
+        setShowSubscribeWizard({ pkg });
     };
 
-    const confirmSubscription = async (petId: string) => {
-        if (!showPetSelector) return;
-        const pkg = showPetSelector.pkg;
+    const confirmSubscription = async () => {
+        if (!showSubscribeWizard || !wizPetId || !wizDate || !wizTime) return;
+        const pkg = showSubscribeWizard.pkg;
 
         setProcessingId(pkg.id);
-        setShowPetSelector(null);
+        const wizardStateCopy = { ...showSubscribeWizard }; // Keep reference
+        setShowSubscribeWizard(null); // Close modal visual
 
         try {
-            await api.packages.subscribe(session.user.id, pkg.id, petId);
-            toast.success(`Parabéns! Plano ${pkg.title} ativado! 🎉`);
+            const startIso = `${wizDate}T${wizTime}:00`;
+            const result = await api.packages.subscribe(session.user.id, pkg, wizPetId, startIso);
+            
+            if (result.warning) toast.warning(result.warning);
+            else toast.success(result.message || 'Assinatura confirmada!');
+            
             await loadData(); 
         } catch (e: any) {
             console.error(e);
             toast.error(e.message || 'Erro ao processar assinatura.');
+            // Reopen if error? For now, user has to retry.
         } finally {
             setProcessingId(null);
         }
@@ -126,7 +199,6 @@ export const PackagesView: React.FC<PackagesViewProps> = ({ onNavigate, session 
         if (!window.confirm("Tem certeza que deseja cancelar esta assinatura? Os benefícios serão encerrados imediatamente.")) return;
         
         try {
-            // Loading visual local se quisesse, mas vamos usar toast
             toast.info("Processando cancelamento...");
             await api.packages.cancelSubscription(subId);
             toast.success("Assinatura cancelada com sucesso.");
@@ -148,29 +220,16 @@ export const PackagesView: React.FC<PackagesViewProps> = ({ onNavigate, session 
         const allPetsProtected = myPets.length > 0 && availablePets.length === 0;
 
         if (allPetsProtected) {
-            // Se todos os meus pets estão neste plano específico
             if (hasSomePetOnThisPlan && petsOnThisPlan.length === myPets.length) {
-                return (
-                    <button className="btn full-width btn-secondary" disabled style={{opacity: 0.8}}>
-                        Todos Protegidos <Check size={16} />
-                    </button>
-                );
+                return <button className="btn full-width btn-secondary" disabled style={{opacity: 0.8}}>Todos Protegidos <Check size={16} /></button>;
             }
-             // Se estão protegidos mas nem todos neste plano
-            return (
-                <button className="btn full-width btn-secondary" disabled style={{opacity: 0.8}}>
-                   Seus pets já possuem planos
-                </button>
-            );
+            return <button className="btn full-width btn-secondary" disabled style={{opacity: 0.8}}>Seus pets já possuem planos</button>;
         }
 
         return (
             <button 
                 className={`btn full-width ${processingId === pkg.id ? 'loading' : ''}`}
-                style={pkg.highlight ? { 
-                    background: 'linear-gradient(135deg, var(--primary), #8E44AD)',
-                    color: 'white'
-                } : {}}
+                style={pkg.highlight ? { background: 'linear-gradient(135deg, var(--primary), #8E44AD)', color: 'white' } : {}}
                 onClick={() => handleInitiateSubscribe(pkg)}
                 disabled={processingId !== null}
             >
@@ -181,11 +240,8 @@ export const PackagesView: React.FC<PackagesViewProps> = ({ onNavigate, session 
 
     return (
         <div className="container page-enter" style={{ paddingTop: 20 }}>
-            {/* Header */}
             <div className="nav-header">
-                <button className="btn-icon-sm" onClick={() => onNavigate('home')}>
-                    <ChevronLeft size={22} />
-                </button>
+                <button className="btn-icon-sm" onClick={() => onNavigate('home')}><ChevronLeft size={22} /></button>
                 <h3>Clube de Assinatura</h3>
                 <div style={{ width: 44 }}></div>
             </div>
@@ -197,7 +253,6 @@ export const PackagesView: React.FC<PackagesViewProps> = ({ onNavigate, session 
                 </p>
             </div>
 
-            {/* Packages Grid */}
             <div className="packages-grid">
                 {loading ? (
                     <div className="spinner-center"><div className="spinner"></div></div>
@@ -206,11 +261,7 @@ export const PackagesView: React.FC<PackagesViewProps> = ({ onNavigate, session 
                          <div className="text-center w-full fade-in-up" style={{gridColumn: '1/-1', padding: 60, background: '#f8f9fa', borderRadius: 16}}>
                             <ShieldCheck size={48} color="#999" style={{marginBottom:16, opacity: 0.5}}/>
                             <h3 style={{color: '#666'}}>Nenhum plano disponível</h3>
-                            <p style={{color: '#999'}}>O catálogo de assinaturas está vazio no momento.</p>
-                            {session?.user?.email?.includes('admin') && (
-                                <button className="btn btn-secondary btn-sm mt-4" onClick={() => onNavigate('admin')}>Cadastrar no Admin</button>
-                            )}
-                         </div>
+                        </div>
                     ) :
                     packages.map((pkg, idx) => {
                         const price = Number(pkg.price);
@@ -219,126 +270,132 @@ export const PackagesView: React.FC<PackagesViewProps> = ({ onNavigate, session 
                         const hasSubs = petsOnThisPlan.length > 0;
                         
                         return (
-                        <div 
-                            key={pkg.id} 
-                            // CHANGE: mudado de 'reveal-on-scroll' para 'fade-in-up' para garantir visibilidade
-                            className={`card package-card fade-in-up ${pkg.highlight ? 'highlight-pkg' : ''} ${hasSubs ? 'active-plan-card' : ''}`}
-                            style={{ transitionDelay: `${idx * 0.1}s` }}
-                        >
-                            {/* Badges */}
-                            {pkg.highlight && (
-                                <div className="pkg-badge">
-                                    <Crown size={14} fill="white" /> POPULAR
-                                </div>
-                            )}
+                        <div key={pkg.id} className={`card package-card fade-in-up ${pkg.highlight ? 'highlight-pkg' : ''} ${hasSubs ? 'active-plan-card' : ''}`} style={{ transitionDelay: `${idx * 0.1}s` }}>
+                            {pkg.highlight && <div className="pkg-badge"><Crown size={14} fill="white" /> POPULAR</div>}
                             
-                            {/* Cabeçalho */}
                             <div className="pkg-header" style={{ borderBottomColor: pkg.color_theme || 'var(--primary)' }}>
-                                <h3 style={{ color: pkg.highlight ? 'var(--primary)' : 'var(--secondary)' }}>
-                                    {pkg.title}
-                                </h3>
+                                <h3 style={{ color: pkg.highlight ? 'var(--primary)' : 'var(--secondary)' }}>{pkg.title}</h3>
                                 <p className="pkg-desc">{pkg.description}</p>
                             </div>
                             
-                            {/* Pets Ativos neste Plano */}
                             {hasSubs && (
                                 <div className="subscribed-section fade-in">
                                     <div className="subscribed-avatars-row">
                                         {petsOnThisPlan.map(s => (
-                                            <img 
-                                                key={s.id} 
-                                                src={getPetAvatarUrl(s.pets?.name || '')} 
-                                                alt={s.pets?.name} 
-                                                title={`${s.pets?.name} tem este plano`}
-                                                className="sub-avatar-mini"
-                                            />
+                                            <img key={s.id} src={getPetAvatarUrl(s.pets?.name || '')} className="sub-avatar-mini" title={`${s.pets?.name} tem este plano`}/>
                                         ))}
                                     </div>
-                                    <button className="btn-manage-link" onClick={() => setShowManageModal({pkg})}>
-                                        <Settings size={12} /> Gerenciar
-                                    </button>
+                                    <button className="btn-manage-link" onClick={() => setShowManageModal({pkg})}><Settings size={12} /> Gerenciar</button>
                                 </div>
                             )}
 
-                            {/* Preço */}
                             <div className="pkg-price-area">
-                                {originalPrice && originalPrice > price && (
-                                    <span className="pkg-old-price">de {formatCurrency(originalPrice)}</span>
-                                )}
+                                {originalPrice && originalPrice > price && <span className="pkg-old-price">de {formatCurrency(originalPrice)}</span>}
                                 <div className="pkg-current-price">
-                                    <small>R$</small>
-                                    <strong>{price.toFixed(0)}</strong>
-                                    <small>,00 /mês</small>
+                                    <small>R$</small><strong>{price.toFixed(0)}</strong><small>,00 /mês</small>
                                 </div>
                             </div>
 
-                            {/* Lista de Features */}
                             <ul className="pkg-features">
                                 {(pkg.features || []).map((feat, i) => (
                                     <li key={i}>
-                                        <div className="check-icon" style={{ background: pkg.color_theme || 'var(--primary)' }}>
-                                            <Check size={12} color="white" strokeWidth={3} />
-                                        </div>
+                                        <div className="check-icon" style={{ background: pkg.color_theme || 'var(--primary)' }}><Check size={12} color="white" strokeWidth={3} /></div>
                                         {feat}
                                     </li>
                                 ))}
                             </ul>
 
-                            {/* Botão de Ação */}
-                            <div style={{marginTop: 'auto'}}>
-                                {renderButton(pkg)}
-                            </div>
+                            <div style={{marginTop: 'auto'}}>{renderButton(pkg)}</div>
                         </div>
                     )})
                 )}
             </div>
             
-            <div className="card mt-4 fade-in-up" style={{background: '#FFF8E1', border: '1px solid #FFE082'}}>
-                <div style={{display:'flex', gap: 12}}>
-                    <Star color="#FBC02D" fill="#FBC02D" />
-                    <div>
-                        <strong style={{color: '#F57F17'}}>Benefício Exclusivo</strong>
-                        <p style={{fontSize:'0.9rem', margin:0, color:'#5d4037'}}>
-                            Assinantes têm prioridade na agenda de finais de semana e feriados!
-                        </p>
-                    </div>
-                </div>
-            </div>
-
-            {/* --- MODAL: SELEÇÃO DE PET PARA ASSINAR --- */}
-            {showPetSelector && (
+            {/* --- WIZARD: SELEÇÃO DE PET + DATA --- */}
+            {showSubscribeWizard && (
                 <div className="modal-overlay">
                     <div className="modal-content" style={{maxWidth: 400}}>
                         <div className="modal-header">
-                            <h3>Vincular Pet</h3>
-                            <button onClick={() => setShowPetSelector(null)} className="btn-icon-sm"><X size={20}/></button>
+                            <h3>Assinar {showSubscribeWizard.pkg.title}</h3>
+                            <button onClick={() => setShowSubscribeWizard(null)} className="btn-icon-sm"><X size={20}/></button>
                         </div>
-                        <div className="wizard-body" style={{padding: '24px 20px'}}>
-                            <div className="text-center mb-4">
-                                <div style={{background: showPetSelector.pkg.color_theme || 'var(--primary)', color:'white', display:'inline-block', padding:'4px 12px', borderRadius:20, fontSize:'0.8rem', fontWeight:700, marginBottom:12}}>
-                                    {showPetSelector.pkg.title}
-                                </div>
-                                <p>Quem será o sortudo que vai ganhar este plano?</p>
-                            </div>
+
+                        {/* STEP PROGRESS */}
+                        <div className="wizard-steps">
+                            <div className={`wizard-step-dot ${wizStep >= 1 ? 'active' : ''}`}>1</div>
+                            <div className="wizard-line"></div>
+                            <div className={`wizard-step-dot ${wizStep >= 2 ? 'active' : ''}`}>2</div>
+                        </div>
+
+                        <div className="wizard-body" style={{padding: '20px'}}>
                             
-                            <div className="pet-selection-list">
-                                {getUnsubscribedPets().map(p => (
-                                    <div 
-                                        key={p.id} 
-                                        className="pet-select-item clickable-card"
-                                        onClick={() => confirmSubscription(p.id)}
-                                    >
-                                        <img src={getPetAvatarUrl(p.name)} alt={p.name} />
-                                        <div style={{flex:1}}>
-                                            <strong>{p.name}</strong>
-                                            <small style={{display:'block', color:'#666'}}>{p.breed || 'Pet Amado'}</small>
-                                        </div>
-                                        <div className="select-arrow" style={{background: 'var(--brand-green)', border:'none'}}>
-                                            <Check size={18} color="white" />
-                                        </div>
+                            {/* STEP 1: PET */}
+                            {wizStep === 1 && (
+                                <div className="fade-in-up">
+                                    <h4 className="text-center mb-4">Quem vai ganhar o pacote?</h4>
+                                    <div className="pet-selection-list">
+                                        {getUnsubscribedPets().map(p => (
+                                            <div key={p.id} 
+                                                 className={`pet-select-item clickable-card ${wizPetId === p.id ? 'selected' : ''}`}
+                                                 style={wizPetId === p.id ? {borderColor:'var(--primary)', background:'var(--accent)'} : {}}
+                                                 onClick={() => setWizPetId(p.id)}
+                                            >
+                                                <img src={getPetAvatarUrl(p.name)} alt={p.name} />
+                                                <div style={{flex:1}}>
+                                                    <strong>{p.name}</strong>
+                                                    <small style={{display:'block', color:'#666'}}>{p.breed || 'Pet Amado'}</small>
+                                                </div>
+                                                {wizPetId === p.id && <div className="select-arrow" style={{background: 'var(--brand-green)'}}><Check size={18} color="white" /></div>}
+                                            </div>
+                                        ))}
                                     </div>
-                                ))}
-                            </div>
+                                    <button className="btn btn-primary full-width mt-4" disabled={!wizPetId} onClick={() => setWizStep(2)}>
+                                        Continuar
+                                    </button>
+                                </div>
+                            )}
+
+                            {/* STEP 2: DATE & AUTO SCHEDULE */}
+                            {wizStep === 2 && (
+                                <div className="fade-in-up">
+                                    <h4 className="text-center mb-2">Agendar 1º Banho</h4>
+                                    <p className="text-center text-sm text-gray-500 mb-4">
+                                        Os demais {showSubscribeWizard.pkg.bath_count - 1} banhos serão agendados automaticamente nos próximos dias/semanas.
+                                    </p>
+
+                                    <div className="form-group">
+                                        <label>Data de Início</label>
+                                        <input type="date" className="input-lg" value={wizDate} min={new Date().toLocaleDateString('en-CA')} onChange={(e) => { setWizDate(e.target.value); setWizTime(null); }} />
+                                    </div>
+
+                                    {!isDayValid && wizDate && <div className="text-red-500 text-sm flex items-center gap-2 mb-2"><AlertCircle size={14}/> Fechado aos domingos!</div>}
+
+                                    {isDayValid && wizDate && (
+                                        <>
+                                            <label style={{display:'block', marginBottom:8, fontWeight:700, fontSize:'0.85rem', color:'var(--secondary)'}}>Horários Disponíveis</label>
+                                            <div style={{display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8, maxHeight: 150, overflowY: 'auto', paddingRight: 4, marginBottom:16}}>
+                                                {timeSlots.map(time => (
+                                                    <button key={time} onClick={() => setWizTime(time)} className={`py-2 px-1 rounded-lg text-sm font-bold border transition-all ${wizTime === time ? 'bg-purple-600 text-white border-purple-600' : 'bg-white text-gray-700 hover:border-purple-300'}`}>{time}</button>
+                                                ))}
+                                            </div>
+                                        </>
+                                    )}
+
+                                    {wizDate && wizTime && (
+                                        <div className="summary-card pop-in">
+                                            <div className="summary-row"><span>Validade:</span> <strong>{new Date(wizDate).toLocaleDateString('pt-BR')} até {expirationDate}</strong></div>
+                                            <div className="summary-row"><span>1º Banho:</span> <strong>{new Date(wizDate).toLocaleDateString('pt-BR')} às {wizTime}</strong></div>
+                                            <div className="summary-row"><span>Automático:</span> <strong>+ {showSubscribeWizard.pkg.bath_count - 1} agendamentos</strong></div>
+                                        </div>
+                                    )}
+
+                                    <div className="wizard-actions">
+                                        <button className="btn btn-ghost" onClick={() => setWizStep(1)}>Voltar</button>
+                                        <button className="btn btn-primary" disabled={!wizDate || !wizTime} onClick={confirmSubscription}>Confirmar Assinatura</button>
+                                    </div>
+                                </div>
+                            )}
+
                         </div>
                     </div>
                 </div>
@@ -353,10 +410,7 @@ export const PackagesView: React.FC<PackagesViewProps> = ({ onNavigate, session 
                             <button onClick={() => setShowManageModal(null)} className="btn-icon-sm"><X size={20}/></button>
                         </div>
                         <div className="wizard-body" style={{padding: '20px'}}>
-                            <p style={{fontSize:'0.9rem', color:'#666', marginBottom: 16}}>
-                                Abaixo estão os pets inscritos neste plano. Você pode cancelar a assinatura individualmente.
-                            </p>
-                            
+                            <p style={{fontSize:'0.9rem', color:'#666', marginBottom: 16}}>Abaixo estão os pets inscritos neste plano. Você pode cancelar a assinatura individualmente.</p>
                             <div style={{display:'flex', flexDirection:'column', gap: 10}}>
                                 {getPetsOnPackage(showManageModal.pkg.id).map(sub => (
                                     <div key={sub.id} className="card" style={{padding: 12, display:'flex', alignItems:'center', justifyContent:'space-between', border:'1px solid #eee', marginBottom:0}}>
@@ -367,13 +421,7 @@ export const PackagesView: React.FC<PackagesViewProps> = ({ onNavigate, session 
                                                 <span className="status-badge tag-confirmed">Ativo</span>
                                             </div>
                                         </div>
-                                        <button 
-                                            className="btn btn-sm btn-ghost" 
-                                            style={{color:'#D63031', borderColor:'#D63031', height: 32, padding: '0 10px'}}
-                                            onClick={() => handleCancelSubscription(sub.id)}
-                                        >
-                                            Cancelar
-                                        </button>
+                                        <button className="btn btn-sm btn-ghost" style={{color:'#D63031', borderColor:'#D63031', height: 32, padding: '0 10px'}} onClick={() => handleCancelSubscription(sub.id)}>Cancelar</button>
                                     </div>
                                 ))}
                             </div>

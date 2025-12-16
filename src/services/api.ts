@@ -1,6 +1,61 @@
 import { supabase } from '../lib/supabase';
 import { Appointment, Employee, Pet, Product, Profile, Service, Package, Subscription } from '../types';
 
+// Configuração de Negócio (Duplicada aqui para uso no Backend Service Simulation)
+const BUSINESS_CONFIG = {
+    OPEN_HOUR: 9, 
+    CLOSE_HOUR: 18,
+    WORK_DAYS: [1, 2, 3, 4, 5, 6], // 0=Dom (Fechado)
+    SLOT_INTERVAL: 30
+};
+
+// Helper para encontrar próximo slot válido
+const findNextValidSlot = async (targetDate: Date, durationMinutes: number): Promise<Date> => {
+    let candidate = new Date(targetDate);
+    let attempts = 0;
+    const maxAttempts = 50; // Evitar loop infinito
+
+    while (attempts < maxAttempts) {
+        // 1. Verificar regra de dia da semana (Domingo fechado)
+        const day = candidate.getDay();
+        if (!BUSINESS_CONFIG.WORK_DAYS.includes(day)) {
+            // Avança para o próximo dia às 9h
+            candidate.setDate(candidate.getDate() + 1);
+            candidate.setHours(BUSINESS_CONFIG.OPEN_HOUR, 0, 0, 0);
+            continue;
+        }
+
+        // 2. Verificar horário comercial
+        const hour = candidate.getHours();
+        const endHour = hour + (durationMinutes / 60);
+        
+        if (hour < BUSINESS_CONFIG.OPEN_HOUR) {
+             candidate.setHours(BUSINESS_CONFIG.OPEN_HOUR, 0, 0, 0);
+             continue;
+        }
+        if (endHour > BUSINESS_CONFIG.CLOSE_HOUR) {
+             // Avança para o próximo dia
+             candidate.setDate(candidate.getDate() + 1);
+             candidate.setHours(BUSINESS_CONFIG.OPEN_HOUR, 0, 0, 0);
+             continue;
+        }
+
+        // 3. Verificar Colisão no Banco
+        const endCandidate = new Date(candidate.getTime() + durationMinutes * 60000);
+        const isFree = await api.booking.checkAvailability(candidate.toISOString(), endCandidate.toISOString());
+
+        if (isFree) {
+            return candidate;
+        }
+
+        // Se ocupado, avança 1 hora (tentativa simples de heurística)
+        candidate.setTime(candidate.getTime() + 60 * 60000);
+        attempts++;
+    }
+
+    return targetDate; // Fallback se falhar (deixa colidir ou trata erro na UI)
+};
+
 export const api = {
   auth: {
     async getSession() {
@@ -63,6 +118,24 @@ export const api = {
         status: 'pending'
       });
       if (error) throw error;
+    },
+    async rescheduleAppointment(appointmentId: number, newStartIso: string, newEndIso: string) {
+        // Validação de disponibilidade
+        const isAvailable = await api.booking.checkAvailability(newStartIso, newEndIso);
+        if (!isAvailable) {
+            throw new Error("Horário indisponível.");
+        }
+
+        const { error } = await supabase
+            .from('appointments')
+            .update({ 
+                start_time: newStartIso, 
+                end_time: newEndIso,
+                status: 'confirmed' // Reseta status para confirmado se estava pendente
+            })
+            .eq('id', appointmentId);
+            
+        if (error) throw error;
     },
     // NOVO MÉTODO: Verifica colisão de horários (Overlapping)
     // Regra: (StartA < EndB) and (EndA > StartB)
@@ -131,7 +204,7 @@ export const api = {
           return data as Subscription[];
       },
 
-      async subscribe(userId: string, packageId: number, petId: string) {
+      async subscribe(userId: string, pkg: Package, petId: string, firstBathStartIso: string) {
           // 1. Verifica se ESSE PET já tem assinatura ativa
           const { data: existing } = await supabase
               .from('subscriptions')
@@ -147,13 +220,56 @@ export const api = {
           // 2. Cria a assinatura vinculada ao Pet
           const { error } = await supabase.from('subscriptions').insert({
               user_id: userId,
-              package_id: packageId,
+              package_id: pkg.id,
               pet_id: petId,
               status: 'active'
           });
 
           if (error) throw error;
-          return { success: true, message: 'Assinatura realizada com sucesso!' };
+
+          // 3. AUTO-SCHEDULE LOGIC
+          // Vamos agendar os banhos do pacote automaticamente
+          try {
+              // Simular busca do serviço "Banho" (Assumindo ID 1 ou o primeiro da lista)
+              // Em produção, o pacote teria um linked service_id. Aqui vamos usar um serviço dummy de Banho.
+              const services = await api.booking.getServices();
+              const bathService = services.find(s => s.name.toLowerCase().includes('banho')) || services[0];
+              
+              if (!bathService) return { success: true, message: 'Assinatura criada, mas erro ao agendar banhos.' };
+
+              const totalBaths = pkg.bath_count;
+              const intervalDays = Math.floor(30 / totalBaths); // Ex: 4 banhos = cada 7 dias
+              const duration = bathService.duration_minutes;
+
+              const firstDate = new Date(firstBathStartIso);
+
+              // Loop para criar agendamentos
+              for (let i = 0; i < totalBaths; i++) {
+                  // Calcular data ideal
+                  let targetDate = new Date(firstDate);
+                  targetDate.setDate(targetDate.getDate() + (i * intervalDays));
+
+                  // Se for o primeiro, usa a hora exata escolhida. 
+                  // Se for subsequente, tenta manter a hora, mas ajusta se necessário.
+                  const validStartDate = await findNextValidSlot(targetDate, duration);
+                  const validEndDate = new Date(validStartDate.getTime() + duration * 60000);
+
+                  await api.booking.createAppointment(
+                      userId,
+                      petId,
+                      bathService.id,
+                      validStartDate.toISOString(),
+                      validEndDate.toISOString()
+                  );
+              }
+
+          } catch (scheduleError) {
+              console.error("Erro no agendamento automático:", scheduleError);
+              // Não falha a assinatura, mas avisa
+              return { success: true, warning: 'Assinatura ativa, mas verifique os agendamentos.' };
+          }
+
+          return { success: true, message: 'Assinatura realizada e banhos agendados!' };
       },
 
       async cancelSubscription(subscriptionId: number) {
