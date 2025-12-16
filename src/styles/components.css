@@ -24,7 +24,8 @@
 .clickable-card:active { transform: scale(0.98); }
 
 .cta-card-gradient {
-    background: linear-gradient(135deg, var(--primary), #FF6B6B);
+    /* Gradiente atualizado para Roxo -> Rosa Suave */
+    background: linear-gradient(135deg, var(--primary), #D291BC);
     color: white; border: none;
     display: flex; flex-direction: column; justify-content: space-between;
     min-height: 140px; /* Reduced */
@@ -47,13 +48,14 @@
 .btn:focus-visible { box-shadow: 0 0 0 4px var(--primary-glow); }
 
 .btn-primary { 
-    background: linear-gradient(135deg, var(--primary), #FF6B6B); 
+    /* Gradiente atualizado para combinar com a nova marca */
+    background: linear-gradient(135deg, var(--primary), #8E44AD); 
     color: white; 
     box-shadow: 0 4px 12px -2px var(--primary-glow);
 }
 .btn-primary:disabled { filter: grayscale(1); cursor: not-allowed; box-shadow: none; opacity: 0.7; }
 .btn-primary:hover:not(:disabled) { 
-    filter: brightness(1.05);
+    filter: brightness(1.1);
     box-shadow: 0 8px 16px -4px var(--primary-glow);
     transform: translateY(-1px);
 }
@@ -149,7 +151,7 @@ input, select, textarea {
 input:focus, select:focus, textarea:focus { 
     outline: none; background: white; 
     border-color: var(--primary); 
-    box-shadow: 0 0 0 3px rgba(255, 140, 66, 0.1);
+    box-shadow: 0 0 0 3px var(--primary-glow);
 }
 input::placeholder { color: #A0AEC0; opacity: 1; }
 
@@ -166,4 +168,4 @@ input::placeholder { color: #A0AEC0; opacity: 1; }
 .tag-cancelled { background: var(--status-cancelled-bg); color: var(--status-cancelled-text); }
 
 .tag-pill { background: #eee; padding: 3px 8px; border-radius: 16px; font-size: 0.75rem; }
-.tag-pill-price { background: #E6FFF5; color: #00B894; padding: 3px 8px; border-radius: 16px; font-size: 0.75rem; font-weight: 700; }
+.tag-pill-price { background: var(--status-confirmed-bg); color: var(--brand-green); padding: 3px 8px; border-radius: 16px; font-size: 0.75rem; font-weight: 700; }

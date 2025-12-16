@@ -1,44 +1,56 @@
 
 /* =========================================
-   TOKENS (Design System) - COMPACT MOBILE VERSION
+   TOKENS (Design System) - VIBRANT BRAND UPDATE
    ========================================= */
 
 :root {
-  /* Paleta: Laranja Vibrante + Tons Suaves */
-  --primary: #FF8C42;       
-  --primary-hover: #E87A30;
-  --primary-glow: rgba(255, 140, 66, 0.4); 
+  /* Paleta Vibrante Baseada na Imagem da Marca */
   
-  --secondary: #2D3436;     
+  /* Roxo (Primary) - Sofisticação e "Spa" */
+  --primary: #9B59B6;       
+  --primary-hover: #8E44AD;
+  --primary-glow: rgba(155, 89, 182, 0.4); 
+  
+  /* Ciano (Secondary Action) - Limpeza e Frescor */
+  --brand-cyan: #00CEC9;
+  
+  /* Amarelo (Accent/Warning) - Energia */
+  --brand-yellow: #FDCB6E;
+  
+  /* Verde (Success) - Saúde */
+  --brand-green: #00B894;
+
+  /* Neutros */
+  --secondary: #2D3436;     /* Texto Escuro */
   --secondary-light: #636E72;
   
-  --accent: #FFF5EB;        /* Laranja muito pálido para fundos de ícones */
+  --accent: #FDF2FA;        /* Roxo muito pálido para fundos de ícones */
   --surface: #FFFFFF;
   
-  --bg-app: #E6E9EF;        /* Updated: Darker cool gray for better contrast with white cards */
-  --bg-input: #F0F2F5;      /* Cinza frio para inputs */
+  --bg-app: #F4F6F8;        /* Cinza neutro moderno */
+  --bg-input: #F0F2F5;      
   
   --text-main: #2D3436;
   --text-body: #636E72;     
   --text-muted: #95a5a6;
   
-  /* Status Colors (Pastel & Strong) */
-  --status-pending-bg: #FFF4E5; --status-pending-text: #FF9F43;
-  --status-confirmed-bg: #E6FFF5; --status-confirmed-text: #00B894;
-  --status-progress-bg: #E3F2FD; --status-progress-text: #0984E3;
-  --status-completed-bg: #F0F2F5; --status-completed-text: #2D3436;
-  --status-cancelled-bg: #FFF0F0; --status-cancelled-text: #FF7675;
+  /* Status Colors (Updated to match Brand Palette) */
+  --status-pending-bg: #FFF8E1; --status-pending-text: #F39C12; /* Amarelo/Laranja */
+  --status-confirmed-bg: #E0F2F1; --status-confirmed-text: #00B894; /* Verde Marca */
+  --status-progress-bg: #E0F7FA; --status-progress-text: #00CEC9; /* Ciano Marca */
+  --status-completed-bg: #F3E5F5; --status-completed-text: #9B59B6; /* Roxo Marca */
+  --status-cancelled-bg: #FFEBEE; --status-cancelled-text: #FF7675; /* Vermelho Suave */
 
-  /* Formas: Tighter Radii */
+  /* Formas */
   --radius-sm: 8px;
   --radius-md: 16px;        
   --radius-lg: 24px;
   --radius-pill: 999px;     
   
-  /* Sombras "Dreamy" (Difusas e em Camadas - Refinadas) */
+  /* Sombras */
   --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.03);
-  --shadow-card: 0 4px 20px rgba(0, 0, 0, 0.05), 0 2px 6px rgba(0,0,0,0.02);
-  --shadow-float: 0 10px 25px -5px rgba(255, 140, 66, 0.25); 
+  --shadow-card: 0 4px 20px rgba(155, 89, 182, 0.08), 0 2px 6px rgba(0,0,0,0.02); /* Sombra levemente roxa */
+  --shadow-float: 0 10px 25px -5px rgba(155, 89, 182, 0.3); 
   --shadow-inner: inset 0 1px 3px rgba(0,0,0,0.03);
   
   /* Z-Index Hierarchy */
