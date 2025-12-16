@@ -1,55 +1,167 @@
 
+
 /* =========================================
    OVERLAYS (MODAL, MASCOT, LOGIN) - COMPACT
    ========================================= */
 
 /* Modal & Wizard */
 .modal-overlay {
-    position: fixed; inset: 0; background: rgba(0,0,0,0.5); backdrop-filter: blur(5px);
+    position: fixed; inset: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(8px);
     z-index: var(--z-modal); display: flex; align-items: center; justify-content: center; padding: 16px;
     animation: fadeIn 0.3s ease;
 }
 .modal-content {
-    background: white; width: 100%; max-width: 460px; border-radius: 24px;
-    box-shadow: 0 20px 50px rgba(0,0,0,0.2); overflow: hidden;
+    background: white; width: 100%; max-width: 440px; border-radius: 28px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.3); overflow: hidden;
     animation: slideUp 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
-    max-height: 90vh; display: flex; flex-direction: column;
+    max-height: 85vh; display: flex; flex-direction: column;
+    position: relative;
 }
 
-.modal-header { padding: 16px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; }
-.wizard-steps { display: flex; align-items: center; justify-content: center; padding: 16px; gap: 8px; }
-.wizard-step-dot { 
-    width: 26px; height: 26px; border-radius: 50%; background: #eee; color: var(--text-muted);
-    display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.75rem;
+.modal-header { 
+    padding: 16px 24px; display: flex; justify-content: space-between; align-items: center; 
+    border-bottom: 1px solid #f0f0f0; background: white;
 }
-.wizard-step-dot.active { background: var(--primary); color: white; }
-.wizard-line { width: 30px; height: 2px; background: #eee; }
+.wizard-progress-pill {
+    background: #F3F4F6; color: var(--text-body); font-size: 0.75rem; font-weight: 700;
+    padding: 4px 12px; border-radius: 20px; text-transform: uppercase;
+}
+.btn-icon-plain { background: none; border: none; padding: 4px; cursor: pointer; color: var(--secondary); opacity: 0.6; transition: opacity 0.2s; }
+.btn-icon-plain:hover { opacity: 1; }
 
-.wizard-body { padding: 0 20px 24px; overflow-y: auto; }
+.wizard-title { font-size: 1.4rem; color: var(--secondary); margin-bottom: 20px; font-weight: 800; line-height: 1.2; }
+.wizard-body { padding: 0 20px 24px; overflow-y: auto; flex: 1; -webkit-overflow-scrolling: touch; }
 
-.pet-selection-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+/* --- STEP 1: PET SELECTION --- */
+.pet-selection-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
 .pet-select-card { 
-    border: 2px solid #eee; border-radius: 16px; padding: 12px; 
-    display: flex; flex-direction: column; align-items: center; gap: 6px; cursor: pointer; transition: all 0.2s;
+    border: 1px solid var(--border-light); border-radius: 20px; padding: 16px; 
+    display: flex; flex-direction: column; align-items: center; gap: 4px; cursor: pointer; transition: all 0.2s;
+    background: white; position: relative;
 }
-.pet-select-card.selected { border-color: var(--primary); background: var(--accent); }
+.pet-select-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-sm); }
+.pet-select-card.selected { 
+    border-color: var(--primary); background: var(--accent); 
+    box-shadow: 0 0 0 2px var(--primary) inset;
+}
+.check-badge-overlay {
+    position: absolute; right: -4px; bottom: -4px; 
+    background: var(--primary); border-radius: 50%; width: 20px; height: 20px;
+    display: flex; align-items: center; justify-content: center;
+    border: 2px solid white;
+}
 
-.services-list-wizard { display: flex; flex-direction: column; gap: 10px; max-height: 280px; overflow-y: auto; }
+/* --- STEP 2: SERVICE SELECTION --- */
+.services-list-wizard { display: flex; flex-direction: column; gap: 12px; padding-bottom: 4px; }
 .service-select-item {
-    border: 1px solid #eee; padding: 12px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; cursor: pointer;
+    border: 1px solid var(--border-light); padding: 16px; border-radius: 16px; 
+    display: flex; gap: 12px; align-items: center; cursor: pointer; transition: all 0.2s;
 }
-.service-select-item.selected { border-color: var(--primary); background: var(--accent); }
-.service-name { font-weight: 700; font-size: 0.95rem; }
-.service-meta { font-size: 0.75rem; color: var(--text-muted); }
-.service-price { font-weight: 800; color: var(--primary); font-size: 0.95rem; }
+.service-select-item:hover { border-color: #cbd5e1; background: #f8fafc; }
+.service-select-item.selected { 
+    border-color: var(--primary); background: var(--accent);
+    box-shadow: var(--shadow-sm);
+}
+.service-radio-indicator {
+    width: 20px; height: 20px; border-radius: 50%; border: 2px solid #cbd5e1;
+    display: flex; align-items: center; justify-content: center;
+}
+.service-select-item.selected .service-radio-indicator { border-color: var(--primary); }
+.radio-inner { width: 10px; height: 10px; background: var(--primary); border-radius: 50%; }
 
-.wizard-actions { display: flex; gap: 10px; margin-top: 20px; padding-bottom: 10px; }
-.wizard-actions button { flex: 1; }
+.service-price-tag { font-weight: 800; color: var(--secondary); font-size: 1rem; }
 
-.summary-card { background: #F8F9FA; padding: 14px; border-radius: 14px; margin-top: 16px; }
-.summary-row { display: flex; justify-content: space-between; margin-bottom: 6px; font-size: 0.85rem; }
+/* --- STEP 3: HORIZONTAL DATE & TIME SLOTS --- */
+.date-picker-label { font-size: 0.8rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
 
-/* Login Flow Overlay */
+.horizontal-date-scroll {
+    display: flex; gap: 8px; overflow-x: auto; padding-bottom: 8px;
+    margin: 0 -24px; padding: 0 24px 8px 24px; /* Bleed effect */
+    scrollbar-width: none;
+}
+.horizontal-date-scroll::-webkit-scrollbar { display: none; }
+
+.date-pill {
+    flex-shrink: 0; width: 64px; height: 74px;
+    border-radius: 16px; border: 1px solid var(--border-light);
+    background: white; color: var(--text-body);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    cursor: pointer; transition: all 0.2s;
+}
+.date-pill .day-name { font-size: 0.75rem; text-transform: uppercase; font-weight: 600; margin-bottom: 2px; }
+.date-pill .day-num { font-size: 1.4rem; font-weight: 800; line-height: 1; }
+
+.date-pill:hover { border-color: var(--primary); color: var(--primary); }
+.date-pill.selected { 
+    background: var(--primary); color: white; border-color: var(--primary);
+    box-shadow: 0 4px 10px rgba(155, 89, 182, 0.4); transform: translateY(-2px);
+}
+
+.empty-slots-msg {
+    padding: 24px; background: #FFF5F5; border-radius: 12px; color: #E53E3E;
+    text-align: center; font-size: 0.9rem; display: flex; flex-direction: column; align-items: center; gap: 8px;
+}
+
+.slots-grid {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px;
+    max-height: 200px; overflow-y: auto; padding-right: 4px;
+}
+.slot-pill {
+    padding: 10px 0; border-radius: 10px; border: 1px solid var(--border-light);
+    background: white; font-size: 0.9rem; font-weight: 600; color: var(--secondary);
+    cursor: pointer; transition: all 0.2s;
+}
+.slot-pill:hover { border-color: var(--primary); color: var(--primary); background: var(--accent); }
+.slot-pill.selected { 
+    background: var(--primary); color: white; border-color: var(--primary); 
+    box-shadow: 0 4px 10px rgba(155, 89, 182, 0.3); transform: scale(1.05);
+}
+
+.error-banner-shake {
+    background: #FFF5F5; border: 1px solid #FEB2B2; color: #C53030;
+    padding: 12px; border-radius: 12px; font-size: 0.85rem; font-weight: 600;
+    display: flex; align-items: center; gap: 8px;
+    animation: shake 0.4s cubic-bezier(.36,.07,.19,.97) both;
+}
+
+/* Fixed Bottom Action for Step 3 */
+.fixed-bottom-action {
+    position: absolute; bottom: 0; left: 0; right: 0;
+    background: white; border-top: 1px solid #f0f0f0;
+    padding: 16px 24px;
+    z-index: 10;
+    box-shadow: 0 -4px 20px rgba(0,0,0,0.05);
+}
+.booking-summary-row { display: flex; align-items: center; justify-content: space-between; }
+.summary-price { font-size: 1.4rem; font-weight: 800; color: var(--primary); line-height: 1; }
+.btn-wide { min-width: 160px; }
+
+@keyframes shake {
+  10%, 90% { transform: translate3d(-1px, 0, 0); }
+  20%, 80% { transform: translate3d(2px, 0, 0); }
+  30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
+  40%, 60% { transform: translate3d(4px, 0, 0); }
+}
+
+/* --- STEP 4: SUCCESS TICKET --- */
+.success-confetti-icon {
+    width: 80px; height: 80px; margin: 0 auto 20px;
+    background: linear-gradient(135deg, #00B894, #00CEC9);
+    border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 10px 25px rgba(0, 184, 148, 0.4);
+}
+
+.ticket-card {
+    background: #F8F9FA; border: 1px solid #E2E8F0; border-radius: 20px;
+    padding: 24px; text-align: left; position: relative;
+    /* Ticket effect visually simpler */
+}
+.ticket-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+.ticket-label { color: var(--text-muted); font-size: 0.85rem; text-transform: uppercase; font-weight: 700; }
+.ticket-value { color: var(--secondary); font-size: 1rem; }
+.ticket-divider { height: 1px; background: #E2E8F0; margin: 16px 0; border-bottom: 1px dashed #cbd5e1; }
+
+/* Login Flow Overlay (Existing - Kept for context) */
 .login-flow-overlay {
     position: fixed; inset: 0;
     background: linear-gradient(135deg, var(--primary), #FF6B6B);
@@ -57,90 +169,53 @@
     display: flex; align-items: center; justify-content: center;
     color: white; padding: 20px;
 }
-
-.flow-step {
-    text-align: center;
-    max-width: 380px;
-    display: flex; flex-direction: column; align-items: center;
-}
+.flow-step { text-align: center; max-width: 380px; display: flex; flex-direction: column; align-items: center; }
 .flow-step h2 { color: white; font-size: 1.8rem; margin-bottom: 8px; }
 .flow-step p { color: rgba(255,255,255,0.9); font-size: 1rem; }
-
 .welcome-emoji { font-size: 3rem; margin-bottom: 16px; animation: bounce 2s infinite; }
 
 .mascot-insight-circle {
-    width: 100px; height: 100px;
-    background: white; border-radius: 50%;
-    display: flex; align-items: center; justify-content: center;
-    margin-bottom: 20px;
+    width: 100px; height: 100px; background: white; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center; margin-bottom: 20px;
     box-shadow: 0 8px 25px rgba(0,0,0,0.2);
 }
-.mascot-img-lg { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
-
 .insight-bubble {
-    background: white; color: var(--secondary);
-    padding: 20px; border-radius: 20px;
-    position: relative;
-    box-shadow: 0 8px 30px rgba(0,0,0,0.2);
+    background: white; color: var(--secondary); padding: 20px; border-radius: 20px;
+    position: relative; box-shadow: 0 8px 30px rgba(0,0,0,0.2);
 }
 .insight-bubble::after {
-    content: ''; position: absolute;
-    top: -10px; left: 50%; transform: translateX(-50%);
-    border-width: 0 10px 10px 10px;
-    border-style: solid;
-    border-color: transparent transparent white transparent;
+    content: ''; position: absolute; top: -10px; left: 50%; transform: translateX(-50%);
+    border-width: 0 10px 10px 10px; border-style: solid; border-color: transparent transparent white transparent;
 }
 .insight-bubble p { color: var(--secondary); font-size: 1rem; font-weight: 600; margin: 0; }
 
 /* Mascote Flutuante */
 .mascot-container {
-    position: fixed; 
-    /* AJUSTE PARA MOBILE: Deve ficar ACIMA da barra de navegação (aprox 60px+safe area) */
-    bottom: 85px; 
-    right: 16px; 
-    z-index: 90; 
+    position: fixed; bottom: 85px; right: 16px; z-index: 90; 
     display: flex; flex-direction: column; align-items: flex-end;
     pointer-events: none; 
 }
-
 .mascot-icon-wrapper {
-    width: 52px; height: 52px; /* Reduced from 64px */
-    background: linear-gradient(135deg, var(--primary), #FF6B6B);
-    color: white;
-    border-radius: 50%;
-    display: flex; align-items: center; justify-content: center;
-    border: 3px solid white;
-    box-shadow: 0 6px 16px rgba(255, 140, 66, 0.4);
-    cursor: pointer; pointer-events: auto;
-    animation: float 3s ease-in-out infinite;
+    width: 52px; height: 52px; background: linear-gradient(135deg, var(--primary), #FF6B6B);
+    color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    border: 3px solid white; box-shadow: 0 6px 16px rgba(255, 140, 66, 0.4);
+    cursor: pointer; pointer-events: auto; animation: float 3s ease-in-out infinite;
     transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     overflow: hidden;
 }
 .mascot-icon-wrapper:hover { transform: scale(1.1); }
-.mascot-img { width: 100%; height: 100%; object-fit: cover; }
-
 .speech-bubble {
-    background: white; padding: 8px 14px; border-radius: 14px; 
-    border-bottom-right-radius: 4px;
+    background: white; padding: 8px 14px; border-radius: 14px; border-bottom-right-radius: 4px;
     font-size: 0.8rem; font-weight: 700; color: var(--secondary);
-    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-    margin-bottom: 6px; margin-right: 10px;
-    pointer-events: auto; position: relative;
-    max-width: 180px;
-    border: 1px solid rgba(0,0,0,0.05);
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1); margin-bottom: 6px; margin-right: 10px;
+    pointer-events: auto; position: relative; max-width: 180px; border: 1px solid rgba(0,0,0,0.05);
     animation: popIn 0.3s ease-out;
 }
-
 .bubble-close {
-    position: absolute; top: -6px; right: -6px;
-    background: var(--secondary); color: white;
-    width: 16px; height: 16px; border-radius: 50%;
-    display: flex; align-items: center; justify-content: center;
-    cursor: pointer; border: 2px solid white;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    position: absolute; top: -6px; right: -6px; background: var(--secondary); color: white;
+    width: 16px; height: 16px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    cursor: pointer; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
-
-/* Desktop Adjustment: Mascote desce pois não tem barra inferior */
 @media (min-width: 1024px) {
     .mascot-container { bottom: 40px; right: 40px; }
 }

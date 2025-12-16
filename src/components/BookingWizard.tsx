@@ -1,8 +1,8 @@
 
-import React, { useState, useMemo, useEffect } from 'react';
-import { X, AlertCircle, Clock, CalendarCheck, Check, Calendar as CalendarIcon, PartyPopper } from 'lucide-react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
+import { X, AlertCircle, Clock, CalendarCheck, Check, Calendar as CalendarIcon, PartyPopper, ChevronRight, DollarSign } from 'lucide-react';
 import { api } from '../services/api';
-import { formatCurrency, toLocalISOString, getPetAvatarUrl, formatDate } from '../utils/ui';
+import { formatCurrency, getPetAvatarUrl, formatDate } from '../utils/ui';
 import { useToast } from '../context/ToastContext';
 import { Pet, Service } from '../types';
 
@@ -37,14 +37,14 @@ export const BookingWizard: React.FC<BookingWizardProps> = ({
     const [wizPet, setWizPet] = useState<string | null>(null);
     const [wizService, setWizService] = useState<Service | null>(null);
     
-    // Date & Time States (Separados para melhor UX)
+    // Date & Time States
     const [selectedDate, setSelectedDate] = useState<string>(''); // YYYY-MM-DD
     const [selectedTime, setSelectedTime] = useState<string | null>(null); // HH:mm
     
     const [isBooking, setIsBooking] = useState(false);
     const [validationError, setValidationError] = useState<string | null>(null);
     
-    // Success State Data to display in final step
+    // Success State Data
     const [bookedData, setBookedData] = useState<{
         petName: string;
         serviceName: string;
@@ -54,62 +54,72 @@ export const BookingWizard: React.FC<BookingWizardProps> = ({
     } | null>(null);
 
     const toast = useToast();
+    const dateScrollRef = useRef<HTMLDivElement>(null);
 
-    // Inicializa a data com hoje (Local Time)
+    // Inicializa a data com hoje (Local Time) se não tiver
     useEffect(() => {
-        const today = new Date();
-        // toLocaleDateString('en-CA') returns YYYY-MM-DD in local time
-        setSelectedDate(today.toLocaleDateString('en-CA'));
+        if (!selectedDate) {
+            const today = new Date();
+            // Se hoje for domingo (0), avança para segunda
+            if (today.getDay() === 0) {
+                today.setDate(today.getDate() + 1);
+            }
+            setSelectedDate(today.toLocaleDateString('en-CA'));
+        }
     }, []);
 
-    // Gera os slots de tempo baseados na data selecionada E duração do serviço
+    // --- GERADOR DE DATAS (HORIZONTAL SCROLL) ---
+    const nextDays = useMemo(() => {
+        const days = [];
+        const today = new Date();
+        
+        for (let i = 0; i < 14; i++) {
+            const d = new Date(today);
+            d.setDate(today.getDate() + i);
+            const dayOfWeek = d.getDay();
+            
+            // Filtra dias de trabalho
+            if (BUSINESS_CONFIG.WORK_DAYS.includes(dayOfWeek)) {
+                days.push({
+                    dateStr: d.toLocaleDateString('en-CA'),
+                    dayName: d.toLocaleDateString('pt-BR', { weekday: 'short' }).replace('.', ''),
+                    dayNum: d.getDate(),
+                    fullLabel: d.toLocaleDateString('pt-BR')
+                });
+            }
+        }
+        return days;
+    }, []);
+
+    // --- GERADOR DE SLOTS ---
     const timeSlots = useMemo(() => {
         if (!selectedDate || !wizService) return [];
 
         const slots: string[] = [];
         const now = new Date();
-        
-        // Fix Timezone: Compare local date strings
         const isToday = selectedDate === now.toLocaleDateString('en-CA');
         
         let currentHour = BUSINESS_CONFIG.OPEN_HOUR;
         let currentMinute = 0;
 
-        // Limite para o inicio do serviço: Horario Fechamento - Duração do Serviço
         const serviceDurationHours = wizService.duration_minutes / 60;
         const lastPossibleStartHour = BUSINESS_CONFIG.CLOSE_HOUR - serviceDurationHours;
 
-        // Loop até o fechamento
         while (currentHour < BUSINESS_CONFIG.CLOSE_HOUR) {
-            // Formatar HH:mm
             const timeStr = `${currentHour.toString().padStart(2, '0')}:${currentMinute.toString().padStart(2, '0')}`;
-            
-            // Verifica se o serviço terminaria DEPOIS do fechamento
-            // Convert current time to decimal hours (ex: 17:30 = 17.5)
             const currentDecimalTime = currentHour + (currentMinute / 60);
             
-            // Allow equality (start exactly at last possible moment)
-            // Use epsilon for float comparison safety
-            if (currentDecimalTime > lastPossibleStartHour + 0.001) {
-                break;
-            }
+            if (currentDecimalTime > lastPossibleStartHour + 0.001) break;
 
-            // Validação de "Passado" para o dia de hoje
             let isValid = true;
             if (isToday) {
-                // Creates date object in local time
                 const slotDate = new Date(`${selectedDate}T${timeStr}:00`);
-                // Buffer de 30min para agendamento em cima da hora
-                const slotBuffer = new Date(now.getTime() + 30 * 60000);
-                
+                const slotBuffer = new Date(now.getTime() + 30 * 60000); // 30min antecedência
                 if (slotDate < slotBuffer) isValid = false;
             }
 
-            if (isValid) {
-                slots.push(timeStr);
-            }
+            if (isValid) slots.push(timeStr);
 
-            // Incremento
             currentMinute += BUSINESS_CONFIG.SLOT_INTERVAL;
             if (currentMinute >= 60) {
                 currentHour++;
@@ -118,14 +128,6 @@ export const BookingWizard: React.FC<BookingWizardProps> = ({
         }
         return slots;
     }, [selectedDate, wizService]);
-
-    // Validação de Dia da Semana (Domingo)
-    const isDayValid = useMemo(() => {
-        if (!selectedDate) return false;
-        // Fix de timezone simples: Setar hora para meio dia para evitar virada de dia por UTC
-        const dayOfWeek = new Date(`${selectedDate}T12:00:00`).getDay();
-        return BUSINESS_CONFIG.WORK_DAYS.includes(dayOfWeek);
-    }, [selectedDate]);
 
     const handleConfirm = async () => {
         if(!wizPet || !wizService || !selectedDate || !selectedTime) return;
@@ -137,8 +139,8 @@ export const BookingWizard: React.FC<BookingWizardProps> = ({
             // 1. Weekly Package Conflict Check
             const hasWeeklyConflict = await api.booking.checkWeeklyPackageConflict(wizPet, selectedDate);
             if (hasWeeklyConflict) {
-                 setValidationError("Este pet já possui um banho do pacote agendado para esta semana.");
-                 toast.warning("Use seus créditos do pacote ou escolha outra semana. 📅");
+                 setValidationError("Este pet já possui um banho agendado nesta semana (Plano VIP).");
+                 toast.warning("Limite semanal do plano atingido. 📅");
                  setIsBooking(false);
                  return;
             }
@@ -149,20 +151,19 @@ export const BookingWizard: React.FC<BookingWizardProps> = ({
             const duration = wizService.duration_minutes;
             const end = new Date(start.getTime() + duration * 60000);
 
-            // 2. Check Availability with Backend (Collision Detection)
+            // 2. Check Availability
             const isAvailable = await api.booking.checkAvailability(start.toISOString(), end.toISOString());
             
             if (!isAvailable) {
-                setValidationError("Este horário já está reservado. Por favor, escolha outro slot.");
+                setValidationError("Ops! Alguém acabou de reservar este horário. Tente outro.");
                 toast.error("Horário indisponível! 😓");
                 setIsBooking(false);
                 return;
             }
 
-            // 3. Create Appointment (Success)
+            // 3. Create Appointment
             await api.booking.createAppointment(session.user.id, wizPet, wizService.id, start.toISOString(), end.toISOString());
             
-            // Prepare Success Data View
             const petObj = pets.find(p => p.id === wizPet);
             setBookedData({
                 petName: petObj?.name || 'Seu Pet',
@@ -173,7 +174,6 @@ export const BookingWizard: React.FC<BookingWizardProps> = ({
             });
 
             await onSuccess();
-            // Don't close immediately. Move to success step.
             setStep(4);
             
         } catch (e) {
@@ -184,38 +184,44 @@ export const BookingWizard: React.FC<BookingWizardProps> = ({
         }
     };
 
-    // Calculate dynamic end time for preview
-    const endTimePreview = useMemo(() => {
-        if (!selectedDate || !selectedTime || !wizService) return '';
-        const start = new Date(`${selectedDate}T${selectedTime}:00`);
-        const end = new Date(start.getTime() + wizService.duration_minutes * 60000);
-        return end.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
-    }, [selectedDate, selectedTime, wizService]);
+    // Auto-scroll para o dia selecionado (UX Polish)
+    useEffect(() => {
+        if (step === 3 && dateScrollRef.current) {
+            // Pequeno delay para renderizar
+            setTimeout(() => {
+                const selectedEl = dateScrollRef.current?.querySelector('.date-pill.selected');
+                if (selectedEl) {
+                    selectedEl.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+                }
+            }, 100);
+        }
+    }, [step, selectedDate]);
 
     return (
         <div className="modal-overlay">
             <div className="modal-content">
-                {/* Header (Hide close button on success step to force user to read) */}
+                {/* Header Compacto */}
                 <div className="modal-header">
-                    <h3>{step === 4 ? 'Agendamento Realizado!' : 'Agendar Banho & Tosa'}</h3>
+                    {step === 4 ? (
+                         <h3 className="text-brand-green">Sucesso! 🎉</h3>
+                    ) : (
+                        <div style={{display:'flex', alignItems:'center', gap: 8}}>
+                            {step > 1 && <button onClick={() => setStep(step - 1)} className="btn-icon-plain"><ChevronRight size={20} style={{transform:'rotate(180deg)'}}/></button>}
+                            <div className="wizard-progress-pill">
+                                Passo {step} de 3
+                            </div>
+                        </div>
+                    )}
                     {step !== 4 && <button onClick={onClose} className="btn-icon-sm"><X size={20}/></button>}
                 </div>
-                
-                {step !== 4 && (
-                    <div className="wizard-steps">
-                        <div className={`wizard-step-dot ${step >= 1 ? 'active' : ''}`}>1</div>
-                        <div className="wizard-line"></div>
-                        <div className={`wizard-step-dot ${step >= 2 ? 'active' : ''}`}>2</div>
-                        <div className="wizard-line"></div>
-                        <div className={`wizard-step-dot ${step >= 3 ? 'active' : ''}`}>3</div>
-                    </div>
-                )}
 
-                <div className="wizard-body page-enter">
+                <div className="wizard-body page-enter" style={{padding: '20px 24px'}}>
+                    
                     {/* STEP 1: PET SELECTION */}
                     {step === 1 && (
                         <div className="fade-in-up">
-                            <h4 className="text-center mb-4">Quem vai receber cuidados hoje?</h4>
+                            <h2 className="wizard-title">Quem vai receber cuidados hoje?</h2>
+                            
                             {pets.length === 0 ? (
                                 <div className="empty-state text-center py-8">
                                     <p className="text-gray-500 mb-4">Você não tem pets cadastrados.</p>
@@ -227,182 +233,162 @@ export const BookingWizard: React.FC<BookingWizardProps> = ({
                                         <div key={p.id} 
                                              className={`pet-select-card ${wizPet === p.id ? 'selected' : ''}`}
                                              onClick={() => setWizPet(p.id)}>
-                                            <div style={{position:'relative'}}>
-                                                <img src={getPetAvatarUrl(p.name)} className="pet-avatar-3d" style={{width: 56, height: 56}} alt={p.name} />
+                                            <div style={{position:'relative', marginBottom: 8}}>
+                                                <img src={getPetAvatarUrl(p.name)} className="pet-avatar-3d" style={{width: 64, height: 64, border:'2px solid white'}} alt={p.name} />
                                                 {wizPet === p.id && (
-                                                    <div style={{position:'absolute', right:-5, bottom:-5, background:'var(--primary)', borderRadius:'50%', padding:2}}>
-                                                        <Check size={12} color='white' />
+                                                    <div className="check-badge-overlay">
+                                                        <Check size={12} color='white' strokeWidth={3} />
                                                     </div>
                                                 )}
                                             </div>
-                                            <span style={{fontWeight:600}}>{p.name}</span>
+                                            <span className="font-bold text-sm text-secondary">{p.name}</span>
+                                            <span className="text-xs text-muted">{p.breed || 'Pet'}</span>
                                         </div>
                                     ))}
                                 </div>
                             )}
-                            <button className="btn btn-primary full-width mt-6" disabled={!wizPet} onClick={() => setStep(2)}>Continuar</button>
+                            <button className="btn btn-primary full-width mt-6 shadow-float" disabled={!wizPet} onClick={() => setStep(2)}>
+                                Continuar
+                            </button>
                         </div>
                     )}
 
                     {/* STEP 2: SERVICE SELECTION */}
                     {step === 2 && (
                         <div className="fade-in-up">
-                            <h4 className="text-center mb-4">Qual serviço?</h4>
+                            <h2 className="wizard-title">Qual o tratamento?</h2>
                             <div className="services-list-wizard">
                                 {services.map(s => (
                                     <div key={s.id} 
                                          className={`service-select-item ${wizService?.id === s.id ? 'selected' : ''}`}
                                          onClick={() => setWizService(s)}>
+                                        <div className="service-radio-indicator">
+                                            {wizService?.id === s.id && <div className="radio-inner" />}
+                                        </div>
                                         <div style={{flex:1}}>
                                             <div className="service-name">{s.name}</div>
-                                            <div className="service-meta"><Clock size={12} style={{verticalAlign:'middle'}}/> {s.duration_minutes} min</div>
+                                            <div className="service-meta text-xs mt-1">
+                                                <Clock size={10} style={{marginRight:2}}/> {s.duration_minutes} min
+                                            </div>
                                         </div>
-                                        <div className="service-price">{formatCurrency(s.price)}</div>
+                                        <div className="service-price-tag">
+                                            {formatCurrency(s.price)}
+                                        </div>
                                     </div>
                                 ))}
                             </div>
-                            <div className="wizard-actions">
-                                <button className="btn btn-ghost" onClick={() => setStep(1)}>Voltar</button>
-                                <button className="btn btn-primary" disabled={!wizService} onClick={() => setStep(3)}>Continuar</button>
-                            </div>
+                            <button className="btn btn-primary full-width mt-4 shadow-float" disabled={!wizService} onClick={() => setStep(3)}>
+                                Continuar
+                            </button>
                         </div>
                     )}
 
-                    {/* STEP 3: DATE & SLOT SELECTION */}
+                    {/* STEP 3: DATE & SLOT SELECTION (IMPROVED) */}
                     {step === 3 && (
                         <div className="fade-in-up">
-                            <h4 className="text-center mb-2">Quando?</h4>
+                            <h2 className="wizard-title mb-2">Quando fica melhor?</h2>
                             
-                            <div className="form-group" style={{marginBottom:16}}>
-                                <label style={{display:'flex', alignItems:'center', gap:6}}>
-                                    <CalendarIcon size={14}/> Selecione o Dia
-                                </label>
-                                <input 
-                                    type="date" 
-                                    className="input-lg"
-                                    value={selectedDate} 
-                                    min={new Date().toLocaleDateString('en-CA')}
-                                    onChange={(e) => {
-                                        setSelectedDate(e.target.value);
-                                        setSelectedTime(null); 
-                                        setValidationError(null);
-                                    }}
-                                />
-                                {!isDayValid && selectedDate && (
-                                    <div className="text-red-500 text-sm mt-2 flex items-center gap-2">
-                                        <AlertCircle size={14}/> Fechado aos domingos!
+                            {/* Horizontal Date Picker */}
+                            <div className="date-picker-label"><CalendarIcon size={14}/> Selecione o Dia</div>
+                            <div className="horizontal-date-scroll" ref={dateScrollRef}>
+                                {nextDays.map((d, i) => (
+                                    <button 
+                                        key={d.dateStr}
+                                        className={`date-pill ${selectedDate === d.dateStr ? 'selected' : ''}`}
+                                        onClick={() => { setSelectedDate(d.dateStr); setSelectedTime(null); setValidationError(null); }}
+                                    >
+                                        <span className="day-name">{d.dayName}</span>
+                                        <span className="day-num">{d.dayNum}</span>
+                                    </button>
+                                ))}
+                            </div>
+
+                            {/* Time Slots Grid */}
+                            <div className="mt-6 animate-fade">
+                                <div className="date-picker-label"><Clock size={14}/> Horários para {new Date(selectedDate).toLocaleDateString('pt-BR', {day:'2-digit', month:'long'})}</div>
+                                
+                                {timeSlots.length === 0 ? (
+                                    <div className="empty-slots-msg">
+                                        <AlertCircle size={20} />
+                                        <span>Sem horários disponíveis para esta data.</span>
+                                    </div>
+                                ) : (
+                                    <div className="slots-grid">
+                                        {timeSlots.map(time => (
+                                            <button
+                                                key={time}
+                                                onClick={() => { setSelectedTime(time); setValidationError(null); }}
+                                                className={`slot-pill ${selectedTime === time ? 'selected' : ''}`}
+                                            >
+                                                {time}
+                                            </button>
+                                        ))}
                                     </div>
                                 )}
                             </div>
 
-                            {isDayValid && selectedDate && wizService && (
-                                <div className="fade-in">
-                                    <label style={{display:'block', marginBottom:8, fontWeight:700, fontSize:'0.85rem', color:'var(--secondary)'}}>
-                                        Horários Disponíveis ({timeSlots.length})
-                                    </label>
-                                    
-                                    {timeSlots.length === 0 ? (
-                                        <div className="p-4 bg-gray-100 rounded-lg text-center text-gray-500 text-sm">
-                                            {new Date(`${selectedDate}T00:00:00`) < new Date(new Date().setHours(0,0,0,0)) ? 'Data passada.' : 'Sem horários disponíveis hoje.'}
-                                        </div>
-                                    ) : (
-                                        <div style={{
-                                            display: 'grid', 
-                                            gridTemplateColumns: 'repeat(4, 1fr)', 
-                                            gap: 8,
-                                            maxHeight: 180,
-                                            overflowY: 'auto',
-                                            paddingRight: 4
-                                        }}>
-                                            {timeSlots.map(time => (
-                                                <button
-                                                    key={time}
-                                                    onClick={() => { setSelectedTime(time); setValidationError(null); }}
-                                                    className={`
-                                                        py-2 px-1 rounded-lg text-sm font-bold border transition-all
-                                                        ${selectedTime === time 
-                                                            ? 'bg-purple-600 text-white border-purple-600 shadow-md transform scale-105' 
-                                                            : 'bg-white text-gray-700 border-gray-200 hover:border-purple-300 hover:bg-purple-50'}
-                                                    `}
-                                                >
-                                                    {time}
-                                                </button>
-                                            ))}
-                                        </div>
-                                    )}
-                                </div>
-                            )}
-
+                            {/* Validation Error Banner */}
                             {validationError && (
-                                <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-600 text-sm flex items-start gap-2 animate-pulse">
-                                    <AlertCircle size={16} style={{marginTop:2, flexShrink:0}}/> 
+                                <div className="error-banner-shake mt-4">
+                                    <AlertCircle size={16} /> 
                                     <span>{validationError}</span>
                                 </div>
                             )}
                             
-                            {wizPet && wizService && selectedDate && selectedTime && !validationError && (
-                                <div className="summary-card pop-in">
-                                    <h5 style={{margin:'0 0 10px 0', borderBottom:'1px solid #ddd', paddingBottom:6, color:'var(--secondary)'}}>Resumo</h5>
-                                    <div className="summary-row"><span>Pet:</span> <strong>{pets.find(p=>p.id===wizPet)?.name}</strong></div>
-                                    <div className="summary-row"><span>Serviço:</span> <strong>{wizService.name}</strong></div>
-                                    <div className="summary-row"><span>Valor:</span> <strong style={{color:'var(--primary)'}}>{formatCurrency(wizService.price)}</strong></div>
-                                    <div className="summary-row" style={{marginTop:8, paddingTop:8, borderTop:'1px dashed #ddd'}}>
-                                        <span>Horário:</span> 
-                                        <strong>
-                                            {selectedTime}
-                                            <span style={{color:'#666', margin:'0 4px', fontSize:'0.8em'}}>➝ {endTimePreview}</span>
-                                        </strong>
+                            {/* Resumo & Action */}
+                            <div className="fixed-bottom-action">
+                                {wizPet && wizService && selectedDate && selectedTime && (
+                                    <div className="booking-summary-row fade-in">
+                                        <div>
+                                            <small>Total a Pagar</small>
+                                            <div className="summary-price">{formatCurrency(wizService.price)}</div>
+                                        </div>
+                                        <button 
+                                          className={`btn btn-primary btn-wide ${isBooking ? 'loading' : ''}`} 
+                                          disabled={!selectedTime || isBooking} 
+                                          onClick={handleConfirm}
+                                        >
+                                            {isBooking ? 'Confirmando...' : 'Confirmar Agendamento'}
+                                        </button>
                                     </div>
-                                </div>
-                            )}
-
-                            <div className="wizard-actions">
-                                <button className="btn btn-ghost" onClick={() => setStep(2)}>Voltar</button>
-                                <button 
-                                  className={`btn btn-primary ${isBooking ? 'loading' : ''}`} 
-                                  disabled={!selectedTime || isBooking || !!validationError} 
-                                  onClick={handleConfirm}
-                                >
-                                    {isBooking ? 'Reservando...' : 'Confirmar'}
-                                </button>
+                                )}
                             </div>
+                            
+                            {/* Espaço extra para não cobrir conteúdo com o fixed bottom */}
+                            <div style={{height: 80}}></div>
                         </div>
                     )}
 
                     {/* STEP 4: SUCCESS FEEDBACK */}
                     {step === 4 && bookedData && (
-                        <div className="fade-in-up text-center" style={{paddingTop: 10}}>
-                            <div style={{
-                                width: 80, height: 80, margin: '0 auto 20px', 
-                                background: '#E0F2F1', borderRadius: '50%', 
-                                display: 'flex', alignItems: 'center', justifyContent: 'center'
-                            }} className="pop-in">
-                                <PartyPopper size={40} color="var(--brand-green)" />
+                        <div className="fade-in-up text-center pt-4">
+                            <div className="success-confetti-icon pop-in">
+                                <PartyPopper size={48} color="white" />
                             </div>
                             
-                            <h3 style={{color: 'var(--brand-green)', marginBottom: 8}}>Agendamento Enviado!</h3>
-                            <p style={{marginBottom: 24, fontSize: '1rem'}}>
-                                Avisamos o <strong>{bookedData.petName}</strong> que ele vai ficar cheiroso! 🐶✨
+                            <h2 className="text-2xl font-bold text-gray-800 mb-2">Agendado com Sucesso!</h2>
+                            <p className="text-gray-500 mb-6">
+                                O spa do <strong>{bookedData.petName}</strong> está garantido.
                             </p>
 
-                            <div className="card" style={{background: '#F8FAFC', border: '1px solid #E2E8F0', padding: 20, textAlign: 'left', marginBottom: 24}}>
-                                <div className="summary-row">
-                                    <span style={{color:'#666'}}><CalendarIcon size={14} style={{verticalAlign:'middle', marginRight:4}}/> Data</span>
-                                    <strong>{bookedData.date}</strong>
+                            <div className="ticket-card">
+                                <div className="ticket-header">
+                                    <span className="ticket-label">Data</span>
+                                    <strong className="ticket-value">{bookedData.date}</strong>
                                 </div>
-                                <div className="summary-row">
-                                    <span style={{color:'#666'}}><Clock size={14} style={{verticalAlign:'middle', marginRight:4}}/> Horário</span>
-                                    <strong>{bookedData.time}</strong>
+                                <div className="ticket-row">
+                                    <span className="ticket-label">Horário</span>
+                                    <strong className="ticket-value">{bookedData.time}</strong>
                                 </div>
-                                <div style={{height:1, background:'#eee', margin:'10px 0'}}></div>
-                                <div className="summary-row">
-                                    <span style={{color:'#666'}}>Serviço</span>
-                                    <strong>{bookedData.serviceName}</strong>
+                                <div className="ticket-divider"></div>
+                                <div className="ticket-row">
+                                    <span className="ticket-label">Serviço</span>
+                                    <strong className="ticket-value">{bookedData.serviceName}</strong>
                                 </div>
                             </div>
 
-                            <button className="btn btn-primary full-width" onClick={onClose}>
-                                Combinado!
+                            <button className="btn btn-primary full-width mt-6" onClick={onClose}>
+                                Ver na Minha Agenda
                             </button>
                         </div>
                     )}

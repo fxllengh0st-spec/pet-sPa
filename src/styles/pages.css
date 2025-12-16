@@ -27,19 +27,34 @@
 
 /* --- HERO & HOME (REFACTORED FOR RESPONSIVENESS) --- */
 .hero-header {
-  background: linear-gradient(135deg, #FF9966 0%, #FF5E62 100%);
+  background: white; /* Alterado de Gradiente Full para Fundo Branco Limpo com Elementos */
   border-radius: 0 0 32px 32px;
-  color: white;
+  color: var(--secondary);
   margin-top: -20px; 
   padding: 40px 20px 0;
   position: relative; 
   overflow: hidden;
-  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.2);
+  /* box-shadow removida para look mais "clean" */
   display: flex;
   flex-direction: column;
   align-items: center;
   text-align: center;
   min-height: auto; 
+}
+
+/* Badge no topo do Hero */
+.hero-badge {
+    background: #F3E5F5; color: var(--primary); 
+    padding: 6px 16px; border-radius: 20px; font-weight: 700; font-size: 0.75rem;
+    text-transform: uppercase; letter-spacing: 0.05em; display: inline-flex; align-items: center; gap: 6px;
+    margin-bottom: 16px;
+}
+
+/* Texto Gradiente no H1 */
+.text-gradient {
+    background: linear-gradient(135deg, var(--primary), #FF7675);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
 }
 
 /* Desktop Styles */
@@ -52,6 +67,7 @@
         align-items: center;
         min-height: 480px;
         border-radius: 0 0 50px 50px;
+        background: radial-gradient(circle at 100% 0%, #fdf2fa 0%, white 50%);
     }
 }
 
@@ -64,13 +80,12 @@
 }
 
 .hero-header h1 { 
-    color: white; margin-bottom: 16px; font-size: 2rem; line-height: 1.2; 
-    text-shadow: 0 4px 12px rgba(0,0,0,0.1); 
+    color: var(--secondary); margin-bottom: 16px; font-size: 2.5rem; line-height: 1.1; font-weight: 800;
 }
-@media (min-width: 768px) { .hero-header h1 { font-size: 3.5rem; } }
+@media (min-width: 768px) { .hero-header h1 { font-size: 3.8rem; } }
 
 .hero-header p { 
-    color: rgba(255,255,255,0.95); font-size: 1rem; max-width: 500px; 
+    color: var(--text-body); font-size: 1rem; max-width: 500px; 
     margin: 0 auto 24px; font-weight: 500;
 }
 @media (min-width: 1024px) { .hero-header p { margin: 0 0 32px 0; font-size: 1.2rem; } }
@@ -80,28 +95,53 @@
 }
 @media (min-width: 1024px) { .hero-actions { justify-content: flex-start; } }
 
-.hero-btn { width: 100%; max-width: 200px; height: 50px; }
-.hero-btn-outline { border-color: rgba(255,255,255,0.6); color: white; border: 2px solid; height: 50px; }
-.hero-btn-outline:hover { background: rgba(255,255,255,0.2); border-color: white; }
+.hero-btn { width: 100%; max-width: 200px; height: 50px; border: 1px solid rgba(0,0,0,0.05); }
+.hero-btn-outline { 
+    border-color: #E2E8F0; color: var(--secondary); border: 2px solid; height: 50px; 
+    background: transparent;
+}
+.hero-btn-outline:hover { border-color: var(--primary); color: var(--primary); }
 
-/* Imagem Hero Responsiva (Flex Item agora, não absolute) */
-.hero-pets-img {
+/* HERO IMAGE CONTAINER & BUBBLES */
+.hero-img-container {
+    position: relative;
     width: 80%;
     max-width: 300px;
-    height: auto;
     margin-top: 20px;
-    filter: drop-shadow(0 10px 20px rgba(0,0,0,0.2));
     z-index: 1;
-    transform: translateY(5px); /* Pequeno ajuste para "sentar" na borda */
 }
 
+.hero-pets-img {
+    width: 100%;
+    height: auto;
+    filter: drop-shadow(0 20px 40px rgba(0,0,0,0.15));
+    transform: translateY(10px);
+}
+
+.floating-bubble {
+    position: absolute;
+    background: white;
+    padding: 8px 16px;
+    border-radius: 20px;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+    font-size: 0.8rem; font-weight: 700; color: var(--secondary);
+    animation: float 4s ease-in-out infinite;
+    white-space: nowrap;
+    z-index: 2;
+}
+
+.bubble-1 { top: 20%; left: -20px; animation-delay: 0s; transform: rotate(-5deg); }
+.bubble-2 { bottom: 30%; right: -30px; animation-delay: 2s; transform: rotate(5deg); }
+
 @media (min-width: 1024px) {
-    .hero-pets-img {
+    .hero-img-container {
         max-width: 450px;
         width: 45%;
         margin-top: 0;
         transform: translateY(20px);
     }
+    .bubble-1 { top: 30%; left: -40px; font-size: 0.9rem; }
+    .bubble-2 { bottom: 40%; right: -20px; font-size: 0.9rem; }
 }
 
 /* Offset para o conteúdo subir sobre o header */
