@@ -36,7 +36,9 @@ export const ActiveTrackingCard: React.FC<ActiveTrackingCardProps> = ({
             // 3. Confirmados ou Pendentes (Apenas se ainda não tiver passado o horário de fim)
             // Se o horário final já passou e não foi marcado como completed/in_progress, escondemos do tracker 
             // (assume-se que já acabou ou foi esquecido, não é mais "ativo" para o usuário monitorar)
-            return new Date(a.end_time) > now;
+            // Obs: Adicionamos 1 hora de tolerância após o fim antes de sumir, para o user não achar que sumiu do nada
+            const endTimeTolerance = new Date(new Date(a.end_time).getTime() + 60 * 60000); 
+            return endTimeTolerance > now;
 
         }).sort((a,b) => {
             // Ordenação: Em andamento primeiro (topo), depois por data mais próxima
@@ -57,13 +59,26 @@ export const ActiveTrackingCard: React.FC<ActiveTrackingCardProps> = ({
     // --- RENDERIZAÇÃO COMPACTA PARA HEADER (Lista Horizontal) ---
     if (variant === 'header') {
         return (
-            <div style={{display:'flex', gap: 12, overflowX: 'auto', paddingBottom: 4, maxWidth: '100%'}} className="no-scrollbar">
+            <div 
+                className="no-scrollbar fade-in" 
+                style={{
+                    display:'flex', 
+                    gap: 12, 
+                    overflowX: 'auto', 
+                    paddingBottom: 4, 
+                    // LIMITE DE LARGURA: 
+                    // Define um máximo fixo ou relativo à viewport para não empurrar a navegação.
+                    // 35vw garante espaço em telas médias, 450px é um bom teto para telas grandes.
+                    maxWidth: 'min(450px, 35vw)', 
+                    alignItems: 'center'
+                }}
+            >
                 {activeApps.map(app => (
                     <div 
                         key={app.id}
                         className={`active-status-card header-compact status-bg-${app.status} clickable-card`}
                         onClick={() => handleClick(app)}
-                        style={{flexShrink: 0}}
+                        style={{flexShrink: 0}} // Impede que o card encolha, forçando o scroll
                     >
                         <div className="compact-icon-box">
                             {app.status === 'in_progress' && <Activity size={16} className="pulse-animation" />}
