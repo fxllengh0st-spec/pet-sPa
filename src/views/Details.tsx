@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { ChevronLeft, Clock, CheckCircle, Droplet, Sparkles, X, Calendar, DollarSign, Scissors, CalendarClock, AlertCircle } from 'lucide-react';
+import { ChevronLeft, Clock, CheckCircle, Droplet, Sparkles, X, Calendar, DollarSign, Scissors, CalendarClock, AlertCircle, ChevronRight, Activity, CalendarCheck } from 'lucide-react';
 import { Appointment, Pet, Route } from '../types';
 import { formatCurrency, formatDate, getPetAvatarUrl } from '../utils/ui';
 import { api } from '../services/api';
@@ -19,7 +19,31 @@ interface PetDetailsProps {
 
 export const PetDetailsView: React.FC<PetDetailsProps> = ({ selectedPet, apps, onNavigate, setSelectedAppointment }) => {
      if (!selectedPet) return null;
+     
+     // Filtrar histórico
      const petHistory = apps.filter(a => a.pet_id === selectedPet.id);
+     
+     // Buscar agendamento ATIVO (o mais relevante para o usuário ver agora)
+     // Prioridade: Em progresso > Confirmado > Pendente
+     const activeApp = useMemo(() => {
+         const inProgress = petHistory.find(a => a.status === 'in_progress');
+         if (inProgress) return inProgress;
+         
+         const confirmed = petHistory.filter(a => a.status === 'confirmed')
+             .sort((a,b) => new Date(a.start_time).getTime() - new Date(b.start_time).getTime())[0];
+         if (confirmed) return confirmed;
+
+         const pending = petHistory.filter(a => a.status === 'pending')
+             .sort((a,b) => new Date(a.start_time).getTime() - new Date(b.start_time).getTime())[0];
+         return pending;
+     }, [petHistory]);
+
+     const renderServiceIcon = (name: string) => {
+        const n = (name || '').toLowerCase();
+        if (n.includes('tosa')) return <Scissors size={18} />;
+        if (n.includes('banho')) return <Droplet size={18} />;
+        return <Sparkles size={18} />;
+     };
 
      return (
         <div className="container page-enter" style={{ paddingTop: 20 }}>
@@ -29,35 +53,91 @@ export const PetDetailsView: React.FC<PetDetailsProps> = ({ selectedPet, apps, o
                <div style={{width: 44}}></div>
            </div>
 
-           <div className="card reveal-on-scroll" style={{textAlign:'center', padding: '40px 20px'}}>
-               <img src={getPetAvatarUrl(selectedPet.name)} alt={selectedPet.name} style={{width: 80, height: 80, margin: '0 auto 16px', display: 'block'}} className="pet-avatar-3d" />
-               <h2>{selectedPet.name}</h2>
-               <p>{selectedPet.breed || 'Sem raça definida'}</p>
-               <div style={{display:'flex', justifyContent:'center', gap: 12, marginTop: 16}}>
-                   {selectedPet.weight && <span className="status-badge tag-confirmed">{selectedPet.weight} kg</span>}
-                   {selectedPet.notes && <span className="status-badge tag-in_progress">📝 Observações</span>}
+           {/* HEADER DO PET */}
+           <div className="card reveal-on-scroll" style={{textAlign:'center', padding: '30px 20px', marginBottom: 24}}>
+               <div style={{position:'relative', display:'inline-block'}}>
+                   <img src={getPetAvatarUrl(selectedPet.name)} alt={selectedPet.name} style={{width: 100, height: 100, margin: '0 auto 16px', display: 'block', border:'4px solid white', boxShadow:'0 8px 20px rgba(0,0,0,0.1)'}} className="pet-avatar-3d" />
+                   <div style={{position:'absolute', bottom: 16, right: 0, background: 'var(--surface)', borderRadius:'50%', padding: 6, boxShadow:'0 2px 8px rgba(0,0,0,0.1)'}}>
+                       {selectedPet.breed?.toLowerCase().includes('gato') ? '🐱' : '🐶'}
+                   </div>
                </div>
+               
+               <h2 style={{fontSize:'1.8rem', marginBottom: 4}}>{selectedPet.name}</h2>
+               <p style={{color:'#666', fontSize:'0.95rem'}}>{selectedPet.breed || 'Sem raça definida'}</p>
+               
+               <div style={{display:'flex', justifyContent:'center', gap: 12, marginTop: 16}}>
+                   {selectedPet.weight && <span className="tag-pill">⚖️ {selectedPet.weight} kg</span>}
+                   {selectedPet.birth_date && <span className="tag-pill">🎂 {new Date(selectedPet.birth_date).getFullYear()}</span>}
+               </div>
+
                {selectedPet.notes && (
-                   <div style={{marginTop: 20, background: '#FFF9C4', padding: 12, borderRadius: 12, color: '#FBC02D', fontSize: '0.9rem', textAlign: 'left'}}>
-                      <strong>Notas:</strong> {selectedPet.notes}
+                   <div style={{marginTop: 20, background: '#FFF9C4', padding: '12px 16px', borderRadius: 12, color: '#FBC02D', fontSize: '0.85rem', textAlign: 'left', border: '1px solid #FFF59D'}}>
+                      <strong>📝 Observações:</strong> {selectedPet.notes}
                    </div>
                )}
            </div>
 
-           <h3 style={{margin: '24px 0 16px'}} className="reveal-on-scroll">Histórico de {selectedPet.name}</h3>
+           {/* CARD DE STATUS ATIVO (TRACKING) */}
+           {activeApp && (
+               <div className="reveal-on-scroll" onClick={() => { setSelectedAppointment(activeApp); onNavigate('appointment-details'); }} style={{cursor:'pointer'}}>
+                   <h3 className="section-title" style={{marginTop:0, fontSize:'1.1rem', marginBottom: 12}}>Status Atual</h3>
+                   
+                   <div className={`active-status-card status-bg-${activeApp.status}`}>
+                       <div className="active-status-header">
+                           <div className="active-status-badge">
+                               {activeApp.status === 'in_progress' && <><Activity size={14} className="pulse-animation"/> Em Atendimento</>}
+                               {activeApp.status === 'confirmed' && <><CalendarCheck size={14}/> Confirmado</>}
+                               {activeApp.status === 'pending' && <><Clock size={14}/> Aguardando Aprovação</>}
+                           </div>
+                           <div style={{background:'rgba(255,255,255,0.2)', borderRadius:'50%', width:32, height:32, display:'flex', alignItems:'center', justifyContent:'center'}}>
+                               <ChevronRight size={18} color="white"/>
+                           </div>
+                       </div>
+                       
+                       <div className="active-status-content">
+                           <h3>{activeApp.services?.name}</h3>
+                           <p>
+                               {activeApp.status === 'in_progress' 
+                                 ? 'Seu pet está recebendo cuidados agora mesmo! 🛁' 
+                                 : `${new Date(activeApp.start_time).toLocaleDateString()} às ${new Date(activeApp.start_time).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}`}
+                           </p>
+                       </div>
+                       
+                       {/* Decorative Icon Background */}
+                       <div style={{position:'absolute', right: -10, bottom: -20, opacity: 0.15}}>
+                           {activeApp.status === 'in_progress' ? <Droplet size={100} fill="white"/> : <Calendar size={100} fill="white"/>}
+                       </div>
+                   </div>
+               </div>
+           )}
+
+           <h3 className="section-title reveal-on-scroll" style={{marginTop: 32}}>Histórico Completo</h3>
            <div className="card reveal-on-scroll" style={{padding: 0, overflow:'hidden'}}>
                {petHistory.length === 0 ? (
-                   <div style={{padding:24, textAlign:'center', color:'#999'}}>Nenhum banho registrado ainda.</div>
+                   <div style={{padding:40, textAlign:'center', color:'#999'}}>
+                       <div style={{fontSize:'2rem', marginBottom:10}}>📅</div>
+                       Nenhum serviço realizado ainda.<br/>Que tal agendar o primeiro?
+                   </div>
                ) : (
-                   petHistory.map(a => (
-                     <div key={a.id} className="history-item clickable-card" onClick={() => { setSelectedAppointment(a); onNavigate('appointment-details'); }} style={{padding: '16px 20px'}}>
-                        <div>
-                            <strong>{a.services?.name}</strong>
-                            <div className="history-meta">{formatDate(a.start_time)}</div>
-                        </div>
-                        <span className={`status-badge tag-${a.status}`}>{a.status}</span>
-                     </div>
-                   ))
+                   <div>
+                       {petHistory.map(a => (
+                         <div key={a.id} className="history-list-item clickable-card" onClick={() => { setSelectedAppointment(a); onNavigate('appointment-details'); }}>
+                            <div style={{display:'flex', alignItems:'center'}}>
+                                <div className="history-icon-box">
+                                    {renderServiceIcon(a.services?.name || '')}
+                                </div>
+                                <div>
+                                    <strong style={{fontSize:'0.95rem', display:'block'}}>{a.services?.name}</strong>
+                                    <span style={{fontSize:'0.8rem', color:'#666'}}>{formatDate(a.start_time)}</span>
+                                </div>
+                            </div>
+                            <div style={{textAlign:'right'}}>
+                                <div style={{fontWeight:700, fontSize:'0.9rem', color:'var(--primary)'}}>{formatCurrency(a.services?.price || 0)}</div>
+                                <span className={`status-badge tag-${a.status}`} style={{marginTop:4, fontSize:'0.65rem'}}>{a.status}</span>
+                            </div>
+                         </div>
+                       ))}
+                   </div>
                )}
            </div>
         </div>

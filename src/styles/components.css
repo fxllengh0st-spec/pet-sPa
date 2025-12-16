@@ -1,4 +1,5 @@
 
+
 /* =========================================
    UI COMPONENTS
    ========================================= */
@@ -31,6 +32,71 @@
     display: flex; flex-direction: column; justify-content: space-between;
     min-height: 140px; 
     box-shadow: 0 10px 25px rgba(155, 89, 182, 0.3); /* Sombra colorida forte */
+}
+
+/* --- TRACKING / ACTIVE STATUS CARD (NEW) --- */
+.active-status-card {
+    border-radius: 20px;
+    padding: 24px;
+    color: white;
+    margin-bottom: 24px;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 10px 30px -5px rgba(0,0,0,0.2);
+    border: 1px solid rgba(255,255,255,0.2);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    min-height: 140px;
+}
+
+.status-bg-pending {
+    background: linear-gradient(135deg, #F39C12, #F1C40F);
+    box-shadow: 0 10px 20px rgba(243, 156, 18, 0.3);
+}
+.status-bg-confirmed {
+    background: linear-gradient(135deg, #00B894, #00CEC9);
+    box-shadow: 0 10px 20px rgba(0, 184, 148, 0.3);
+}
+.status-bg-in_progress {
+    background: linear-gradient(135deg, #0984E3, #74B9FF);
+    box-shadow: 0 10px 20px rgba(9, 132, 227, 0.3);
+}
+
+.active-status-header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 12px;
+}
+.active-status-badge {
+    background: rgba(255,255,255,0.25);
+    backdrop-filter: blur(4px);
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    display: flex; align-items: center; gap: 6px;
+}
+
+.active-status-content h3 { color: white !important; font-size: 1.4rem; margin: 0 0 4px 0; }
+.active-status-content p { color: rgba(255,255,255,0.95); margin: 0; font-size: 0.95rem; }
+
+/* History List Enhanced */
+.history-list-item {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 16px;
+    border-bottom: 1px solid #F1F5F9;
+    transition: background 0.2s;
+}
+.history-list-item:last-child { border-bottom: none; }
+.history-list-item:hover { background: #F8FAFC; }
+
+.history-icon-box {
+    width: 44px; height: 44px; border-radius: 12px;
+    background: #F1F5F9; color: var(--secondary);
+    display: flex; align-items: center; justify-content: center;
+    margin-right: 16px; flex-shrink: 0;
 }
 
 /* Buttons */
