@@ -1,9 +1,10 @@
 
 import React, { useMemo } from 'react';
-import { ChevronLeft, Plus, LayoutDashboard, Clock, TrendingUp, Sparkles, Award, Crown, Calendar } from 'lucide-react';
+import { ChevronLeft, Plus, LayoutDashboard, Clock, TrendingUp, Sparkles, Award, Crown, Calendar, LogOut, Settings, HelpCircle, User, History } from 'lucide-react';
 import { Profile, Pet, Route, Subscription } from '../types';
 import { useToast } from '../context/ToastContext';
 import { getAvatarUrl, getPetAvatarUrl, formatCurrency } from '../utils/ui';
+import { api } from '../services/api';
 
 interface UserProfileProps {
     profile: Profile | null;
@@ -27,27 +28,26 @@ export const UserProfileView: React.FC<UserProfileProps> = ({
     onAddPet
 }) => {
     const toast = useToast();
+
+    const handleLogout = async () => {
+        await api.auth.signOut();
+        onNavigate('login');
+    };
     
     // --- CÁLCULO DE ESTATÍSTICAS RICAS ---
     const stats = useMemo(() => {
-        // Filtrar apenas agendamentos realizados (Concluídos)
         const completedApps = apps.filter(a => a.status === 'completed');
-        
-        // 1. Total Investido (Soma dos preços dos serviços concluídos)
         const totalInvested = completedApps.reduce((acc, curr) => acc + (curr.services?.price || 0), 0);
-        
-        // 2. Tempo de Mimo (Soma da duração em minutos -> Converter para horas)
         const totalMinutes = completedApps.reduce((acc, curr) => acc + (curr.services?.duration_minutes || 0), 0);
-        const totalHours = Math.max(0, Math.round(totalMinutes / 60)); // Arredonda
+        const totalHours = Math.max(0, Math.round(totalMinutes / 60));
         
-        // 3. Serviço Favorito
         const serviceCounts: Record<string, number> = {};
         completedApps.forEach(a => {
             const name = a.services?.name || 'Outro';
             serviceCounts[name] = (serviceCounts[name] || 0) + 1;
         });
         
-        let favoriteService = 'Nenhum ainda';
+        let favoriteService = '—';
         let maxCount = 0;
         
         Object.entries(serviceCounts).forEach(([name, count]) => {
@@ -57,60 +57,58 @@ export const UserProfileView: React.FC<UserProfileProps> = ({
             }
         });
 
-        // 4. Nível de Fidelidade (Gamificação)
         const totalCount = completedApps.length;
         let loyaltyTier = 'Bronze';
         let nextTierCount = 5;
+        let tierColor = '#CD7F32';
         
         if (totalCount >= 20) {
             loyaltyTier = 'Diamante';
             nextTierCount = 50;
+            tierColor = '#b9f2ff';
         } else if (totalCount >= 10) {
             loyaltyTier = 'Ouro';
             nextTierCount = 20;
+            tierColor = '#FFD700';
         } else if (totalCount >= 5) {
             loyaltyTier = 'Prata';
             nextTierCount = 10;
+            tierColor = '#C0C0C0';
         }
 
         const progressPercent = Math.min(100, Math.round((totalCount / nextTierCount) * 100));
 
-        return {
-            totalInvested,
-            totalHours,
-            favoriteService,
-            loyaltyTier,
-            totalCount,
-            nextTierCount,
-            progressPercent
-        };
+        return { totalInvested, totalHours, favoriteService, loyaltyTier, totalCount, nextTierCount, progressPercent, tierColor };
     }, [apps]);
 
     return (
-    <div className="container page-enter" style={{ paddingTop: 20 }}>
-       <div className="nav-header">
-           <button className="btn-icon-sm" onClick={() => onNavigate('dashboard')}><ChevronLeft /></button>
-           <h3>Meu Perfil</h3>
-           <div style={{width: 44}}></div>
+    <div className="container page-enter" style={{ paddingTop: 20, paddingBottom: 100 }}>
+       
+       {/* HEADER TRANSPARENTE COM AÇÕES */}
+       <div className="profile-header-modern reveal-on-scroll">
+           <div style={{display:'flex', alignItems:'center', gap: 16}}>
+               <div className="profile-avatar-lg">
+                  <img 
+                    src={getAvatarUrl(profile?.full_name || 'User')} 
+                    alt="Avatar" 
+                  />
+               </div>
+               <div>
+                   <h2 style={{color:'var(--secondary)', marginBottom: 2, fontSize:'1.4rem'}}>{profile?.full_name?.split(' ')[0]}</h2>
+                   <div style={{display:'flex', alignItems:'center', gap: 6}}>
+                       <span className="tier-badge" style={{backgroundColor: stats.tierColor + '30', color: 'var(--secondary)', borderColor: stats.tierColor}}>
+                           {stats.loyaltyTier}
+                       </span>
+                       {profile?.role === 'admin' && <span className="status-badge tag-confirmed">Admin</span>}
+                   </div>
+               </div>
+           </div>
+           <button className="btn-icon-sm" onClick={handleLogout} title="Sair">
+               <LogOut size={18} color="#FF7675" />
+           </button>
        </div>
 
-       <div className="profile-header reveal-on-scroll">
-           <div className="profile-avatar">
-              <img 
-                src={getAvatarUrl(profile?.full_name || 'User')} 
-                alt="Avatar" 
-                style={{width:'100%', height:'100%', objectFit:'cover'}} 
-              />
-           </div>
-           <div>
-               <h2 style={{color:'white', marginBottom:4}}>{profile?.full_name}</h2>
-               <p style={{color:'rgba(255,255,255,0.8)', margin:0}}>{session?.user.email}</p>
-               <span className="status-badge" style={{background:'rgba(255,255,255,0.2)', color:'white', marginTop:8}}>
-                  {profile?.role === 'admin' ? 'Administrador' : 'Cliente Vip'}
-               </span>
-           </div>
-       </div>
-
+       {/* ADMIN ACCESS CARD */}
        {profile?.role === 'admin' && (
            <div 
              className="card clickable-card reveal-on-scroll" 
@@ -122,84 +120,74 @@ export const UserProfileView: React.FC<UserProfileProps> = ({
                  color: 'white', 
                  display:'flex', 
                  alignItems:'center', 
-                 gap: 16
+                 gap: 16,
+                 border: 'none',
+                 position: 'relative',
+                 overflow: 'hidden'
              }}
            >
-                <div style={{width: 40, height: 40, background: 'rgba(255,255,255,0.1)', borderRadius: '50%', display:'flex', alignItems:'center', justifyContent:'center'}}>
-                    <LayoutDashboard size={20} color="white" />
+                <div style={{width: 44, height: 44, background: 'rgba(255,255,255,0.15)', borderRadius: '50%', display:'flex', alignItems:'center', justifyContent:'center', zIndex: 2}}>
+                    <LayoutDashboard size={22} color="white" />
                 </div>
-                <div>
-                    <h3 style={{color:'white', fontSize:'1rem', margin:0}}>Painel de Administrador</h3>
-                    <p style={{color:'rgba(255,255,255,0.7)', margin:0, fontSize:'0.8rem'}}>Acessar Métricas e Kanban</p>
+                <div style={{zIndex: 2}}>
+                    <h3 style={{color:'white', fontSize:'1rem', margin:0}}>Painel de Controle</h3>
+                    <p style={{color:'rgba(255,255,255,0.7)', margin:0, fontSize:'0.8rem'}}>Gestão de Loja & Agendamentos</p>
                 </div>
+                <LayoutDashboard size={100} color="white" style={{position:'absolute', right: -20, bottom: -30, opacity: 0.05}} />
            </div>
        )}
 
-       {/* --- SECTION: STATS & GAMIFICATION --- */}
-       <div className="reveal-on-scroll" style={{marginBottom: 32}}>
-          <h3 style={{marginBottom:16}}>Minhas Conquistas</h3>
-          
-          <div className="stat-grid-rich">
-              {/* Card Fidelidade - Full Width */}
-              <div className="loyalty-card">
-                  <div className="loyalty-header">
-                      <div style={{display:'flex', alignItems:'center', gap:10}}>
-                          <Award size={24} color="#FDCB6E" />
-                          <div>
-                              <strong style={{display:'block', lineHeight:1.2}}>Nível Fidelidade</strong>
-                              <span style={{fontSize:'0.75rem', opacity:0.8}}>Continue agendando para subir!</span>
-                          </div>
-                      </div>
-                      <div className="loyalty-badge">{stats.loyaltyTier}</div>
-                  </div>
-                  <div className="loyalty-progress-container">
-                      <div className="loyalty-progress-labels">
-                          <span>{stats.totalCount} Banhos</span>
-                          <span>Próximo Nível: {stats.nextTierCount}</span>
-                      </div>
-                      <div className="loyalty-progress-track">
-                          <div className="loyalty-progress-fill" style={{width: `${stats.progressPercent}%`}}></div>
-                      </div>
-                  </div>
-              </div>
-
-              {/* Stat 1: Tempo de Mimo */}
-              <div className="stat-card-rich">
-                  <div className="stat-card-rich-icon icon-bg-purple">
-                      <Clock size={18} />
-                  </div>
-                  <span className="stat-rich-label">Tempo de Mimo</span>
-                  <span className="stat-rich-value">{stats.totalHours} horas</span>
-              </div>
-
-              {/* Stat 2: Investimento */}
-              <div className="stat-card-rich">
-                  <div className="stat-card-rich-icon icon-bg-green">
-                      <TrendingUp size={18} />
-                  </div>
-                  <span className="stat-rich-label">Investido em Cuidado</span>
-                  <span className="stat-rich-value" style={{fontSize:'1rem'}}>{formatCurrency(stats.totalInvested)}</span>
-              </div>
-
-              {/* Stat 3: Serviço Favorito (Full Width na 2a linha se tiver pouco espaço, ou manter grid) */}
-              <div className="stat-card-rich" style={{gridColumn: '1 / -1'}}>
-                  <div style={{display:'flex', alignItems:'center', justifyContent:'space-between'}}>
-                      <div>
-                          <span className="stat-rich-label" style={{display:'block', marginBottom:4}}>Serviço Favorito</span>
-                          <span className="stat-rich-value">{stats.favoriteService}</span>
-                      </div>
-                      <div className="stat-card-rich-icon icon-bg-orange" style={{marginBottom:0}}>
-                          <Sparkles size={18} />
-                      </div>
-                  </div>
-              </div>
-          </div>
+       {/* QUICK ACTIONS ROW */}
+       <div className="quick-actions-grid reveal-on-scroll">
+           <button className="quick-action-btn" onClick={() => onNavigate('dashboard')}>
+               <div className="qa-icon" style={{background:'#E3F2FD', color:'#2196F3'}}><History size={20}/></div>
+               <span>Histórico</span>
+           </button>
+           <button className="quick-action-btn">
+               <div className="qa-icon" style={{background:'#F3E5F5', color:'#9C27B0'}}><User size={20}/></div>
+               <span>Dados</span>
+           </button>
+           <button className="quick-action-btn">
+               <div className="qa-icon" style={{background:'#E0F2F1', color:'#009688'}}><HelpCircle size={20}/></div>
+               <span>Ajuda</span>
+           </button>
+           <button className="quick-action-btn" onClick={handleLogout}>
+               <div className="qa-icon" style={{background:'#FFEBEE', color:'#F44336'}}><Settings size={20}/></div>
+               <span>Config</span>
+           </button>
        </div>
 
-       {/* --- NEW SECTION: ACTIVE SUBSCRIPTIONS --- */}
+       {/* PETS SECTION (HORIZONTAL SCROLL / GRID) */}
+       <div className="section-header-row reveal-on-scroll">
+            <h3>Meus Pets</h3>
+            <button className="btn-text-action" onClick={() => onAddPet ? onAddPet() : toast.info('Funcionalidade indisponível')}>
+                <Plus size={16}/> Adicionar
+            </button>
+       </div>
+       
+       {pets.length === 0 ? (
+           <div className="empty-state-card reveal-on-scroll" onClick={() => onAddPet && onAddPet()}>
+               <div className="empty-icon-bg"><Plus size={32} color="var(--primary)"/></div>
+               <p>Cadastre seu primeiro pet</p>
+           </div>
+       ) : (
+         <div className="pets-grid-modern reveal-on-scroll">
+           {pets.map(p => (
+              <div key={p.id} className="pet-modern-card clickable-card" onClick={() => { setSelectedPet(p); onNavigate('pet-details'); }}>
+                 <img src={getPetAvatarUrl(p.name)} className="pet-img-cover" alt={p.name} />
+                 <div className="pet-card-info">
+                     <strong>{p.name}</strong>
+                     <span>{p.breed || 'Pet Amado'}</span>
+                 </div>
+              </div>
+           ))}
+         </div>
+       )}
+
+       {/* SUBSCRIPTIONS */}
        {subscriptions.length > 0 && (
-           <div className="reveal-on-scroll" style={{marginBottom: 32}}>
-               <h3 style={{marginBottom:16}}>Planos Ativos ({subscriptions.length})</h3>
+           <div className="reveal-on-scroll mt-4">
+               <h3 className="section-title-sm">Assinaturas Ativas</h3>
                <div style={{display:'flex', flexDirection:'column', gap: 12}}>
                    {subscriptions.map(sub => {
                        const pet = pets.find(p => p.id === sub.pet_id);
@@ -208,17 +196,16 @@ export const UserProfileView: React.FC<UserProfileProps> = ({
                        const daysLeft = Math.ceil((expireDate.getTime() - new Date().getTime()) / (1000 * 3600 * 24));
                        
                        return (
-                           <div key={sub.id} className="card clickable-card" style={{margin:0, padding: 16, display:'flex', alignItems:'center', gap: 16}} onClick={() => { if(pet) { setSelectedPet(pet); onNavigate('pet-details'); } }}>
-                               <div style={{width: 50, height: 50, background: 'linear-gradient(135deg, #00B894 0%, #00CEC9 100%)', borderRadius: 12, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0}}>
-                                   <Crown size={24} color="white" fill="rgba(255,255,255,0.3)" />
+                           <div key={sub.id} className="card sub-compact-card clickable-card" onClick={() => { if(pet) { setSelectedPet(pet); onNavigate('pet-details'); } }}>
+                               <div className="sub-icon-box">
+                                   <Crown size={20} color="white" />
                                </div>
                                <div style={{flex:1}}>
-                                   <strong style={{display:'block', fontSize:'0.95rem'}}>{sub.packages?.title}</strong>
-                                   <div style={{display:'flex', alignItems:'center', gap: 6, fontSize:'0.8rem', color:'var(--text-muted)'}}>
-                                      <span>Pet: {pet?.name || 'Desconhecido'}</span>
-                                      <span>•</span>
-                                      <span style={{color: daysLeft < 5 ? 'var(--brand-yellow)' : 'inherit'}}>Expira em {daysLeft} dias</span>
-                                   </div>
+                                   <strong style={{display:'block', fontSize:'0.9rem', color:'var(--secondary)'}}>{sub.packages?.title}</strong>
+                                   <div style={{fontSize:'0.75rem', color:'var(--text-muted)'}}>Pet: {pet?.name}</div>
+                               </div>
+                               <div className="sub-status-tag" style={{color: daysLeft < 5 ? '#e17055' : '#00b894', background: daysLeft < 5 ? '#fab1a030' : '#55efc420'}}>
+                                   {daysLeft} dias
                                </div>
                            </div>
                        );
@@ -227,28 +214,60 @@ export const UserProfileView: React.FC<UserProfileProps> = ({
            </div>
        )}
 
-       <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:16}} className="reveal-on-scroll">
-            <h3>Meus Pets</h3>
-            <button 
-                className="btn-icon-sm" 
-                style={{width:32, height:32}} 
-                onClick={() => onAddPet ? onAddPet() : toast.info('Funcionalidade indisponível')}
-            >
-                <Plus size={16}/>
-            </button>
-       </div>
-       
-       {pets.length === 0 ? <p className="text-center text-gray-500 py-4">Nenhum pet cadastrado.</p> : (
-         <div className="pet-grid">
-           {pets.map(p => (
-              <div key={p.id} className="card pet-card clickable-card reveal-on-scroll" onClick={() => { setSelectedPet(p); onNavigate('pet-details'); }}>
-                 <img src={getPetAvatarUrl(p.name)} className="pet-avatar-3d" alt={p.name} />
-                 <strong>{p.name}</strong>
-                 <span className="pet-breed">{p.breed || 'SRD'}</span>
+       {/* FIDELITY CARD */}
+       <div className="reveal-on-scroll mt-4">
+          <h3 className="section-title-sm">Clube de Fidelidade</h3>
+          <div className="loyalty-card-modern">
+              <div className="loyalty-bg-pattern"></div>
+              <div className="loyalty-content">
+                  <div className="loyalty-top">
+                      <div className="loyalty-brand">
+                          <Award size={20} color={stats.tierColor} />
+                          <span>PetSpa Rewards</span>
+                      </div>
+                      <span className="loyalty-tier-text" style={{color: stats.tierColor}}>{stats.loyaltyTier}</span>
+                  </div>
+                  
+                  <div className="loyalty-middle">
+                      <div className="big-stat">
+                          <span className="label">Banhos Realizados</span>
+                          <span className="value">{stats.totalCount}</span>
+                      </div>
+                      <div className="big-stat right">
+                          <span className="label">Próximo Nível</span>
+                          <span className="value">{stats.nextTierCount}</span>
+                      </div>
+                  </div>
+
+                  <div className="loyalty-bar-container">
+                      <div className="loyalty-bar-fill" style={{width: `${stats.progressPercent}%`, background: stats.tierColor}}></div>
+                  </div>
+                  <div className="loyalty-footer">
+                      <span>Faltam {Math.max(0, stats.nextTierCount - stats.totalCount)} visitas para subir de nível</span>
+                  </div>
               </div>
-           ))}
-         </div>
-       )}
+          </div>
+       </div>
+
+       {/* FUN STATS */}
+       <div className="stats-row-mini reveal-on-scroll">
+           <div className="mini-stat">
+               <Clock size={16} className="text-purple-500 mb-1"/>
+               <strong>{stats.totalHours}h</strong>
+               <span>de Mimo</span>
+           </div>
+           <div className="mini-stat">
+               <TrendingUp size={16} className="text-green-500 mb-1"/>
+               <strong>{formatCurrency(stats.totalInvested)}</strong>
+               <span>Investidos</span>
+           </div>
+           <div className="mini-stat">
+               <Sparkles size={16} className="text-orange-500 mb-1"/>
+               <strong>{stats.favoriteService}</strong>
+               <span>Favorito</span>
+           </div>
+       </div>
+
     </div>
   );
 };

@@ -251,83 +251,127 @@
 .masonry-item { break-inside: avoid; margin-bottom: 16px; border-radius: 16px; overflow: hidden; }
 .gallery-img { width: 100%; display: block; }
 
-/* --- USER PROFILE HEADER --- */
-.profile-header {
-    display: flex;
-    align-items: center;
-    gap: 20px;
-    background: linear-gradient(135deg, var(--primary), #8E44AD);
-    padding: 30px;
-    border-radius: 24px;
-    color: white;
-    margin-bottom: 24px;
-    box-shadow: 0 10px 30px -5px rgba(155, 89, 182, 0.3);
+/* --- USER PROFILE (NEW) --- */
+.profile-header-modern {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 12px 0 24px;
 }
 
-.profile-avatar {
-    width: 80px;
-    height: 80px;
-    border-radius: 50%;
-    border: 3px solid rgba(255,255,255,0.3);
-    overflow: hidden;
-    flex-shrink: 0;
-    background: white;
+.profile-avatar-lg {
+    width: 64px; height: 64px; border-radius: 50%;
+    border: 2px solid var(--primary); padding: 2px;
+    background: white; overflow: hidden;
+}
+.profile-avatar-lg img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
+
+.tier-badge {
+    padding: 2px 8px; border-radius: 10px; border: 1px solid;
+    font-size: 0.7rem; font-weight: 800; text-transform: uppercase;
 }
 
-@media (min-width: 768px) {
-    .profile-avatar {
-        width: 100px;
-        height: 100px;
-    }
+/* Quick Actions Grid */
+.quick-actions-grid {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 32px;
 }
-
-/* --- USER PROFILE RICH STATS --- */
-.stat-grid-rich {
-    display: grid; grid-template-columns: 1fr 1fr; gap: 12px;
+.quick-action-btn {
+    display: flex; flex-direction: column; align-items: center; gap: 8px;
+    background: none; border: none; cursor: pointer;
 }
-.stat-card-rich {
-    background: white; border-radius: 16px; padding: 16px;
-    border: 1px solid var(--border-light);
-    box-shadow: var(--shadow-sm);
-    display: flex; flex-direction: column; justify-content: center;
-    min-height: 100px;
-    position: relative; overflow: hidden;
-}
-.stat-card-rich-icon {
-    width: 36px; height: 36px; border-radius: 10px;
+.qa-icon {
+    width: 50px; height: 50px; border-radius: 16px;
     display: flex; align-items: center; justify-content: center;
-    margin-bottom: 12px;
+    transition: transform 0.2s;
 }
-.icon-bg-purple { background: #F3E5F5; color: var(--primary); }
-.icon-bg-blue { background: #E0F7FA; color: var(--brand-cyan); }
-.icon-bg-green { background: #E0F2F1; color: var(--brand-green); }
-.icon-bg-orange { background: #FFF3E0; color: #F39C12; }
+.quick-action-btn:active .qa-icon { transform: scale(0.9); }
+.quick-action-btn span { font-size: 0.75rem; color: var(--secondary); font-weight: 500; }
 
-.stat-rich-label { font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); letter-spacing: 0.05em; font-weight: 700; }
-.stat-rich-value { font-size: 1.2rem; font-weight: 800; color: var(--secondary); margin-top: 4px; line-height: 1.2; }
-
-/* Loyalty Card */
-.loyalty-card {
-    grid-column: 1 / -1; /* Spans full width */
-    background: linear-gradient(135deg, #2D3436, #000000);
-    color: white;
-    padding: 20px; border-radius: 16px;
-    margin-bottom: 12px;
-    position: relative; overflow: hidden;
-    box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+/* Pets Grid Modern */
+.section-header-row {
+    display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;
 }
-.loyalty-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
-.loyalty-badge {
-    background: linear-gradient(to right, #FDCB6E, #E1B12C);
-    color: #2D3436; padding: 4px 12px; border-radius: 12px;
-    font-size: 0.75rem; font-weight: 800; text-transform: uppercase;
-    box-shadow: 0 4px 10px rgba(253, 203, 110, 0.3);
+.section-title-sm {
+    font-size: 1.1rem; color: var(--secondary); font-weight: 700; margin-bottom: 16px;
+}
+.btn-text-action {
+    background: none; border: none; color: var(--primary); 
+    font-weight: 700; font-size: 0.85rem; display: flex; align-items: center; gap: 4px; cursor: pointer;
 }
 
-.loyalty-progress-container { margin-top: 8px; }
-.loyalty-progress-labels { display: flex; justify-content: space-between; font-size: 0.7rem; color: rgba(255,255,255,0.6); margin-bottom: 6px; }
-.loyalty-progress-track { width: 100%; height: 8px; background: rgba(255,255,255,0.1); border-radius: 4px; overflow: hidden; }
-.loyalty-progress-fill { height: 100%; background: linear-gradient(to right, #00B894, #00CEC9); border-radius: 4px; transition: width 1s ease-out; }
+.pets-grid-modern {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 16px; margin-bottom: 32px;
+}
+.pet-modern-card {
+    background: white; border-radius: 20px; overflow: hidden;
+    box-shadow: var(--shadow-sm); border: 1px solid var(--border-light);
+    position: relative;
+}
+.pet-img-cover {
+    width: 100%; height: 100px; object-fit: cover;
+}
+.pet-card-info { padding: 12px; }
+.pet-card-info strong { display: block; font-size: 0.95rem; line-height: 1.2; }
+.pet-card-info span { font-size: 0.8rem; color: var(--text-muted); }
+
+.empty-state-card {
+    border: 2px dashed #CBD5E0; border-radius: 16px;
+    padding: 24px; text-align: center; cursor: pointer;
+    background: #F8FAFC;
+}
+.empty-icon-bg {
+    width: 50px; height: 50px; background: #E2E8F0; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center; margin: 0 auto 12px;
+}
+
+/* Loyalty Card Modern */
+.loyalty-card-modern {
+    background: #1e272e; color: white; border-radius: 24px; padding: 24px;
+    position: relative; overflow: hidden; margin-bottom: 32px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+}
+.loyalty-bg-pattern {
+    position: absolute; inset: 0; opacity: 0.05;
+    background-image: radial-gradient(#ffffff 1px, transparent 1px);
+    background-size: 10px 10px;
+}
+.loyalty-content { position: relative; z-index: 2; }
+.loyalty-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+.loyalty-brand { display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.05em; }
+.loyalty-tier-text { font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em; }
+
+.loyalty-middle { display: flex; justify-content: space-between; margin-bottom: 12px; }
+.big-stat { display: flex; flex-direction: column; }
+.big-stat.right { text-align: right; }
+.big-stat .label { font-size: 0.7rem; color: rgba(255,255,255,0.6); text-transform: uppercase; }
+.big-stat .value { font-size: 1.5rem; font-weight: 300; }
+
+.loyalty-bar-container {
+    height: 6px; background: rgba(255,255,255,0.1); border-radius: 3px; overflow: hidden; margin-bottom: 12px;
+}
+.loyalty-bar-fill { height: 100%; transition: width 1s ease-out; }
+.loyalty-footer { font-size: 0.75rem; color: rgba(255,255,255,0.5); text-align: center; }
+
+/* Sub Compact Card */
+.sub-compact-card {
+    padding: 12px; display: flex; align-items: center; gap: 12px;
+    border-radius: 16px; margin: 0;
+}
+.sub-icon-box {
+    width: 44px; height: 44px; border-radius: 12px;
+    background: linear-gradient(135deg, #00B894, #00CEC9);
+    display: flex; align-items: center; justify-content: center;
+}
+.sub-status-tag {
+    font-size: 0.75rem; font-weight: 700; padding: 4px 10px; border-radius: 8px;
+}
+
+/* Stats Row Mini */
+.stats-row-mini { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-bottom: 20px; }
+.mini-stat {
+    background: white; border: 1px solid var(--border-light); border-radius: 16px;
+    padding: 12px; display: flex; flex-direction: column; align-items: center; text-align: center;
+}
+.mini-stat strong { font-size: 0.95rem; color: var(--secondary); margin-bottom: 2px; }
+.mini-stat span { font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; }
 
 /* --- SERVICES PAGE --- */
 .services-list-full {
