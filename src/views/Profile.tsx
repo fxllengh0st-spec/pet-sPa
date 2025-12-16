@@ -1,9 +1,8 @@
-
-import React from 'react';
-import { ChevronLeft, Plus, LayoutDashboard } from 'lucide-react';
+import React, { useMemo } from 'react';
+import { ChevronLeft, Plus, LayoutDashboard, Clock, TrendingUp, Sparkles, Award } from 'lucide-react';
 import { Profile, Pet, Route } from '../types';
 import { useToast } from '../context/ToastContext';
-import { getAvatarUrl, getPetAvatarUrl } from '../utils/ui';
+import { getAvatarUrl, getPetAvatarUrl, formatCurrency } from '../utils/ui';
 
 interface UserProfileProps {
     profile: Profile | null;
@@ -26,6 +25,64 @@ export const UserProfileView: React.FC<UserProfileProps> = ({
 }) => {
     const toast = useToast();
     
+    // --- CÁLCULO DE ESTATÍSTICAS RICAS ---
+    const stats = useMemo(() => {
+        // Filtrar apenas agendamentos realizados (Concluídos)
+        const completedApps = apps.filter(a => a.status === 'completed');
+        
+        // 1. Total Investido (Soma dos preços dos serviços concluídos)
+        const totalInvested = completedApps.reduce((acc, curr) => acc + (curr.services?.price || 0), 0);
+        
+        // 2. Tempo de Mimo (Soma da duração em minutos -> Converter para horas)
+        const totalMinutes = completedApps.reduce((acc, curr) => acc + (curr.services?.duration_minutes || 0), 0);
+        const totalHours = Math.max(0, Math.round(totalMinutes / 60)); // Arredonda
+        
+        // 3. Serviço Favorito
+        const serviceCounts: Record<string, number> = {};
+        completedApps.forEach(a => {
+            const name = a.services?.name || 'Outro';
+            serviceCounts[name] = (serviceCounts[name] || 0) + 1;
+        });
+        
+        let favoriteService = 'Nenhum ainda';
+        let maxCount = 0;
+        
+        Object.entries(serviceCounts).forEach(([name, count]) => {
+            if (count > maxCount) {
+                maxCount = count;
+                favoriteService = name;
+            }
+        });
+
+        // 4. Nível de Fidelidade (Gamificação)
+        const totalCount = completedApps.length;
+        let loyaltyTier = 'Bronze';
+        let nextTierCount = 5;
+        
+        if (totalCount >= 20) {
+            loyaltyTier = 'Diamante';
+            nextTierCount = 50;
+        } else if (totalCount >= 10) {
+            loyaltyTier = 'Ouro';
+            nextTierCount = 20;
+        } else if (totalCount >= 5) {
+            loyaltyTier = 'Prata';
+            nextTierCount = 10;
+        }
+
+        const progressPercent = Math.min(100, Math.round((totalCount / nextTierCount) * 100));
+
+        return {
+            totalInvested,
+            totalHours,
+            favoriteService,
+            loyaltyTier,
+            totalCount,
+            nextTierCount,
+            progressPercent
+        };
+    }, [apps]);
+
     return (
     <div className="container page-enter" style={{ paddingTop: 20 }}>
        <div className="nav-header">
@@ -75,6 +132,67 @@ export const UserProfileView: React.FC<UserProfileProps> = ({
            </div>
        )}
 
+       {/* --- SECTION: STATS & GAMIFICATION --- */}
+       <div className="reveal-on-scroll" style={{marginBottom: 32}}>
+          <h3 style={{marginBottom:16}}>Minhas Conquistas</h3>
+          
+          <div className="stat-grid-rich">
+              {/* Card Fidelidade - Full Width */}
+              <div className="loyalty-card">
+                  <div className="loyalty-header">
+                      <div style={{display:'flex', alignItems:'center', gap:10}}>
+                          <Award size={24} color="#FDCB6E" />
+                          <div>
+                              <strong style={{display:'block', lineHeight:1.2}}>Nível Fidelidade</strong>
+                              <span style={{fontSize:'0.75rem', opacity:0.8}}>Continue agendando para subir!</span>
+                          </div>
+                      </div>
+                      <div className="loyalty-badge">{stats.loyaltyTier}</div>
+                  </div>
+                  <div className="loyalty-progress-container">
+                      <div className="loyalty-progress-labels">
+                          <span>{stats.totalCount} Banhos</span>
+                          <span>Próximo Nível: {stats.nextTierCount}</span>
+                      </div>
+                      <div className="loyalty-progress-track">
+                          <div className="loyalty-progress-fill" style={{width: `${stats.progressPercent}%`}}></div>
+                      </div>
+                  </div>
+              </div>
+
+              {/* Stat 1: Tempo de Mimo */}
+              <div className="stat-card-rich">
+                  <div className="stat-card-rich-icon icon-bg-purple">
+                      <Clock size={18} />
+                  </div>
+                  <span className="stat-rich-label">Tempo de Mimo</span>
+                  <span className="stat-rich-value">{stats.totalHours} horas</span>
+              </div>
+
+              {/* Stat 2: Investimento */}
+              <div className="stat-card-rich">
+                  <div className="stat-card-rich-icon icon-bg-green">
+                      <TrendingUp size={18} />
+                  </div>
+                  <span className="stat-rich-label">Investido em Cuidado</span>
+                  <span className="stat-rich-value" style={{fontSize:'1rem'}}>{formatCurrency(stats.totalInvested)}</span>
+              </div>
+
+              {/* Stat 3: Serviço Favorito (Full Width na 2a linha se tiver pouco espaço, ou manter grid) */}
+              <div className="stat-card-rich" style={{gridColumn: '1 / -1'}}>
+                  <div style={{display:'flex', alignItems:'center', justifyContent:'space-between'}}>
+                      <div>
+                          <span className="stat-rich-label" style={{display:'block', marginBottom:4}}>Serviço Favorito</span>
+                          <span className="stat-rich-value">{stats.favoriteService}</span>
+                      </div>
+                      <div className="stat-card-rich-icon icon-bg-orange" style={{marginBottom:0}}>
+                          <Sparkles size={18} />
+                      </div>
+                  </div>
+              </div>
+          </div>
+       </div>
+
        <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:16}} className="reveal-on-scroll">
             <h3>Meus Pets</h3>
             <button 
@@ -97,20 +215,6 @@ export const UserProfileView: React.FC<UserProfileProps> = ({
            ))}
          </div>
        )}
-       
-       <div className="card reveal-on-scroll" style={{marginTop: 24}}>
-          <h3 style={{marginBottom:16}}>Estatísticas</h3>
-          <div className="stat-grid">
-              <div className="stat-card">
-                 <div className="stat-value">{apps.length}</div>
-                 <div className="stat-label">Banhos Realizados</div>
-              </div>
-              <div className="stat-card">
-                 <div className="stat-value">{pets.length}</div>
-                 <div className="stat-label">Pets Amados</div>
-              </div>
-          </div>
-       </div>
     </div>
   );
 };
