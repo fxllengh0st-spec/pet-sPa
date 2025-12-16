@@ -1,6 +1,5 @@
-
 import React, { useState } from 'react';
-import { X, Dog, Calendar, Weight, FileText } from 'lucide-react';
+import { X, Dog, Calendar, Weight, FileText, Camera, Upload } from 'lucide-react';
 import { api } from '../services/api';
 import { useToast } from '../context/ToastContext';
 
@@ -21,6 +20,19 @@ export const PetWizard: React.FC<PetWizardProps> = ({ onClose, session, onSucces
     const [birthDate, setBirthDate] = useState('');
     const [weight, setWeight] = useState('');
     const [notes, setNotes] = useState('');
+    const [avatarUrl, setAvatarUrl] = useState<string | null>(null); // Mockado via URL ou base64
+
+    // Mock Image Upload (In a real app, this would upload to Storage bucket)
+    const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                setAvatarUrl(reader.result as string);
+            };
+            reader.readAsDataURL(file);
+        }
+    };
 
     const handleSave = async () => {
         if (!name) return;
@@ -31,7 +43,8 @@ export const PetWizard: React.FC<PetWizardProps> = ({ onClose, session, onSucces
                 breed: breed || null,
                 birth_date: birthDate || null,
                 weight: weight ? parseFloat(weight) : null,
-                notes: notes || null
+                notes: notes || null,
+                avatar_url: avatarUrl || null
             };
 
             await api.booking.createPet(session.user.id, petPayload);
@@ -60,6 +73,8 @@ export const PetWizard: React.FC<PetWizardProps> = ({ onClose, session, onSucces
                     <div className={`wizard-step-dot ${step >= 2 ? 'active' : ''}`}>2</div>
                     <div className="wizard-line"></div>
                     <div className={`wizard-step-dot ${step >= 3 ? 'active' : ''}`}>3</div>
+                    <div className="wizard-line"></div>
+                    <div className={`wizard-step-dot ${step >= 4 ? 'active' : ''}`}>4</div>
                 </div>
 
                 <div className="wizard-body page-enter">
@@ -133,7 +148,7 @@ export const PetWizard: React.FC<PetWizardProps> = ({ onClose, session, onSucces
                         </div>
                     )}
 
-                    {/* STEP 3: Notes & Confirm */}
+                    {/* STEP 3: Notes */}
                     {step === 3 && (
                         <div className="fade-in-up">
                             <h4 className="text-center mb-4">Algo mais que devemos saber?</h4>
@@ -149,21 +164,53 @@ export const PetWizard: React.FC<PetWizardProps> = ({ onClose, session, onSucces
                                 />
                             </div>
 
+                            <div className="wizard-actions">
+                                <button className="btn btn-ghost" onClick={() => setStep(2)}>Voltar</button>
+                                <button className="btn btn-primary" onClick={() => setStep(4)}>Próximo</button>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* STEP 4: Photo & Confirm */}
+                    {step === 4 && (
+                        <div className="fade-in-up">
+                            <h4 className="text-center mb-4">Uma foto do {name}! 📸</h4>
+                            
+                            <div style={{display:'flex', flexDirection:'column', alignItems:'center', marginBottom: 20}}>
+                                <div style={{
+                                    width: 120, height: 120, borderRadius: '50%', 
+                                    background: '#F8F9FA', border: '2px dashed #CBD5E0',
+                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                    overflow: 'hidden', position: 'relative'
+                                }}>
+                                    {avatarUrl ? (
+                                        <img src={avatarUrl} alt="Preview" style={{width:'100%', height:'100%', objectFit:'cover'}} />
+                                    ) : (
+                                        <Camera size={40} color="#CBD5E0" />
+                                    )}
+                                </div>
+                                
+                                <label className="btn btn-sm btn-ghost mt-4" style={{cursor: 'pointer'}}>
+                                    <Upload size={16} style={{marginRight: 6}} />
+                                    {avatarUrl ? 'Trocar Foto' : 'Escolher Foto'}
+                                    <input type="file" accept="image/*" onChange={handleImageUpload} style={{display:'none'}} />
+                                </label>
+                            </div>
+
                             <div className="summary-card">
                                 <div className="summary-row"><span>Nome:</span> <strong>{name}</strong></div>
                                 {breed && <div className="summary-row"><span>Raça:</span> <strong>{breed}</strong></div>}
-                                {birthDate && <div className="summary-row"><span>Nascimento:</span> <strong>{new Date(birthDate).toLocaleDateString()}</strong></div>}
                                 {weight && <div className="summary-row"><span>Peso:</span> <strong>{weight} kg</strong></div>}
                             </div>
 
                             <div className="wizard-actions">
-                                <button className="btn btn-ghost" onClick={() => setStep(2)}>Voltar</button>
+                                <button className="btn btn-ghost" onClick={() => setStep(3)}>Voltar</button>
                                 <button 
                                   className={`btn btn-primary ${isSaving ? 'loading' : ''}`} 
                                   disabled={isSaving} 
                                   onClick={handleSave}
                                 >
-                                    {isSaving ? 'Salvando...' : 'Cadastrar Pet'}
+                                    {isSaving ? 'Salvando...' : 'Finalizar Cadastro'}
                                 </button>
                             </div>
                         </div>

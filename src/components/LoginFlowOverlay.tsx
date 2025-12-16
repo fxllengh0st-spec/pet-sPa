@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Loader2, Dog } from 'lucide-react';
 import { LoginStage, Profile, Appointment, Pet, Service } from '../types';
@@ -7,7 +6,7 @@ interface LoginFlowOverlayProps {
     loginStage: LoginStage;
     setLoginStage: (stage: LoginStage) => void;
     session: any;
-    onComplete: () => void;
+    onComplete: (hasPets: boolean) => void;
     loadUserData: (uid: string) => Promise<{ pets: Pet[], apps: Appointment[] }>;
     loadProfile: (uid: string) => Promise<void>;
 }
@@ -21,6 +20,7 @@ export const LoginFlowOverlay: React.FC<LoginFlowOverlayProps> = ({
     loadProfile 
 }) => {
     const [insightText, setInsightText] = useState('');
+    const [hasPets, setHasPets] = useState(false);
     
     useEffect(() => {
         if (loginStage === 'welcome') {
@@ -31,9 +31,11 @@ export const LoginFlowOverlay: React.FC<LoginFlowOverlayProps> = ({
                    const data = await loadUserData(session.user.id);
                    await loadProfile(session.user.id);
                    
-                   // Gera insight
                    const petCount = data.pets.length;
                    const appCount = data.apps.length;
+                   
+                   setHasPets(petCount > 0);
+
                    let text = '';
                    
                    if (petCount === 0) text = "Vi que você ainda não tem pets cadastrados. Vamos resolver isso?";
@@ -75,8 +77,8 @@ export const LoginFlowOverlay: React.FC<LoginFlowOverlayProps> = ({
                      <div className="insight-bubble">
                          <p>"{insightText}"</p>
                      </div>
-                     <button className="btn btn-white mt-4" onClick={onComplete}>
-                         Ir para meu Perfil
+                     <button className="btn btn-white mt-4" onClick={() => onComplete(hasPets)}>
+                         {hasPets ? 'Ir para meu Perfil' : 'Cadastrar Pet Agora'}
                      </button>
                 </div>
             )}

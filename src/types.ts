@@ -27,6 +27,7 @@ export interface Pet {
   weight?: number;
   birth_date?: string; // Adicionado conforme schema
   notes?: string;
+  avatar_url?: string; // Novo campo para foto
 }
 
 export type AppointmentStatus = 'pending' | 'confirmed' | 'in_progress' | 'completed' | 'cancelled';

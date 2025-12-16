@@ -154,7 +154,17 @@ export default function App() {
           loginStage={loginStage}
           setLoginStage={setLoginStage}
           session={session}
-          onComplete={() => { setLoginStage('idle'); navigateTo('user-profile'); }}
+          onComplete={(hasPets) => { 
+              setLoginStage('idle'); 
+              navigateTo('user-profile');
+              // Se não tiver pets, abre o wizard automaticamente
+              if (!hasPets) {
+                  setTimeout(() => {
+                      setShowPetWizard(true);
+                      toast.info("Vamos cadastrar seu primeiro pet! 🐾");
+                  }, 600);
+              }
+          }}
           loadUserData={loadUserData}
           loadProfile={loadProfile}
        />
