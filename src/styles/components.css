@@ -1,5 +1,6 @@
 
 
+
 /* =========================================
    UI COMPONENTS
    ========================================= */
@@ -10,28 +11,35 @@
   border-radius: var(--radius-md);
   padding: 20px; 
   box-shadow: var(--shadow-card);
-  /* Borda sutil para definição em telas de baixa qualidade */
-  border: 1px solid rgba(226, 232, 240, 0.8); 
+  
+  /* Borda Sutil para definição em telas LCD/Retina */
+  border: 1px solid rgba(255, 255, 255, 0.5); /* Borda "Glassy" */
+  position: relative;
+  
   margin-bottom: 16px;
   transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.3s ease, border-color 0.3s ease;
-  position: relative;
   overflow: hidden; 
   will-change: transform;
 }
+
+/* Efeito de hover refinado */
 .card:hover {
     transform: translateY(-3px);
     box-shadow: var(--shadow-float);
-    border-color: rgba(155, 89, 182, 0.4); /* Roxo sutil no hover */
+    border-color: rgba(155, 89, 182, 0.2); 
+    z-index: 2;
 }
+
 .clickable-card { cursor: pointer; }
 .clickable-card:active { transform: scale(0.98); }
 
+/* Cartão com gradiente de destaque (CTA) */
 .cta-card-gradient {
     background: linear-gradient(135deg, var(--primary), #D291BC);
     color: white; border: none;
     display: flex; flex-direction: column; justify-content: space-between;
     min-height: 140px; 
-    box-shadow: 0 10px 25px rgba(155, 89, 182, 0.3); /* Sombra colorida forte */
+    box-shadow: 0 15px 35px -5px rgba(155, 89, 182, 0.4); /* Sombra mais intensa e colorida */
 }
 
 /* --- TRACKING / ACTIVE STATUS CARD (NEW) --- */
@@ -42,7 +50,7 @@
     margin-bottom: 24px;
     position: relative;
     overflow: hidden;
-    box-shadow: 0 10px 30px -5px rgba(0,0,0,0.2);
+    box-shadow: 0 15px 35px -5px rgba(0,0,0,0.15); /* Sombra profunda */
     border: 1px solid rgba(255,255,255,0.2);
     display: flex;
     flex-direction: column;
@@ -251,8 +259,8 @@ input, select, textarea {
   padding: 0 16px;
   /* Borda mais visível e fundo com contraste contra o card branco */
   border: 1px solid #CBD5E1; 
-  border-radius: 12px; /* Reduzido de 'pill' para rounded-lg para parecer mais profissional */
-  background: var(--bg-input); 
+  border-radius: 12px; 
+  background: var(--bg-input); /* Fundo sutil para input dentro de card branco */
   font-family: 'Inter', sans-serif; font-size: 0.95rem; color: var(--text-main);
   transition: all 0.2s ease;
   box-shadow: inset 0 2px 4px rgba(0,0,0,0.02); /* Sombra interna sutil */

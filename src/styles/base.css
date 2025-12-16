@@ -1,3 +1,4 @@
+
 /* =========================================
    BASE & RESET
    ========================================= */
@@ -18,7 +19,14 @@ html {
 
 body {
   font-family: 'Inter', sans-serif;
+  
+  /* Fundo da Aplicação com Gradiente Sutil (Estilo Premium) */
   background-color: var(--bg-app);
+  background-image: 
+    radial-gradient(circle at 10% 20%, rgba(155, 89, 182, 0.03) 0%, transparent 40%),
+    radial-gradient(circle at 90% 80%, rgba(0, 206, 201, 0.03) 0%, transparent 40%);
+  background-attachment: fixed; /* Parallax feel: O fundo fica fixo enquanto o conteúdo rola */
+  
   color: var(--text-main);
   margin: 0; padding: 0;
   line-height: 1.6; /* Melhor legibilidade */

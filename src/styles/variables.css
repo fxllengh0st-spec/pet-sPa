@@ -1,4 +1,5 @@
 
+
 /* =========================================
    TOKENS (Design System) - VIBRANT BRAND UPDATE
    ========================================= */
@@ -26,13 +27,13 @@
   
   --accent: #FDF2FA;        /* Roxo muito pálido para fundos de ícones */
   --surface: #FFFFFF;
+  --surface-alt: #FAFAFA;   /* Fundo alternativo para cards secundários */
   
-  /* AJUSTE DE DESIGN: Fundo com personalidade e Cards definidos */
-  /* Um cinza muito levemente tintado de roxo/azul para modernidade */
-  --bg-app: #F2F4F8;        
+  /* AJUSTE DE DESIGN: Fundo sofisticado (Lavanda Acinzentado) */
+  --bg-app: #F4F1F6;        
   
-  /* Input mais escuro que o background do app para contraste dentro do card branco */
-  --bg-input: #F1F5F9;      
+  /* Input com contraste adequado sobre fundo branco */
+  --bg-input: #F8FAFC;      
   
   --border-light: #E2E8F0;  
   
@@ -53,11 +54,11 @@
   --radius-lg: 24px;
   --radius-pill: 999px;     
   
-  /* Sombras - Coloridas para visual "Premium" */
+  /* Sombras - Modernas e Profundas */
   --shadow-sm: 0 2px 4px rgba(155, 89, 182, 0.05);
-  /* Sombra principal do card: Leve tom roxo para integrar com o fundo */
-  --shadow-card: 0 4px 20px -2px rgba(45, 52, 54, 0.08), 0 0 0 1px rgba(0,0,0,0.02);
-  --shadow-float: 0 20px 30px -5px rgba(155, 89, 182, 0.15);
+  /* Sombra principal: Difusa e com leve tom da marca para integração */
+  --shadow-card: 0 10px 30px -5px rgba(45, 52, 54, 0.05), 0 4px 10px -2px rgba(0,0,0,0.01);
+  --shadow-float: 0 20px 40px -5px rgba(155, 89, 182, 0.15);
   --shadow-inner: inset 0 2px 4px 0 rgba(0, 0, 0, 0.03);
   
   /* Z-Index Hierarchy */
