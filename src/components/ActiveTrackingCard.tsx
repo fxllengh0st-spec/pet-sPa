@@ -70,7 +70,11 @@ export const ActiveTrackingCard: React.FC<ActiveTrackingCardProps> = ({
                     // Define um máximo fixo ou relativo à viewport para não empurrar a navegação.
                     // 35vw garante espaço em telas médias, 450px é um bom teto para telas grandes.
                     maxWidth: 'min(450px, 35vw)', 
-                    alignItems: 'center'
+                    alignItems: 'center',
+                    // EFEITO FADE OUT & ARREDONDAMENTO
+                    maskImage: 'linear-gradient(to right, black 85%, transparent 100%)',
+                    WebkitMaskImage: 'linear-gradient(to right, black 85%, transparent 100%)',
+                    borderRadius: '0 30px 30px 0' 
                 }}
             >
                 {activeApps.map(app => (
