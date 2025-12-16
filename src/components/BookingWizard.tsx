@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { X, AlertCircle, Clock, CalendarCheck, Check, Calendar as CalendarIcon } from 'lucide-react';
+import { X, AlertCircle, Clock, CalendarCheck, Check, Calendar as CalendarIcon, PartyPopper } from 'lucide-react';
 import { api } from '../services/api';
-import { formatCurrency, toLocalISOString, getPetAvatarUrl } from '../utils/ui';
+import { formatCurrency, toLocalISOString, getPetAvatarUrl, formatDate } from '../utils/ui';
 import { useToast } from '../context/ToastContext';
 import { Pet, Service } from '../types';
 
@@ -43,6 +43,15 @@ export const BookingWizard: React.FC<BookingWizardProps> = ({
     const [isBooking, setIsBooking] = useState(false);
     const [validationError, setValidationError] = useState<string | null>(null);
     
+    // Success State Data to display in final step
+    const [bookedData, setBookedData] = useState<{
+        petName: string;
+        serviceName: string;
+        date: string;
+        time: string;
+        price: number;
+    } | null>(null);
+
     const toast = useToast();
 
     // Inicializa a data com hoje (Local Time)
@@ -143,9 +152,20 @@ export const BookingWizard: React.FC<BookingWizardProps> = ({
             // 2. Create Appointment (Success)
             await api.booking.createAppointment(session.user.id, wizPet, wizService.id, start.toISOString(), end.toISOString());
             
+            // Prepare Success Data View
+            const petObj = pets.find(p => p.id === wizPet);
+            setBookedData({
+                petName: petObj?.name || 'Seu Pet',
+                serviceName: wizService.name,
+                date: new Date(selectedDate).toLocaleDateString('pt-BR'),
+                time: selectedTime,
+                price: wizService.price
+            });
+
             await onSuccess();
-            toast.success('Agendamento confirmado! Seu pet vai amar. 🐾');
-            onClose();
+            // Don't close immediately. Move to success step.
+            setStep(4);
+            
         } catch (e) {
             console.error(e);
             toast.error('Erro técnico ao agendar. Tente novamente.');
@@ -165,18 +185,21 @@ export const BookingWizard: React.FC<BookingWizardProps> = ({
     return (
         <div className="modal-overlay">
             <div className="modal-content">
+                {/* Header (Hide close button on success step to force user to read) */}
                 <div className="modal-header">
-                    <h3>Agendar Banho & Tosa</h3>
-                    <button onClick={onClose} className="btn-icon-sm"><X size={20}/></button>
+                    <h3>{step === 4 ? 'Agendamento Realizado!' : 'Agendar Banho & Tosa'}</h3>
+                    {step !== 4 && <button onClick={onClose} className="btn-icon-sm"><X size={20}/></button>}
                 </div>
                 
-                <div className="wizard-steps">
-                    <div className={`wizard-step-dot ${step >= 1 ? 'active' : ''}`}>1</div>
-                    <div className="wizard-line"></div>
-                    <div className={`wizard-step-dot ${step >= 2 ? 'active' : ''}`}>2</div>
-                    <div className="wizard-line"></div>
-                    <div className={`wizard-step-dot ${step >= 3 ? 'active' : ''}`}>3</div>
-                </div>
+                {step !== 4 && (
+                    <div className="wizard-steps">
+                        <div className={`wizard-step-dot ${step >= 1 ? 'active' : ''}`}>1</div>
+                        <div className="wizard-line"></div>
+                        <div className={`wizard-step-dot ${step >= 2 ? 'active' : ''}`}>2</div>
+                        <div className="wizard-line"></div>
+                        <div className={`wizard-step-dot ${step >= 3 ? 'active' : ''}`}>3</div>
+                    </div>
+                )}
 
                 <div className="wizard-body page-enter">
                     {/* STEP 1: PET SELECTION */}
@@ -235,12 +258,11 @@ export const BookingWizard: React.FC<BookingWizardProps> = ({
                         </div>
                     )}
 
-                    {/* STEP 3: DATE & SLOT SELECTION (UPDATED) */}
+                    {/* STEP 3: DATE & SLOT SELECTION */}
                     {step === 3 && (
                         <div className="fade-in-up">
                             <h4 className="text-center mb-2">Quando?</h4>
                             
-                            {/* Date Picker Customizado */}
                             <div className="form-group" style={{marginBottom:16}}>
                                 <label style={{display:'flex', alignItems:'center', gap:6}}>
                                     <CalendarIcon size={14}/> Selecione o Dia
@@ -252,7 +274,7 @@ export const BookingWizard: React.FC<BookingWizardProps> = ({
                                     min={new Date().toLocaleDateString('en-CA')}
                                     onChange={(e) => {
                                         setSelectedDate(e.target.value);
-                                        setSelectedTime(null); // Reset time on date change
+                                        setSelectedTime(null); 
                                         setValidationError(null);
                                     }}
                                 />
@@ -263,7 +285,6 @@ export const BookingWizard: React.FC<BookingWizardProps> = ({
                                 )}
                             </div>
 
-                            {/* Time Slot Grid */}
                             {isDayValid && selectedDate && wizService && (
                                 <div className="fade-in">
                                     <label style={{display:'block', marginBottom:8, fontWeight:700, fontSize:'0.85rem', color:'var(--secondary)'}}>
@@ -302,7 +323,6 @@ export const BookingWizard: React.FC<BookingWizardProps> = ({
                                 </div>
                             )}
 
-                            {/* Error Banner */}
                             {validationError && (
                                 <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-600 text-sm flex items-start gap-2 animate-pulse">
                                     <AlertCircle size={16} style={{marginTop:2, flexShrink:0}}/> 
@@ -310,7 +330,6 @@ export const BookingWizard: React.FC<BookingWizardProps> = ({
                                 </div>
                             )}
                             
-                            {/* Summary & Actions */}
                             {wizPet && wizService && selectedDate && selectedTime && !validationError && (
                                 <div className="summary-card pop-in">
                                     <h5 style={{margin:'0 0 10px 0', borderBottom:'1px solid #ddd', paddingBottom:6, color:'var(--secondary)'}}>Resumo</h5>
@@ -337,6 +356,44 @@ export const BookingWizard: React.FC<BookingWizardProps> = ({
                                     {isBooking ? 'Reservando...' : 'Confirmar'}
                                 </button>
                             </div>
+                        </div>
+                    )}
+
+                    {/* STEP 4: SUCCESS FEEDBACK */}
+                    {step === 4 && bookedData && (
+                        <div className="fade-in-up text-center" style={{paddingTop: 10}}>
+                            <div style={{
+                                width: 80, height: 80, margin: '0 auto 20px', 
+                                background: '#E0F2F1', borderRadius: '50%', 
+                                display: 'flex', alignItems: 'center', justifyContent: 'center'
+                            }} className="pop-in">
+                                <PartyPopper size={40} color="var(--brand-green)" />
+                            </div>
+                            
+                            <h3 style={{color: 'var(--brand-green)', marginBottom: 8}}>Agendamento Enviado!</h3>
+                            <p style={{marginBottom: 24, fontSize: '1rem'}}>
+                                Avisamos o <strong>{bookedData.petName}</strong> que ele vai ficar cheiroso! 🐶✨
+                            </p>
+
+                            <div className="card" style={{background: '#F8FAFC', border: '1px solid #E2E8F0', padding: 20, textAlign: 'left', marginBottom: 24}}>
+                                <div className="summary-row">
+                                    <span style={{color:'#666'}}><CalendarIcon size={14} style={{verticalAlign:'middle', marginRight:4}}/> Data</span>
+                                    <strong>{bookedData.date}</strong>
+                                </div>
+                                <div className="summary-row">
+                                    <span style={{color:'#666'}}><Clock size={14} style={{verticalAlign:'middle', marginRight:4}}/> Horário</span>
+                                    <strong>{bookedData.time}</strong>
+                                </div>
+                                <div style={{height:1, background:'#eee', margin:'10px 0'}}></div>
+                                <div className="summary-row">
+                                    <span style={{color:'#666'}}>Serviço</span>
+                                    <strong>{bookedData.serviceName}</strong>
+                                </div>
+                            </div>
+
+                            <button className="btn btn-primary full-width" onClick={onClose}>
+                                Combinado!
+                            </button>
                         </div>
                     )}
                 </div>
