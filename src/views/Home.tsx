@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Sparkles, Scissors, Droplet, Heart, HeartHandshake, Crown, CalendarCheck } from 'lucide-react';
+import { Sparkles, Scissors, Droplet, Heart, HeartHandshake, Crown } from 'lucide-react';
 import { Route } from '../types';
 import { getAvatarUrl } from '../utils/ui';
 
@@ -17,19 +17,15 @@ export const HomePage: React.FC<HomePageProps> = ({ session, onNavigate, onOpenB
     <div className="page-enter">
       <header className="hero-header reveal-on-scroll">
         <div className="hero-content">
-          <div className="hero-badge fade-in-up">
-              <Sparkles size={12} /> Cuidado Premium
-          </div>
-          <h1 className="fade-in-up delay-1">
-            Seu pet merece <br />
-            <span className="text-gradient">um dia de rei!</span>
+          <h1 className="fade-in-up">
+            Seu pet limpo,<br />feliz e saudável!
           </h1>
-          <p className="fade-in-up delay-2">
-            Banho, tosa e spa com tecnologia e muito carinho. Agende em segundos pelo app.
+          <p className="fade-in-up delay-1">
+            Confiança, carinho e tecnologia. Agendamento inteligente com IA.
           </p>
-          <div className="hero-actions fade-in-up delay-3">
-            <button className="btn btn-white hero-btn shadow-float" onClick={() => session ? onOpenBooking() : onNavigate('login')}>
-                <CalendarCheck size={18} /> Agendar Agora
+          <div className="hero-actions fade-in-up delay-2">
+            <button className="btn btn-white hero-btn" onClick={() => session ? onOpenBooking() : onNavigate('login')}>
+                Agendar Agora
             </button>
             <button className="btn btn-ghost hero-btn-outline" onClick={onOpenChat}>
                <Sparkles size={18} style={{ marginRight: 8 }} /> Assistente IA
@@ -38,23 +34,15 @@ export const HomePage: React.FC<HomePageProps> = ({ session, onNavigate, onOpenB
         </div>
 
         {/* Imagem responsiva do mascote */}
-        <div className="hero-img-container fade-in-slide delay-2">
-            <img 
-                src={`${BASE_STORAGE_URL}/random.png`} 
-                alt="Pet Feliz" 
-                className="hero-pets-img"
-            />
-            {/* Elementos flutuantes decorativos */}
-            <div className="floating-bubble bubble-1">🛁 Banho Quentinho</div>
-            <div className="floating-bubble bubble-2">✂️ Tosa Estilosa</div>
-        </div>
+        <img 
+            src={`${BASE_STORAGE_URL}/random.png`} 
+            alt="Pet Feliz" 
+            className="hero-pets-img fade-in-slide delay-2"
+        />
       </header>
       
       <div className="container home-content-offset">
-         <div className="section-header-row reveal-on-scroll">
-             <h2 className="section-title" style={{marginTop:0}}>Nossos Serviços</h2>
-             <button className="btn-text-action" onClick={() => onNavigate('services')}>Ver Todos</button>
-         </div>
+         <h2 className="section-title reveal-on-scroll">Nossos Serviços</h2>
          
          <div className="services-preview-grid">
             <div className="service-img-card reveal-on-scroll" onClick={() => onNavigate('services')} style={{backgroundImage: `url(${BASE_STORAGE_URL}/1.jpg)`}}>
@@ -95,27 +83,21 @@ export const HomePage: React.FC<HomePageProps> = ({ session, onNavigate, onOpenB
                   marginBottom: 24,
                   border: 'none',
                   position: 'relative',
-                  overflow: 'hidden',
-                  padding: '24px 32px'
+                  overflow: 'hidden'
               }}
          >
              <div style={{position:'relative', zIndex:2}}>
                  <div style={{display:'flex', alignItems:'center', gap: 8, marginBottom: 8}}>
-                    <div style={{background:'rgba(255,255,255,0.2)', padding:6, borderRadius:8}}>
-                        <Crown size={20} fill="#FDCB6E" color="#FDCB6E" />
-                    </div>
-                    <span style={{fontWeight: 800, textTransform:'uppercase', fontSize:'0.85rem', letterSpacing:'0.05em', color:'rgba(255,255,255,0.9)'}}>Clube VIP</span>
+                    <Crown size={24} fill="#FDCB6E" color="#FDCB6E" />
+                    <span style={{fontWeight: 800, textTransform:'uppercase', fontSize:'0.85rem', letterSpacing:'0.05em', color:'#FDCB6E'}}>Clube VIP</span>
                  </div>
-                 <h3 style={{color:'white', margin:0, fontSize:'1.6rem', lineHeight:1.1}}>Assinatura Mensal</h3>
-                 <p style={{color:'rgba(255,255,255,0.9)', margin:'4px 0 0 0'}}>Economize até 30% nos banhos.</p>
+                 <h3 style={{color:'white', margin:0, fontSize:'1.4rem'}}>Assinatura</h3>
+                 <p style={{color:'rgba(255,255,255,0.9)', margin:0}}>Economize 30%</p>
              </div>
-             <div style={{background: 'white', color: '#00B894', padding: '12px 24px', borderRadius: 30, fontWeight: 800, whiteSpace:'nowrap', zIndex:2, boxShadow:'0 4px 15px rgba(0,0,0,0.1)'}}>
-                 Ver Planos
+             <div style={{background: 'rgba(255,255,255,0.2)', padding: '10px 16px', borderRadius: 20, fontWeight: 700, whiteSpace:'nowrap', zIndex:2}}>
+                 Ver
              </div>
-             
-             {/* Background Shapes */}
-             <div style={{position:'absolute', right: -20, bottom: -40, width: 180, height: 180, borderRadius:'50%', background:'rgba(255,255,255,0.1)'}}></div>
-             <div style={{position:'absolute', left: -20, top: -40, width: 100, height: 100, borderRadius:'50%', background:'rgba(255,255,255,0.05)'}}></div>
+             <div style={{position:'absolute', right: -20, bottom: -40, width: 140, height: 140, borderRadius:'50%', background:'rgba(255,255,255,0.1)'}}></div>
          </div>
          
          <div className="features-section mt-4">
@@ -165,6 +147,43 @@ export const HomePage: React.FC<HomePageProps> = ({ session, onNavigate, onOpenB
                         className="gallery-item-home"
                     />
                 ))}
+            </div>
+         </div>
+
+         {/* Testimonials */}
+         <div className="testimonials-section mt-4 reveal-on-scroll">
+            <h2 className="section-title">Quem ama, recomenda</h2>
+            <div className="testimonials-scroll">
+                <div className="testimonial-card">
+                    <div className="user-profile-row mb-2" style={{display:'flex', alignItems:'center', gap:10}}>
+                         <img src={getAvatarUrl("Mariana Silva")} style={{width:40, height:40, borderRadius:'50%', objectFit:'cover'}} alt="Ana" />
+                         <div>
+                            <small className="block font-bold text-gray-800 leading-tight" style={{display:'block', fontWeight:700}}>Mariana Silva</small>
+                            <div className="stars text-xs">⭐⭐⭐⭐⭐</div>
+                         </div>
+                    </div>
+                    <p>"A Mel nunca voltou tão cheirosa! O atendimento é impecável."</p>
+                </div>
+                <div className="testimonial-card">
+                     <div className="user-profile-row mb-2" style={{display:'flex', alignItems:'center', gap:10}}>
+                         <img src={getAvatarUrl("Roberto Costa")} style={{width:40, height:40, borderRadius:'50%', objectFit:'cover'}} alt="Carlos" />
+                         <div>
+                            <small className="block font-bold text-gray-800 leading-tight" style={{display:'block', fontWeight:700}}>Roberto Costa</small>
+                            <div className="stars text-xs">⭐⭐⭐⭐⭐</div>
+                         </div>
+                    </div>
+                    <p>"Adoro a facilidade de agendar pelo app. Super prático!"</p>
+                </div>
+                <div className="testimonial-card">
+                     <div className="user-profile-row mb-2" style={{display:'flex', alignItems:'center', gap:10}}>
+                         <img src={getAvatarUrl("Julia Santos")} style={{width:40, height:40, borderRadius:'50%', objectFit:'cover'}} alt="Julia" />
+                         <div>
+                            <small className="block font-bold text-gray-800 leading-tight" style={{display:'block', fontWeight:700}}>Julia Santos</small>
+                            <div className="stars text-xs">⭐⭐⭐⭐⭐</div>
+                         </div>
+                    </div>
+                    <p>"Confio de olhos fechados. Trataram meu Thor como rei."</p>
+                </div>
             </div>
          </div>
       </div>
