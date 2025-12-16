@@ -328,3 +328,54 @@
 .loyalty-progress-labels { display: flex; justify-content: space-between; font-size: 0.7rem; color: rgba(255,255,255,0.6); margin-bottom: 6px; }
 .loyalty-progress-track { width: 100%; height: 8px; background: rgba(255,255,255,0.1); border-radius: 4px; overflow: hidden; }
 .loyalty-progress-fill { height: 100%; background: linear-gradient(to right, #00B894, #00CEC9); border-radius: 4px; transition: width 1s ease-out; }
+
+/* --- SERVICES PAGE --- */
+.services-list-full {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 24px;
+    margin-bottom: 40px;
+}
+
+/* Card detalhado de serviço para o grid */
+.service-card-detailed {
+    display: flex;
+    flex-direction: column;
+    height: 100%; /* Garante altura igual */
+    justify-content: space-between;
+}
+
+.service-icon-large {
+    width: 56px; height: 56px;
+    background: var(--accent);
+    color: var(--primary);
+    border-radius: 16px;
+    display: flex; align-items: center; justify-content: center;
+    margin-bottom: 20px;
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);
+}
+
+.service-info-full {
+    flex: 1; /* Empurra o botão para baixo */
+    margin-bottom: 20px;
+}
+
+.service-info-full h3 {
+    font-size: 1.25rem;
+    margin-bottom: 8px;
+    color: var(--secondary);
+}
+
+.service-info-full p {
+    color: var(--text-body);
+    font-size: 0.95rem;
+    line-height: 1.5;
+    margin-bottom: 16px;
+}
+
+.service-tags {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    align-items: center;
+}
