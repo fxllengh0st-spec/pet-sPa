@@ -24,6 +24,8 @@ export const AdminManagement: React.FC = () => {
     // "Create Service on the fly" State
     const [isCreatingNewService, setIsCreatingNewService] = useState(false);
     const [newServiceName, setNewServiceName] = useState('');
+    const [newServicePrice, setNewServicePrice] = useState('');
+    const [newServiceDuration, setNewServiceDuration] = useState('30');
 
     const toast = useToast();
 
@@ -79,6 +81,8 @@ export const AdminManagement: React.FC = () => {
                 });
                 setIsCreatingNewService(false);
                 setNewServiceName('');
+                setNewServicePrice('');
+                setNewServiceDuration('30');
             }
         }
         setIsModalOpen(true);
@@ -123,8 +127,8 @@ export const AdminManagement: React.FC = () => {
                     // 1. Criar o serviço primeiro
                     const createdService = await api.admin.createService({
                         name: newServiceName,
-                        price: 0, // Placeholder, admin deve editar depois
-                        duration_minutes: 30, // Default
+                        price: Number(newServicePrice) || 0,
+                        duration_minutes: Number(newServiceDuration) || 30,
                         active: true,
                         description: 'Serviço criado automaticamente via Pacote'
                     });
@@ -305,16 +309,40 @@ export const AdminManagement: React.FC = () => {
                                         {/* CREATE NEW SERVICE INPUT (CONDITIONAL) */}
                                         {formData.service_id === 'NEW' && (
                                             <div className="form-group fade-in-up" style={{background:'#F3E5F5', padding:12, borderRadius:12}}>
-                                                <label style={{color:'var(--primary)'}}>Nome do Novo Serviço</label>
-                                                <input 
-                                                    type="text" 
-                                                    placeholder="Ex: Banho Premium Plus" 
-                                                    value={newServiceName} 
-                                                    onChange={e => setNewServiceName(e.target.value)}
-                                                    autoFocus
-                                                />
-                                                <small style={{display:'block', marginTop:4, color:'#666'}}>
-                                                    O serviço será criado com preço R$ 0,00 e 30min de duração. Edite-o depois na aba Serviços.
+                                                <div className="form-group">
+                                                    <label style={{color:'var(--primary)'}}>Nome do Novo Serviço</label>
+                                                    <input 
+                                                        type="text" 
+                                                        placeholder="Ex: Banho Premium Plus" 
+                                                        value={newServiceName} 
+                                                        onChange={e => setNewServiceName(e.target.value)}
+                                                        autoFocus
+                                                    />
+                                                </div>
+                                                
+                                                <div style={{display:'flex', gap:10}}>
+                                                    <div className="form-group full-width">
+                                                        <label style={{color:'var(--primary)'}}>Preço Base (R$)</label>
+                                                        <input 
+                                                            type="number" 
+                                                            step="0.01"
+                                                            value={newServicePrice} 
+                                                            onChange={e => setNewServicePrice(e.target.value)}
+                                                            placeholder="0,00"
+                                                        />
+                                                    </div>
+                                                    <div className="form-group full-width">
+                                                        <label style={{color:'var(--primary)'}}>Duração (min)</label>
+                                                        <input 
+                                                            type="number" 
+                                                            value={newServiceDuration} 
+                                                            onChange={e => setNewServiceDuration(e.target.value)}
+                                                        />
+                                                    </div>
+                                                </div>
+
+                                                <small style={{display:'block', marginTop:0, color:'#666'}}>
+                                                    O serviço será criado e vinculado automaticamente a este pacote.
                                                 </small>
                                             </div>
                                         )}
