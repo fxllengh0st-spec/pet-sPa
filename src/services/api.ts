@@ -1,5 +1,3 @@
-
-
 import { supabase } from '../lib/supabase';
 import { Appointment, Employee, Pet, Product, Profile, Service, Package, Subscription } from '../types';
 
@@ -65,6 +63,20 @@ export const api = {
         status: 'pending'
       });
       if (error) throw error;
+    },
+    // NOVO MÉTODO: Verifica colisão de horários (Overlapping)
+    // Regra: (StartA < EndB) and (EndA > StartB)
+    async checkAvailability(startIso: string, endIso: string) {
+        const { data, error } = await supabase
+            .from('appointments')
+            .select('id')
+            .neq('status', 'cancelled') // Ignora cancelados
+            .lt('start_time', endIso) 
+            .gt('end_time', startIso);
+            
+        if (error) throw error;
+        // Se array vazio, está livre. Se tiver itens, tem conflito.
+        return data.length === 0;
     },
     async getMyAppointments(userId: string) {
       const { data, error } = await supabase
