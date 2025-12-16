@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { supabase } from './lib/supabase';
 import { api } from './services/api';
@@ -8,7 +9,7 @@ import { AdminPanel } from './components/Admin';
 import { Logo } from './components/Logo';
 import { Marketplace } from './components/Marketplace';
 import { useToast } from './context/ToastContext';
-import { Home, MessageCircle, User, HeartHandshake, Sparkles, PlusCircle } from 'lucide-react';
+import { Home, User, HeartHandshake, Sparkles, PlusCircle } from 'lucide-react';
 
 // Modules
 import { LoginFlowOverlay } from './components/LoginFlowOverlay';
@@ -52,6 +53,9 @@ export default function App() {
   // Modal States
   const [showBookingModal, setShowBookingModal] = useState(false);
   const [showPetWizard, setShowPetWizard] = useState(false);
+  
+  // NEW: Chat State (Widget Mode)
+  const [isChatOpen, setIsChatOpen] = useState(false);
 
   // Login Flow State
   const [loginStage, setLoginStage] = useState<LoginStage>('idle');
@@ -75,15 +79,6 @@ export default function App() {
 
     return () => observer.disconnect();
   }, [view, pets, apps]);
-
-  // Body class manager for Chat Mode
-  useEffect(() => {
-    if (view === 'chat') {
-        document.body.classList.add('mode-chat');
-    } else {
-        document.body.classList.remove('mode-chat');
-    }
-  }, [view]);
 
   // Initial Load Logic
   useEffect(() => {
@@ -140,6 +135,7 @@ export default function App() {
     setLoginStage('idle');
     toast.info('Até logo! 👋');
     setView('home');
+    setIsChatOpen(false);
   };
 
   const navigateTo = (v: Route) => {
@@ -147,8 +143,10 @@ export default function App() {
       window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
+  const toggleChat = () => setIsChatOpen(!isChatOpen);
+
   return (
-    <div className={view === 'chat' ? 'mode-chat' : ''}>
+    <div className={isChatOpen ? 'mode-chat-open' : ''}>
        
        <LoginFlowOverlay 
           loginStage={loginStage}
@@ -157,7 +155,6 @@ export default function App() {
           onComplete={(hasPets) => { 
               setLoginStage('idle'); 
               navigateTo('user-profile');
-              // Se não tiver pets, abre o wizard automaticamente
               if (!hasPets) {
                   setTimeout(() => {
                       setShowPetWizard(true);
@@ -196,10 +193,10 @@ export default function App() {
           mascotMessage={mascotMessage}
           showMascotBubble={showMascotBubble}
           setShowMascotBubble={setShowMascotBubble}
-          onOpenChat={() => navigateTo('chat')}
+          onOpenChat={toggleChat}
        />
 
-       {/* MOBILE TOP BAR (Logo Only) */}
+       {/* MOBILE TOP BAR */}
        <div className="mobile-top-bar">
           <Logo height={44} onClick={() => navigateTo('home')} />
        </div>
@@ -216,9 +213,9 @@ export default function App() {
              <span>Ajudar</span>
           </button>
           
-          {/* FAB Central Button */}
-          <button className={`nav-item-mobile fab ${view === 'chat' ? 'active' : ''}`} onClick={() => navigateTo('chat')}>
-             <Sparkles size={24} fill={view === 'chat' ? 'currentColor' : 'none'} />
+          {/* FAB Central Button - Toggles Chat Modal */}
+          <button className={`nav-item-mobile fab ${isChatOpen ? 'active' : ''}`} onClick={toggleChat}>
+             <Sparkles size={24} fill={isChatOpen ? 'currentColor' : 'none'} />
           </button>
           
           <button className={`nav-item-mobile ${view === 'packages' ? 'active' : ''}`} onClick={() => navigateTo('packages')}>
@@ -243,8 +240,6 @@ export default function App() {
        <header className="desktop-nav">
           <div style={{display:'flex', alignItems:'center', gap: 20}}>
               <Logo height={36} onClick={() => navigateTo('home')} />
-              
-              {/* DESKTOP HEADER COMPACT TRACKING CARD */}
               <ActiveTrackingCard 
                  appointments={apps} 
                  onNavigate={navigateTo} 
@@ -258,7 +253,8 @@ export default function App() {
              <a href="#" className={`nav-link-item ${view === 'services' && 'active'}`} onClick={() => navigateTo('services')}>Serviços</a>
              <a href="#" className={`nav-link-item ${view === 'packages' && 'active'}`} onClick={() => navigateTo('packages')}>Clube VIP</a>
              <a href="#" className={`nav-link-item ${view === 'market' && 'active'}`} onClick={() => navigateTo('market')}>Adoção</a>
-             <a href="#" className={`nav-link-item nav-link-cta ${view === 'chat' && 'active'}`} onClick={() => navigateTo('chat')}>Assistente IA</a>
+             {/* Chat button toggles modal now */}
+             <a href="#" className={`nav-link-item nav-link-cta ${isChatOpen && 'active'}`} onClick={toggleChat}>Assistente IA</a>
              {session ? (
                <>
                  <a href="#" className="btn btn-primary btn-sm" onClick={() => navigateTo('dashboard')}>Minha Conta</a>
@@ -272,17 +268,18 @@ export default function App() {
        </header>
 
        <main id="app">
-          {view === 'home' && <HomePage session={session} onNavigate={navigateTo} onOpenBooking={() => setShowBookingModal(true)} />}
+          {view === 'home' && <HomePage session={session} onNavigate={navigateTo} onOpenBooking={() => setShowBookingModal(true)} onOpenChat={toggleChat} />}
           {view === 'services' && <ServicesPage services={services} onNavigate={navigateTo} onOpenBooking={() => setShowBookingModal(true)} session={session} />}
           {view === 'packages' && <PackagesView onNavigate={navigateTo} session={session} />}
           {view === 'market' && <Marketplace onNavigate={navigateTo} />}
           {view === 'login' && <LoginPage onNavigate={navigateTo} setLoginStage={setLoginStage} />}
           {view === 'register' && <RegisterPage onNavigate={navigateTo} setLoginStage={setLoginStage} />}
           
-          {/* Chat with State Sync capability */}
-          {view === 'chat' && (
+          {/* Chat is now a global overlay widget */}
+          {isChatOpen && (
               <Chat 
-                  onNavigate={(r) => navigateTo(r as Route)} 
+                  onClose={() => setIsChatOpen(false)}
+                  onNavigate={(r) => { setIsChatOpen(false); navigateTo(r as Route); }} 
                   onActionSuccess={() => { if(session) loadUserData(session.user.id); }} 
               />
           )}

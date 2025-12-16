@@ -2,8 +2,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { api } from '../services/api';
 import { botEngine, BotState, BotContext, BotOption } from '../services/bot-engine';
-import { Send, ChevronLeft } from 'lucide-react';
-import { useToast } from '../context/ToastContext';
+import { Send, X, RefreshCw } from 'lucide-react';
 
 // URL base do Bucket
 const BASE_STORAGE_URL = 'https://vfryefavzurwoiuznkwv.supabase.co/storage/v1/object/public/site-assets';
@@ -11,6 +10,7 @@ const BASE_STORAGE_URL = 'https://vfryefavzurwoiuznkwv.supabase.co/storage/v1/ob
 interface ChatProps {
   onNavigate: (route: string) => void;
   onActionSuccess?: () => void;
+  onClose: () => void;
 }
 
 interface Message {
@@ -20,10 +20,10 @@ interface Message {
   options?: BotOption[];
 }
 
-export const Chat: React.FC<ChatProps> = ({ onNavigate, onActionSuccess }) => {
+export const Chat: React.FC<ChatProps> = ({ onNavigate, onActionSuccess, onClose }) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [isTyping, setIsTyping] = useState(false);
-  const [botAvatarSrc, setBotAvatarSrc] = useState(`${BASE_STORAGE_URL}/bt.webp`);
+  const [botAvatarSrc] = useState(`${BASE_STORAGE_URL}/bt.webp`);
   
   // Layout Refs
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -36,30 +36,6 @@ export const Chat: React.FC<ChatProps> = ({ onNavigate, onActionSuccess }) => {
   // Bot Engine State
   const [botState, setBotState] = useState<BotState>('START');
   const [botContext, setBotContext] = useState<BotContext>({});
-
-  const toast = useToast();
-
-  // --- Mobile Keyboard Fix ---
-  useEffect(() => {
-    const handleResize = () => {
-        if (chatContainerRef.current && window.visualViewport) {
-            chatContainerRef.current.style.height = `${window.visualViewport.height}px`;
-            chatContainerRef.current.style.top = `${window.visualViewport.offsetTop}px`; 
-            scrollToBottom();
-        }
-    };
-    if (window.visualViewport) {
-        window.visualViewport.addEventListener('resize', handleResize);
-        window.visualViewport.addEventListener('scroll', handleResize);
-        handleResize(); 
-    }
-    return () => {
-        if (window.visualViewport) {
-            window.visualViewport.removeEventListener('resize', handleResize);
-            window.visualViewport.removeEventListener('scroll', handleResize);
-        }
-    };
-  }, []);
 
   const scrollToBottom = () => {
     setTimeout(() => {
@@ -143,14 +119,22 @@ export const Chat: React.FC<ChatProps> = ({ onNavigate, onActionSuccess }) => {
     processBotTurn(botState, textToSend, botContext, false);
   };
 
+  const handleRestart = () => {
+      setMessages([]);
+      setBotState('START');
+      const initBot = async () => {
+        const session = await api.auth.getSession();
+        const ctx: BotContext = session ? { userId: session.user.id, userName: session.user.user_metadata.full_name?.split(' ')[0] } : {};
+        setBotContext(ctx);
+        processBotTurn('START', '', ctx);
+      };
+      initBot();
+  };
+
   return (
-    <div className="chat-layout" ref={chatContainerRef}>
-      {/* Header */}
+    <div className="chat-layout widget-mode" ref={chatContainerRef}>
+      {/* Header with Close Button */}
       <div className="chat-header-modern">
-        <button onClick={() => onNavigate('home')} className="chat-back-btn">
-          <ChevronLeft size={24} />
-        </button>
-        
         <div className="chat-header-info">
           <div className="chat-avatar-ring">
              <img 
@@ -166,6 +150,15 @@ export const Chat: React.FC<ChatProps> = ({ onNavigate, onActionSuccess }) => {
               Online
             </div>
           </div>
+        </div>
+        
+        <div style={{display:'flex', gap: 4}}>
+            <button onClick={handleRestart} className="chat-icon-btn" title="Reiniciar Conversa">
+                <RefreshCw size={20} />
+            </button>
+            <button onClick={onClose} className="chat-icon-btn close-btn" title="Fechar">
+                <X size={24} />
+            </button>
         </div>
       </div>
       

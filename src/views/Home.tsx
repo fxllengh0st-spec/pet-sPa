@@ -10,9 +10,10 @@ interface HomePageProps {
     session: any;
     onNavigate: (route: Route) => void;
     onOpenBooking: () => void;
+    onOpenChat: () => void; // New prop for modal toggle
 }
 
-export const HomePage: React.FC<HomePageProps> = ({ session, onNavigate, onOpenBooking }) => (
+export const HomePage: React.FC<HomePageProps> = ({ session, onNavigate, onOpenBooking, onOpenChat }) => (
     <div className="page-enter">
       <header className="hero-header reveal-on-scroll">
         <div className="hero-content">
@@ -26,13 +27,13 @@ export const HomePage: React.FC<HomePageProps> = ({ session, onNavigate, onOpenB
             <button className="btn btn-white hero-btn" onClick={() => session ? onOpenBooking() : onNavigate('login')}>
                 Agendar Agora
             </button>
-            <button className="btn btn-ghost hero-btn-outline" onClick={() => onNavigate('chat')}>
+            <button className="btn btn-ghost hero-btn-outline" onClick={onOpenChat}>
                <Sparkles size={18} style={{ marginRight: 8 }} /> Assistente IA
             </button>
           </div>
         </div>
 
-        {/* Imagem responsiva do mascote - Controlada via Flexbox CSS agora */}
+        {/* Imagem responsiva do mascote */}
         <img 
             src={`${BASE_STORAGE_URL}/random.png`} 
             alt="Pet Feliz" 
