@@ -1,5 +1,4 @@
 
-
 import { supabase } from '../lib/supabase';
 import { Appointment, Employee, Pet, Product, Profile, Service, Package, Subscription } from '../types';
 
@@ -107,35 +106,9 @@ export const api = {
       return data as Pet[];
     },
     async createPet(userId: string, pet: Partial<Pet>) {
-      // Changed to select().single() to return the created pet data (needed for image upload)
-      const { data, error } = await supabase.from('pets').insert({ ...pet, owner_id: userId }).select().single();
+      const { error } = await supabase.from('pets').insert({ ...pet, owner_id: userId });
       if (error) throw error;
-      return data as Pet;
     },
-    // NEW: Update existing pet (e.g. after uploading image)
-    async updatePet(petId: string, updates: Partial<Pet>) {
-        const { error } = await supabase.from('pets').update(updates).eq('id', petId);
-        if (error) throw error;
-    },
-    // NEW: Upload photo logic
-    async uploadPetPhoto(petId: string, file: File) {
-        // 1. Define path: pets/{uuid}.ext
-        const fileExt = file.name.split('.').pop() || 'jpg';
-        const fileName = `${petId}.${fileExt}`;
-        const filePath = `pets/${fileName}`;
-
-        // 2. Upload to 'site-assets' bucket
-        const { error: uploadError } = await supabase.storage
-            .from('site-assets')
-            .upload(filePath, file, { upsert: true });
-
-        if (uploadError) throw uploadError;
-
-        // 3. Get Public URL
-        const { data } = supabase.storage.from('site-assets').getPublicUrl(filePath);
-        return data.publicUrl;
-    },
-
     async createAppointment(userId: string, petId: string, serviceId: string | number, start: string, end: string) {
       const { error } = await supabase.from('appointments').insert({
         client_id: userId,

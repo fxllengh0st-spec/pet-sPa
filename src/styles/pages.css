@@ -1,4 +1,5 @@
 
+
 /* =========================================
    PAGE SPECIFIC STYLES - DESKTOP ENHANCED
    ========================================= */
@@ -601,78 +602,3 @@
     transition: background 0.2s;
 }
 .btn-manage-link:hover { background: rgba(0,184,148,0.1); }
-
-/* --- TRACKER / APPOINTMENT DETAILS (NEW) --- */
-.tracker-hero {
-    border-radius: 24px;
-    padding: 32px 24px;
-    color: white;
-    text-align: center;
-    margin-bottom: 24px;
-    box-shadow: 0 20px 40px rgba(0,0,0,0.15);
-    position: relative;
-    overflow: hidden;
-}
-.hero-icon-lg {
-    width: 80px; height: 80px;
-    background: rgba(255,255,255,0.25);
-    backdrop-filter: blur(8px);
-    border-radius: 50%;
-    display: flex; align-items: center; justify-content: center;
-    margin: 0 auto 16px;
-    box-shadow: 0 8px 16px rgba(0,0,0,0.1);
-}
-
-/* Cores de Fundo do Tracker */
-.tracker-bg-pending { background: linear-gradient(135deg, #F1C40F, #F39C12); }
-.tracker-bg-confirmed { background: linear-gradient(135deg, #00B894, #00CEC9); }
-.tracker-bg-in_progress { background: linear-gradient(135deg, #0984E3, #74B9FF); }
-.tracker-bg-completed { background: linear-gradient(135deg, #6C5CE7, #A29BFE); }
-.tracker-bg-cancelled { background: linear-gradient(135deg, #FF7675, #FAB1A0); }
-
-/* Timeline Visual */
-.timeline-container {
-    position: relative;
-    padding: 10px 0 10px 20px;
-    margin-top: 24px;
-}
-.timeline-track {
-    position: absolute; left: 15px; top: 0; bottom: 0; width: 2px;
-    background: #E2E8F0; z-index: 0;
-}
-.timeline-step {
-    position: relative; z-index: 1;
-    display: flex; gap: 16px;
-    margin-bottom: 32px;
-}
-.timeline-step:last-child { margin-bottom: 0; }
-.step-dot {
-    width: 32px; height: 32px; border-radius: 50%;
-    background: white; border: 2px solid #E2E8F0;
-    display: flex; align-items: center; justify-content: center;
-    color: #CBD5E0; flex-shrink: 0;
-    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-}
-.timeline-step.completed .step-dot {
-    background: var(--brand-green); border-color: var(--brand-green); color: white;
-}
-.timeline-step.current .step-dot {
-    background: white; border-color: var(--brand-green); color: var(--brand-green);
-    box-shadow: 0 0 0 4px rgba(0, 184, 148, 0.2); transform: scale(1.1);
-}
-.step-content strong { display: block; font-size: 0.95rem; margin-bottom: 2px; }
-.step-content p { font-size: 0.8rem; color: var(--text-muted); margin: 0; }
-.timeline-step.active-text strong { color: var(--secondary); }
-.timeline-step.inactive-text strong { color: #A0AEC0; }
-
-/* Detail Info Cards */
-.detail-info-card {
-    background: #F8FAFC; border-radius: 16px; padding: 16px;
-    display: flex; align-items: center; gap: 16px;
-    border: 1px solid #E2E8F0;
-}
-.detail-icon-box {
-    width: 44px; height: 44px; background: white; border-radius: 12px;
-    display: flex; align-items: center; justify-content: center;
-    color: var(--primary); box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-}

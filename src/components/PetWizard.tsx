@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { X, Dog, Calendar, Weight, FileText, Camera, Upload } from 'lucide-react';
 import { api } from '../services/api';
@@ -21,19 +20,15 @@ export const PetWizard: React.FC<PetWizardProps> = ({ onClose, session, onSucces
     const [birthDate, setBirthDate] = useState('');
     const [weight, setWeight] = useState('');
     const [notes, setNotes] = useState('');
-    
-    // Image Handling
-    const [avatarPreviewUrl, setAvatarPreviewUrl] = useState<string | null>(null);
-    const [selectedFile, setSelectedFile] = useState<File | null>(null);
+    const [avatarUrl, setAvatarUrl] = useState<string | null>(null); // Mockado via URL ou base64
 
+    // Mock Image Upload (In a real app, this would upload to Storage bucket)
     const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (file) {
-            setSelectedFile(file);
-            // Create local preview
             const reader = new FileReader();
             reader.onloadend = () => {
-                setAvatarPreviewUrl(reader.result as string);
+                setAvatarUrl(reader.result as string);
             };
             reader.readAsDataURL(file);
         }
@@ -43,33 +38,16 @@ export const PetWizard: React.FC<PetWizardProps> = ({ onClose, session, onSucces
         if (!name) return;
         setIsSaving(true);
         try {
-            // 1. Create Pet record FIRST (without avatar_url initially to avoid PGRST204 if column is missing/cached or to get UUID)
             const petPayload = {
                 name,
                 breed: breed || null,
                 birth_date: birthDate || null,
                 weight: weight ? parseFloat(weight) : null,
-                notes: notes || null
-                // Note: Not sending avatar_url here yet
+                notes: notes || null,
+                avatar_url: avatarUrl || null
             };
 
-            const createdPet = await api.booking.createPet(session.user.id, petPayload);
-            
-            // 2. If there is a file, upload it to Storage bucket using the new Pet ID
-            if (createdPet && createdPet.id && selectedFile) {
-                try {
-                    const publicUrl = await api.booking.uploadPetPhoto(createdPet.id, selectedFile);
-                    
-                    // 3. Update the pet record with the returned URL
-                    // Note: If 'avatar_url' column is missing in DB, this might still fail silently or throw, 
-                    // but the pet is created and image uploaded.
-                    await api.booking.updatePet(createdPet.id, { avatar_url: publicUrl });
-                } catch (uploadErr) {
-                    console.error("Erro ao fazer upload da imagem:", uploadErr);
-                    toast.warning("Pet criado, mas houve um erro ao salvar a foto.");
-                }
-            }
-
+            await api.booking.createPet(session.user.id, petPayload);
             await onSuccess();
             toast.success(`${name} foi cadastrado com sucesso! 🐶`);
             onClose();
@@ -205,8 +183,8 @@ export const PetWizard: React.FC<PetWizardProps> = ({ onClose, session, onSucces
                                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                                     overflow: 'hidden', position: 'relative'
                                 }}>
-                                    {avatarPreviewUrl ? (
-                                        <img src={avatarPreviewUrl} alt="Preview" style={{width:'100%', height:'100%', objectFit:'cover'}} />
+                                    {avatarUrl ? (
+                                        <img src={avatarUrl} alt="Preview" style={{width:'100%', height:'100%', objectFit:'cover'}} />
                                     ) : (
                                         <Camera size={40} color="#CBD5E0" />
                                     )}
@@ -214,7 +192,7 @@ export const PetWizard: React.FC<PetWizardProps> = ({ onClose, session, onSucces
                                 
                                 <label className="btn btn-sm btn-ghost mt-4" style={{cursor: 'pointer'}}>
                                     <Upload size={16} style={{marginRight: 6}} />
-                                    {avatarPreviewUrl ? 'Trocar Foto' : 'Escolher Foto'}
+                                    {avatarUrl ? 'Trocar Foto' : 'Escolher Foto'}
                                     <input type="file" accept="image/*" onChange={handleImageUpload} style={{display:'none'}} />
                                 </label>
                             </div>
