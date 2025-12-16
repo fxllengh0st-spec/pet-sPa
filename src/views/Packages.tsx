@@ -190,7 +190,7 @@ export const PackagesView: React.FC<PackagesViewProps> = ({ onNavigate, session 
                 <div style={{ width: 44 }}></div>
             </div>
 
-            <div className="text-center mb-4 reveal-on-scroll">
+            <div className="text-center mb-4 fade-in-up">
                 <p style={{ maxWidth: 500, margin: '0 auto', color: '#666' }}>
                     Saúde e higiene recorrente para seu pet. <br/>
                     <strong>Cada pet precisa de sua própria assinatura.</strong>
@@ -203,7 +203,7 @@ export const PackagesView: React.FC<PackagesViewProps> = ({ onNavigate, session 
                     <div className="spinner-center"><div className="spinner"></div></div>
                 ) : (
                     packages.length === 0 ? (
-                         <div className="text-center w-full" style={{gridColumn: '1/-1', padding: 60, background: '#f8f9fa', borderRadius: 16}}>
+                         <div className="text-center w-full fade-in-up" style={{gridColumn: '1/-1', padding: 60, background: '#f8f9fa', borderRadius: 16}}>
                             <ShieldCheck size={48} color="#999" style={{marginBottom:16, opacity: 0.5}}/>
                             <h3 style={{color: '#666'}}>Nenhum plano disponível</h3>
                             <p style={{color: '#999'}}>O catálogo de assinaturas está vazio no momento.</p>
@@ -221,7 +221,8 @@ export const PackagesView: React.FC<PackagesViewProps> = ({ onNavigate, session 
                         return (
                         <div 
                             key={pkg.id} 
-                            className={`card package-card reveal-on-scroll ${pkg.highlight ? 'highlight-pkg' : ''} ${hasSubs ? 'active-plan-card' : ''}`}
+                            // CHANGE: mudado de 'reveal-on-scroll' para 'fade-in-up' para garantir visibilidade
+                            className={`card package-card fade-in-up ${pkg.highlight ? 'highlight-pkg' : ''} ${hasSubs ? 'active-plan-card' : ''}`}
                             style={{ transitionDelay: `${idx * 0.1}s` }}
                         >
                             {/* Badges */}
@@ -292,7 +293,7 @@ export const PackagesView: React.FC<PackagesViewProps> = ({ onNavigate, session 
                 )}
             </div>
             
-            <div className="card mt-4 reveal-on-scroll" style={{background: '#FFF8E1', border: '1px solid #FFE082'}}>
+            <div className="card mt-4 fade-in-up" style={{background: '#FFF8E1', border: '1px solid #FFE082'}}>
                 <div style={{display:'flex', gap: 12}}>
                     <Star color="#FBC02D" fill="#FBC02D" />
                     <div>
