@@ -159,7 +159,7 @@ export const AdminManagement: React.FC = () => {
                                     <tr key={s.id}>
                                         <td>#{s.id}</td>
                                         <td><strong>{s.name}</strong></td>
-                                        <td>{formatCurrency(s.price)}</td>
+                                        <td>{formatCurrency(Number(s.price))}</td>
                                         <td>{s.duration_minutes} min</td>
                                         <td>{s.active ? <span className="status-badge tag-confirmed">Ativo</span> : <span className="status-badge tag-cancelled">Inativo</span>}</td>
                                         <td style={{textAlign:'right'}}>
@@ -175,8 +175,8 @@ export const AdminManagement: React.FC = () => {
                                             {p.highlight && <span style={{marginLeft:6, fontSize:'0.7rem'}} className="tag-pill">⭐ Destaque</span>}
                                         </td>
                                         <td>
-                                            {formatCurrency(p.price)} 
-                                            {p.original_price && p.original_price > p.price && <small style={{textDecoration:'line-through', color:'#999', marginLeft:4}}>{formatCurrency(p.original_price)}</small>}
+                                            {formatCurrency(Number(p.price))} 
+                                            {p.original_price && Number(p.original_price) > Number(p.price) && <small style={{textDecoration:'line-through', color:'#999', marginLeft:4}}>{formatCurrency(Number(p.original_price))}</small>}
                                         </td>
                                         <td>{p.bath_count}</td>
                                         <td>{p.active ? <span className="status-badge tag-confirmed">Ativo</span> : <span className="status-badge tag-cancelled">Inativo</span>}</td>

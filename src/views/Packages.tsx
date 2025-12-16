@@ -21,8 +21,10 @@ export const PackagesView: React.FC<PackagesViewProps> = ({ onNavigate, session 
         const load = async () => {
             try {
                 const data = await api.packages.getPackages();
-                setPackages(data);
+                console.log('Pacotes carregados:', data);
+                setPackages(data || []);
             } catch (e) {
+                console.error('Erro ao carregar pacotes:', e);
                 toast.error('Erro ao carregar pacotes.');
             } finally {
                 setLoading(false);
@@ -78,7 +80,12 @@ export const PackagesView: React.FC<PackagesViewProps> = ({ onNavigate, session 
                             <p style={{color: '#999'}}>Nenhum pacote disponível no momento.</p>
                          </div>
                     ) :
-                    packages.map((pkg, idx) => (
+                    packages.map((pkg, idx) => {
+                        // Safe casting for numeric types coming from DB
+                        const price = Number(pkg.price);
+                        const originalPrice = pkg.original_price ? Number(pkg.original_price) : null;
+                        
+                        return (
                         <div 
                             key={pkg.id} 
                             className={`card package-card reveal-on-scroll ${pkg.highlight ? 'highlight-pkg' : ''}`}
@@ -98,12 +105,12 @@ export const PackagesView: React.FC<PackagesViewProps> = ({ onNavigate, session 
                             </div>
 
                             <div className="pkg-price-area">
-                                {pkg.original_price && pkg.original_price > pkg.price && (
-                                    <span className="pkg-old-price">de {formatCurrency(pkg.original_price)}</span>
+                                {originalPrice && originalPrice > price && (
+                                    <span className="pkg-old-price">de {formatCurrency(originalPrice)}</span>
                                 )}
                                 <div className="pkg-current-price">
                                     <small>R$</small>
-                                    <strong>{pkg.price.toFixed(0)}</strong>
+                                    <strong>{price.toFixed(0)}</strong>
                                     <small>,00 /mês</small>
                                 </div>
                             </div>
@@ -132,7 +139,7 @@ export const PackagesView: React.FC<PackagesViewProps> = ({ onNavigate, session 
                                 {subscribingId === pkg.id ? 'Processando...' : 'Quero Esse!'}
                             </button>
                         </div>
-                    ))
+                    )})
                 )}
             </div>
             
