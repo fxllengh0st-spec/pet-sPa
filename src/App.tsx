@@ -26,12 +26,6 @@ import { Dashboard } from './views/Dashboard';
 import { UserProfileView } from './views/Profile';
 import { PetDetailsView, AppointmentDetailsView } from './views/Details';
 
-// Credenciais de Desenvolvimento
-const DEV_USER = {
-    email: 'ale.gomessilva97@gmail.com',
-    pass: 'Tobi@1313'
-};
-
 const MASCOT_COMMENTS: Partial<Record<Route, string[]>> = {
     'home': ['Pronto para um dia de spa? 🛁', 'Seu pet merece o melhor!', 'Toque em Agendar para começar!'],
     'services': ['O Banho Premium é divino! ✨', 'Temos hidratação com cheirinho de morango 🍓'],
@@ -91,7 +85,7 @@ export default function App() {
     }
   }, [view]);
 
-  // Initial Load & Auto Login Logic
+  // Initial Load Logic
   useEffect(() => {
     const initApp = async () => {
         const { data: { session: existingSession } } = await supabase.auth.getSession();
@@ -100,17 +94,6 @@ export default function App() {
             setSession(existingSession);
             loadProfile(existingSession.user.id);
             loadUserData(existingSession.user.id);
-        } else {
-            console.log("Iniciando auto-login de desenvolvimento...");
-            try {
-                const { data, error } = await api.auth.signIn(DEV_USER.email, DEV_USER.pass);
-                if (!error && data?.session) {
-                    setSession(data.session);
-                    toast.success('Login automático de desenvolvimento realizado! 🐶');
-                    loadProfile(data.session.user.id);
-                    loadUserData(data.session.user.id);
-                }
-            } catch (e) { console.error("Erro crítico no auto-login:", e); }
         }
     };
     initApp();
@@ -125,6 +108,7 @@ export default function App() {
       } else { 
           setProfile(null); 
           setPets([]); setApps([]); 
+          // Se não estiver em registro ou login, volta pra home ao fazer logout
           if (view !== 'register' && view !== 'login') setView('home'); 
       }
     });
