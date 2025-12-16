@@ -1,7 +1,8 @@
 
 
+
 import { supabase } from '../lib/supabase';
-import { Appointment, Employee, Pet, Product, Profile, Service, Package } from '../types';
+import { Appointment, Employee, Pet, Product, Profile, Service, Package, Subscription } from '../types';
 
 export const api = {
   auth: {
@@ -98,22 +99,50 @@ export const api = {
 
   packages: {
       async getPackages() {
-          // Agora busca do Supabase real
           const { data, error } = await supabase
             .from('packages')
             .select('*')
             .eq('active', true)
             .order('price', { ascending: true });
             
-          if (error) {
-             console.warn("Erro ao buscar pacotes, usando fallback se tabela não existir", error);
-             return [];
-          }
+          if (error) throw error;
           return data as Package[];
       },
-      async subscribe(userId: string, packageId: number) {
-          // Mock de assinatura
-          await new Promise(resolve => setTimeout(resolve, 1500));
+      
+      // Alterado para trazer ARRAY de subscriptions, pois agora é por PET
+      async getMySubscriptions(userId: string) {
+          const { data, error } = await supabase
+             .from('subscriptions')
+             .select('*, packages(*), pets(name)')
+             .eq('user_id', userId)
+             .eq('status', 'active');
+             
+          if (error) throw error;
+          return data as Subscription[];
+      },
+
+      async subscribe(userId: string, packageId: number, petId: string) {
+          // 1. Verifica se ESSE PET já tem assinatura ativa
+          const { data: existing } = await supabase
+              .from('subscriptions')
+              .select('id')
+              .eq('pet_id', petId)
+              .eq('status', 'active')
+              .maybeSingle();
+
+          if (existing) {
+              throw new Error("Este pet já possui um plano ativo. Cancele o anterior ou escolha outro pet.");
+          }
+
+          // 2. Cria a assinatura vinculada ao Pet
+          const { error } = await supabase.from('subscriptions').insert({
+              user_id: userId,
+              package_id: packageId,
+              pet_id: petId,
+              status: 'active'
+          });
+
+          if (error) throw error;
           return { success: true, message: 'Assinatura realizada com sucesso!' };
       }
   },

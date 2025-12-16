@@ -79,6 +79,17 @@ export interface Package {
     active: boolean;
 }
 
+export interface Subscription {
+    id: number;
+    user_id: string;
+    package_id: number;
+    pet_id?: string; // Novo campo para vincular ao pet
+    status: 'active' | 'cancelled' | 'expired';
+    created_at: string;
+    packages?: Package;
+    pets?: Pet;
+}
+
 // UI Types
 export type Route = 'home' | 'services' | 'about' | 'chat' | 'login' | 'register' | 'dashboard' | 'profile' | 'admin' | 'tracker' | 'user-profile' | 'pet-details' | 'appointment-details' | 'booking-wizard' | 'market' | 'packages';
 

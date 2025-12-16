@@ -94,7 +94,10 @@
 
 /* Mascote Flutuante */
 .mascot-container {
-    position: fixed; bottom: 20px; right: 16px; 
+    position: fixed; 
+    /* AJUSTE PARA MOBILE: Deve ficar ACIMA da barra de navegação (aprox 60px+safe area) */
+    bottom: 85px; 
+    right: 16px; 
     z-index: 90; 
     display: flex; flex-direction: column; align-items: flex-end;
     pointer-events: none; 
@@ -137,6 +140,7 @@
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
-@media (min-width: 768px) {
+/* Desktop Adjustment: Mascote desce pois não tem barra inferior */
+@media (min-width: 1024px) {
     .mascot-container { bottom: 40px; right: 40px; }
 }

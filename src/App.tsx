@@ -9,18 +9,18 @@ import { AdminPanel } from './components/Admin';
 import { Logo } from './components/Logo';
 import { Marketplace } from './components/Marketplace';
 import { useToast } from './context/ToastContext';
-import { Home, MessageCircle, User, Shield, HeartHandshake } from 'lucide-react';
+import { Home, MessageCircle, User, HeartHandshake, Sparkles, PlusCircle } from 'lucide-react';
 
 // Modules
 import { LoginFlowOverlay } from './components/LoginFlowOverlay';
 import { MascotCompanion } from './components/MascotCompanion';
 import { BookingWizard } from './components/BookingWizard';
-import { PetWizard } from './components/PetWizard'; // Importado
+import { PetWizard } from './components/PetWizard'; 
 
 // Views
 import { HomePage } from './views/Home';
 import { ServicesPage } from './views/Services';
-import { PackagesView } from './views/Packages'; // Importado
+import { PackagesView } from './views/Packages';
 import { LoginPage, RegisterPage } from './views/Login';
 import { Dashboard } from './views/Dashboard';
 import { UserProfileView } from './views/Profile';
@@ -32,29 +32,13 @@ const DEV_USER = {
     pass: 'Tobi@1313'
 };
 
-// Dicas de cuidados gerais para misturar
-const CARE_TIPS = [
-    '💡 Dica: Mantenha a água do seu pet sempre fresca!',
-    '💡 Dica: Escovar os pelos evita nós e doenças de pele.',
-    '💡 Dica: Cuidado com passeios em horários muito quentes.',
-    '💡 Dica: Corte as unhas regularmente para evitar desconforto.',
-    '💡 Dica: Chocolate é tóxico para cães! Cuidado.'
-];
-
-// Dicionário de comentários do Mascote por rota
 const MASCOT_COMMENTS: Partial<Record<Route, string[]>> = {
-    'home': ['Pronto para um dia de spa? 🛁', 'Seu pet merece o melhor!', 'Toque em Agendar para começar!', ...CARE_TIPS],
-    'services': ['O Banho Premium é divino! ✨', 'Temos hidratação com cheirinho de morango 🍓', 'Corte de unhas? Deixa com a gente!', ...CARE_TIPS],
-    'packages': ['Economia inteligente! 💰', 'Seu pet limpo o mês todo.', 'O Clube VIP é imperdível!'],
-    'market': ['Adotar é um ato de amor! ❤️', 'Ajude quem precisa 🐾', 'Conheça nossos parceiros de resgate.'], // Atualizado para Social
-    'about': ['A Ana e o João são incríveis ❤️', 'Essa história me emociona...', 'Olha eu nas fotos! 📸'],
-    'dashboard': ['Sua agenda organizada 📅', 'Não esqueça dos compromissos!', 'Tudo sob controle aqui.', ...CARE_TIPS],
-    'user-profile': ['Que perfil chique! 💅', 'Seus pets são lindos!', 'Mantenha os dados atualizados.'],
-    'admin': ['Modo chefe ativado 🕶️', 'De olho nos números 📈', 'Quem manda é você!'],
-    'chat': ['Meu primo digital é muito esperto 🤖', 'Pode perguntar qualquer coisa!', 'Dica: pergunte sobre raças.'],
-    'pet-details': ['Aww, que fofura! 😍', 'Detalhes importantes aqui.', 'Histórico impecável.'],
-    'appointment-details': ['Acompanhando tudo... 🕵️', 'Fase importante!', 'Quase pronto!'],
-    'register': ['Bem-vindo à família! 🐾', 'Preencha tudo com carinho.', 'Quase lá!']
+    'home': ['Pronto para um dia de spa? 🛁', 'Seu pet merece o melhor!', 'Toque em Agendar para começar!'],
+    'services': ['O Banho Premium é divino! ✨', 'Temos hidratação com cheirinho de morango 🍓'],
+    'packages': ['Economia inteligente! 💰', 'Seu pet limpo o mês todo.'],
+    'market': ['Adotar é um ato de amor! ❤️', 'Ajude quem precisa 🐾'],
+    'dashboard': ['Sua agenda organizada 📅', 'Não esqueça dos compromissos!'],
+    'user-profile': ['Que perfil chique! 💅', 'Seus pets são lindos!']
 };
 
 export default function App() {
@@ -73,7 +57,7 @@ export default function App() {
 
   // Modal States
   const [showBookingModal, setShowBookingModal] = useState(false);
-  const [showPetWizard, setShowPetWizard] = useState(false); // New state
+  const [showPetWizard, setShowPetWizard] = useState(false);
 
   // Login Flow State
   const [loginStage, setLoginStage] = useState<LoginStage>('idle');
@@ -96,7 +80,7 @@ export default function App() {
     elements.forEach(el => observer.observe(el));
 
     return () => observer.disconnect();
-  }, [view, pets, apps, loginStage]);
+  }, [view, pets, apps]);
 
   // Body class manager for Chat Mode
   useEffect(() => {
@@ -117,27 +101,18 @@ export default function App() {
             loadProfile(existingSession.user.id);
             loadUserData(existingSession.user.id);
         } else {
-            // AUTO LOGIN FOR DEV (Only if no session)
             console.log("Iniciando auto-login de desenvolvimento...");
             try {
-                // api.auth.signIn agora retorna { data, error }
                 const { data, error } = await api.auth.signIn(DEV_USER.email, DEV_USER.pass);
-                
                 if (!error && data?.session) {
                     setSession(data.session);
-                    // Skip login stage for auto-login to make it smoother
                     toast.success('Login automático de desenvolvimento realizado! 🐶');
                     loadProfile(data.session.user.id);
                     loadUserData(data.session.user.id);
-                } else {
-                    console.warn("Auto-login falhou (Credenciais ou Rede):", error?.message);
                 }
-            } catch (e) {
-                console.error("Erro crítico no auto-login:", e);
-            }
+            } catch (e) { console.error("Erro crítico no auto-login:", e); }
         }
     };
-
     initApp();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
@@ -155,25 +130,6 @@ export default function App() {
     });
     return () => subscription.unsubscribe();
   }, []);
-
-  // Effect para Comentários do Mascote na Navegação
-  useEffect(() => {
-      if (loginStage !== 'idle') return; 
-
-      const comments = MASCOT_COMMENTS[view];
-      if (comments && comments.length > 0) {
-          // Chance de 40% de mostrar mensagem
-          if (Math.random() > 0.4) {
-              const randomComment = comments[Math.floor(Math.random() * comments.length)];
-              setMascotMessage(randomComment);
-              setShowMascotBubble(true);
-              const timer = setTimeout(() => setShowMascotBubble(false), 5000);
-              return () => clearTimeout(timer);
-          }
-      } else {
-          setShowMascotBubble(false);
-      }
-  }, [view, loginStage]);
 
   const loadProfile = async (uid: string) => {
     try {
@@ -208,7 +164,6 @@ export default function App() {
       window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  // --- Main Render ---
   return (
     <div className={view === 'chat' ? 'mode-chat' : ''}>
        
@@ -252,140 +207,82 @@ export default function App() {
           onTriggerLogin={() => navigateTo('login')}
        />
 
-       {/* Mobile Header (Top Navigation) */}
-       <div className="mobile-header-bar">
-          <Logo height={28} onClick={() => navigateTo('home')} />
-          <div className="mobile-header-nav">
-             <button className={`header-icon-btn ${view === 'home' ? 'active' : ''}`} onClick={() => navigateTo('home')}>
-                <Home size={20}/>
-             </button>
-             <button className={`header-icon-btn ${view === 'market' ? 'active' : ''}`} onClick={() => navigateTo('market')}>
-                <HeartHandshake size={20}/>
-             </button>
-             <button className={`header-icon-btn ${view === 'chat' ? 'active' : ''}`} onClick={() => navigateTo('chat')}>
-                <MessageCircle size={20}/>
-             </button>
-             {session ? (
-                 <button className={`header-icon-btn ${view === 'dashboard' ? 'active' : ''}`} onClick={() => navigateTo('dashboard')}>
-                    <User size={20}/>
-                 </button>
-             ) : (
-                 <button className={`header-icon-btn ${view === 'login' ? 'active' : ''}`} onClick={() => navigateTo('login')}>
-                    <User size={20}/>
-                 </button>
-             )}
-          </div>
+       {/* MOBILE TOP BAR (Logo Only) */}
+       <div className="mobile-top-bar">
+          {/* Logo exibido normalmente (com cores), sem a prop variant="white" */}
+          <Logo height={44} onClick={() => navigateTo('home')} />
        </div>
 
-       {/* Desktop Nav */}
+       {/* MOBILE BOTTOM NAV (App-like Experience) */}
+       <nav className="mobile-bottom-nav">
+          <button className={`nav-item-mobile ${view === 'home' ? 'active' : ''}`} onClick={() => navigateTo('home')}>
+             <Home size={24} strokeWidth={view === 'home' ? 2.5 : 2} />
+             <span>Início</span>
+          </button>
+          
+          <button className={`nav-item-mobile ${view === 'market' ? 'active' : ''}`} onClick={() => navigateTo('market')}>
+             <HeartHandshake size={24} strokeWidth={view === 'market' ? 2.5 : 2} />
+             <span>Ajudar</span>
+          </button>
+          
+          {/* FAB Central Button */}
+          <button className={`nav-item-mobile fab ${view === 'chat' ? 'active' : ''}`} onClick={() => navigateTo('chat')}>
+             <Sparkles size={24} fill={view === 'chat' ? 'currentColor' : 'none'} />
+          </button>
+          
+          <button className={`nav-item-mobile ${view === 'packages' ? 'active' : ''}`} onClick={() => navigateTo('packages')}>
+             <PlusCircle size={24} strokeWidth={view === 'packages' ? 2.5 : 2} />
+             <span>Planos</span>
+          </button>
+
+          {session ? (
+             <button className={`nav-item-mobile ${view === 'dashboard' ? 'active' : ''}`} onClick={() => navigateTo('dashboard')}>
+                <User size={24} strokeWidth={view === 'dashboard' ? 2.5 : 2} />
+                <span>Perfil</span>
+             </button>
+          ) : (
+             <button className={`nav-item-mobile ${view === 'login' ? 'active' : ''}`} onClick={() => navigateTo('login')}>
+                <User size={24} strokeWidth={view === 'login' ? 2.5 : 2} />
+                <span>Entrar</span>
+             </button>
+          )}
+       </nav>
+
+       {/* DESKTOP NAV (Sticky Header) */}
        <header className="desktop-nav">
-          <Logo height={32} onClick={() => navigateTo('home')} />
+          <Logo height={36} onClick={() => navigateTo('home')} />
           <nav className="nav-links-desktop">
              <a href="#" className={`nav-link-item ${view === 'home' && 'active'}`} onClick={() => navigateTo('home')}>Início</a>
              <a href="#" className={`nav-link-item ${view === 'services' && 'active'}`} onClick={() => navigateTo('services')}>Serviços</a>
-             <a href="#" className={`nav-link-item ${view === 'packages' && 'active'}`} onClick={() => navigateTo('packages')}>Pacotes</a>
-             <a href="#" className={`nav-link-item ${view === 'market' && 'active'}`} onClick={() => navigateTo('market')}>Social</a>
-             <a href="#" className={`nav-link-item ${view === 'about' && 'active'}`} onClick={() => navigateTo('about')}>Sobre Nós</a>
+             <a href="#" className={`nav-link-item ${view === 'packages' && 'active'}`} onClick={() => navigateTo('packages')}>Clube VIP</a>
+             <a href="#" className={`nav-link-item ${view === 'market' && 'active'}`} onClick={() => navigateTo('market')}>Adoção</a>
              <a href="#" className={`nav-link-item nav-link-cta ${view === 'chat' && 'active'}`} onClick={() => navigateTo('chat')}>Assistente IA</a>
              {session ? (
                <>
-                 <a href="#" className="btn btn-primary btn-sm" onClick={() => navigateTo('dashboard')}>Minha Agenda</a>
+                 <a href="#" className="btn btn-primary btn-sm" onClick={() => navigateTo('dashboard')}>Minha Conta</a>
                  {profile?.role === 'admin' && <a href="#" className="nav-link-item" onClick={() => navigateTo('admin')}>Admin</a>}
-                 <a href="#" className="logout-link" onClick={handleLogout} style={{marginLeft: 20, fontSize:'0.9rem'}}>Sair</a>
+                 <a href="#" className="logout-link" onClick={handleLogout} style={{marginLeft: 20}}>Sair</a>
                </>
              ) : (
-               <a href="#" className="btn btn-secondary btn-sm" onClick={() => navigateTo('login')}>Login</a>
+               <a href="#" className="btn btn-secondary btn-sm" onClick={() => navigateTo('login')}>Entrar / Cadastrar</a>
              )}
           </nav>
        </header>
 
        <main id="app">
-          {view === 'home' && (
-            <HomePage 
-                session={session} 
-                onNavigate={navigateTo} 
-                onOpenBooking={() => setShowBookingModal(true)} 
-            />
-          )}
-
-          {view === 'services' && (
-            <ServicesPage 
-                services={services} 
-                onNavigate={navigateTo} 
-                onOpenBooking={() => setShowBookingModal(true)} 
-                session={session} 
-            />
-          )}
-
-          {view === 'packages' && (
-             <PackagesView onNavigate={navigateTo} session={session} />
-          )}
-
-          {view === 'market' && (
-            <Marketplace onNavigate={navigateTo} />
-          )}
-          
-          {view === 'login' && (
-            <LoginPage 
-                onNavigate={navigateTo} 
-                setLoginStage={setLoginStage} 
-            />
-          )}
-
-          {view === 'register' && (
-            <RegisterPage 
-                onNavigate={navigateTo} 
-                setLoginStage={setLoginStage} 
-            />
-          )}
-          
-          {view === 'chat' && (
-            <Chat onNavigate={(r) => navigateTo(r as Route)} />
-          )}
-          
+          {view === 'home' && <HomePage session={session} onNavigate={navigateTo} onOpenBooking={() => setShowBookingModal(true)} />}
+          {view === 'services' && <ServicesPage services={services} onNavigate={navigateTo} onOpenBooking={() => setShowBookingModal(true)} session={session} />}
+          {view === 'packages' && <PackagesView onNavigate={navigateTo} session={session} />}
+          {view === 'market' && <Marketplace onNavigate={navigateTo} />}
+          {view === 'login' && <LoginPage onNavigate={navigateTo} setLoginStage={setLoginStage} />}
+          {view === 'register' && <RegisterPage onNavigate={navigateTo} setLoginStage={setLoginStage} />}
+          {view === 'chat' && <Chat onNavigate={(r) => navigateTo(r as Route)} />}
           {view === 'about' && <AboutUs onNavigate={navigateTo} />}
-          
-          {view === 'dashboard' && (
-            <Dashboard 
-                profile={profile} 
-                pets={pets} 
-                apps={apps} 
-                onNavigate={navigateTo} 
-                setSelectedPet={setSelectedPet} 
-                setSelectedAppointment={setSelectedAppointment}
-                onOpenBooking={() => setShowBookingModal(true)}
-            />
-          )}
-          
+          {view === 'dashboard' && <Dashboard profile={profile} pets={pets} apps={apps} onNavigate={navigateTo} setSelectedPet={setSelectedPet} setSelectedAppointment={setSelectedAppointment} onOpenBooking={() => setShowBookingModal(true)} />}
           {view === 'admin' && <AdminPanel />}
-          
-          {view === 'user-profile' && (
-            <UserProfileView 
-                profile={profile} 
-                session={session} 
-                pets={pets} 
-                apps={apps} 
-                onNavigate={navigateTo} 
-                setSelectedPet={setSelectedPet}
-                onAddPet={() => setShowPetWizard(true)} // Passed callback
-            />
-          )}
-          
-          {view === 'pet-details' && (
-            <PetDetailsView 
-                selectedPet={selectedPet} 
-                apps={apps} 
-                onNavigate={navigateTo} 
-                setSelectedAppointment={setSelectedAppointment} 
-            />
-          )}
-          
-          {view === 'appointment-details' && (
-            <AppointmentDetailsView 
-                selectedAppointment={selectedAppointment} 
-                onNavigate={navigateTo} 
-            />
-          )}
+          {view === 'user-profile' && <UserProfileView profile={profile} session={session} pets={pets} apps={apps} onNavigate={navigateTo} setSelectedPet={setSelectedPet} onAddPet={() => setShowPetWizard(true)} />}
+          {view === 'pet-details' && <PetDetailsView selectedPet={selectedPet} apps={apps} onNavigate={navigateTo} setSelectedAppointment={setSelectedAppointment} />}
+          {view === 'appointment-details' && <AppointmentDetailsView selectedAppointment={selectedAppointment} onNavigate={navigateTo} />}
        </main>
     </div>
   );

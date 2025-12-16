@@ -4,7 +4,6 @@ import { Sparkles, Scissors, Droplet, Heart, HeartHandshake, Crown } from 'lucid
 import { Route } from '../types';
 import { getAvatarUrl } from '../utils/ui';
 
-// URL base do Bucket ATUALIZADA
 const BASE_STORAGE_URL = 'https://vfryefavzurwoiuznkwv.supabase.co/storage/v1/object/public/site-assets';
 
 interface HomePageProps {
@@ -33,7 +32,7 @@ export const HomePage: React.FC<HomePageProps> = ({ session, onNavigate, onOpenB
           </div>
         </div>
 
-        {/* Imagem decorativa controlada via CSS class .hero-pets-img */}
+        {/* Imagem responsiva do mascote - Controlada via Flexbox CSS agora */}
         <img 
             src={`${BASE_STORAGE_URL}/random.png`} 
             alt="Pet Feliz" 
@@ -57,7 +56,6 @@ export const HomePage: React.FC<HomePageProps> = ({ session, onNavigate, onOpenB
                     <h4>Hidratação</h4>
                 </div>
             </div>
-            {/* CARD ATUALIZADO: De Loja para Social */}
             <div className="service-img-card reveal-on-scroll delay-2" onClick={() => onNavigate('market')} style={{backgroundImage: `url(${BASE_STORAGE_URL}/4.jpg)`}}>
                 <div className="service-overlay">
                     <div className="service-icon-float"><HeartHandshake size={18}/></div>
@@ -90,66 +88,50 @@ export const HomePage: React.FC<HomePageProps> = ({ session, onNavigate, onOpenB
              <div style={{position:'relative', zIndex:2}}>
                  <div style={{display:'flex', alignItems:'center', gap: 8, marginBottom: 8}}>
                     <Crown size={24} fill="#FDCB6E" color="#FDCB6E" />
-                    <span style={{fontWeight: 800, textTransform:'uppercase', fontSize:'0.85rem', letterSpacing:'0.05em', color:'#FDCB6E'}}>Clube de Assinatura</span>
+                    <span style={{fontWeight: 800, textTransform:'uppercase', fontSize:'0.85rem', letterSpacing:'0.05em', color:'#FDCB6E'}}>Clube VIP</span>
                  </div>
-                 <h3 style={{color:'white', margin:0, fontSize:'1.4rem'}}>Pacotes de Banho</h3>
-                 <p style={{color:'rgba(255,255,255,0.9)', margin:0}}>Economize até 30% e garanta horários VIP.</p>
+                 <h3 style={{color:'white', margin:0, fontSize:'1.4rem'}}>Assinatura</h3>
+                 <p style={{color:'rgba(255,255,255,0.9)', margin:0}}>Economize 30%</p>
              </div>
              <div style={{background: 'rgba(255,255,255,0.2)', padding: '10px 16px', borderRadius: 20, fontWeight: 700, whiteSpace:'nowrap', zIndex:2}}>
-                 Ver Planos
+                 Ver
              </div>
-             {/* Decorative Circle */}
              <div style={{position:'absolute', right: -20, bottom: -40, width: 140, height: 140, borderRadius:'50%', background:'rgba(255,255,255,0.1)'}}></div>
          </div>
          
-         {/* Features Section */}
          <div className="features-section mt-4">
              <h2 className="section-title reveal-on-scroll">Por que a PetSpa?</h2>
              <div className="features-grid">
-                
-                {/* Profissionais */}
                 <div className="feature-item feature-green reveal-on-scroll">
                     <div className="feature-text-content">
-                        <h3>Profissionais Certificados</h3>
-                        <p>Equipe treinada para lidar com todos os temperamentos.</p>
+                        <h3>Profissionais</h3>
+                        <p>Equipe treinada para todos os temperamentos.</p>
                     </div>
                     <div className="feature-img-wrapper">
                         <img src={`${BASE_STORAGE_URL}/homepage4.png`} alt="Profissionais" className="feature-png" />
                     </div>
                 </div>
 
-                {/* Ambiente Seguro */}
                 <div className="feature-item feature-red reveal-on-scroll delay-1">
                      <div className="feature-text-content">
-                        <h3>Ambiente Seguro</h3>
-                        <p>Monitoramento e higienização hospitalar constante.</p>
+                        <h3>Segurança</h3>
+                        <p>Monitoramento e higienização hospitalar.</p>
                     </div>
                     <div className="feature-img-wrapper">
                         <img src={`${BASE_STORAGE_URL}/amb.png`} alt="Ambiente" className="feature-png" />
                     </div>
                 </div>
 
-                {/* Amor em cada detalhe */}
                 <div className="feature-item feature-blue reveal-on-scroll delay-2">
                      <div className="feature-text-content">
-                        <h3>Amor em cada detalhe</h3>
+                        <h3>Muito Amor</h3>
                         <p>Produtos hipoalergênicos e tratamento VIP.</p>
                     </div>
                     <div className="feature-img-wrapper">
                         <img src={`${BASE_STORAGE_URL}/random.png`} alt="Amor" className="feature-png" />
                     </div>
                 </div>
-
              </div>
-         </div>
-
-         {/* Promo Banner */}
-         <div className="promo-banner mt-4 clickable-card reveal-on-scroll" onClick={() => session ? onOpenBooking() : onNavigate('login')}>
-            <div className="promo-content">
-                <h3>Primeira vez aqui? 🎁</h3>
-                <p>Ganhe <strong>10% OFF</strong> no primeiro banho agendando pelo app!</p>
-            </div>
-            <img src={`${BASE_STORAGE_URL}/bt.webp`} alt="Mascote" className="promo-mascot-img" />
          </div>
 
          {/* Social Proof Gallery */}
@@ -172,30 +154,30 @@ export const HomePage: React.FC<HomePageProps> = ({ session, onNavigate, onOpenB
             <h2 className="section-title">Quem ama, recomenda</h2>
             <div className="testimonials-scroll">
                 <div className="testimonial-card">
-                    <div className="user-profile-row mb-2">
-                         <img src={getAvatarUrl("Ana P.")} className="avatar-xs" alt="Ana" />
+                    <div className="user-profile-row mb-2" style={{display:'flex', alignItems:'center', gap:10}}>
+                         <img src={getAvatarUrl("Mariana Silva")} style={{width:40, height:40, borderRadius:'50%', objectFit:'cover'}} alt="Ana" />
                          <div>
-                            <small className="block font-bold text-gray-800 leading-tight">Ana P.</small>
+                            <small className="block font-bold text-gray-800 leading-tight" style={{display:'block', fontWeight:700}}>Mariana Silva</small>
                             <div className="stars text-xs">⭐⭐⭐⭐⭐</div>
                          </div>
                     </div>
                     <p>"A Mel nunca voltou tão cheirosa! O atendimento é impecável."</p>
                 </div>
                 <div className="testimonial-card">
-                     <div className="user-profile-row mb-2">
-                         <img src={getAvatarUrl("Carlos M.")} className="avatar-xs" alt="Carlos" />
+                     <div className="user-profile-row mb-2" style={{display:'flex', alignItems:'center', gap:10}}>
+                         <img src={getAvatarUrl("Roberto Costa")} style={{width:40, height:40, borderRadius:'50%', objectFit:'cover'}} alt="Carlos" />
                          <div>
-                            <small className="block font-bold text-gray-800 leading-tight">Carlos M.</small>
+                            <small className="block font-bold text-gray-800 leading-tight" style={{display:'block', fontWeight:700}}>Roberto Costa</small>
                             <div className="stars text-xs">⭐⭐⭐⭐⭐</div>
                          </div>
                     </div>
                     <p>"Adoro a facilidade de agendar pelo app. Super prático!"</p>
                 </div>
                 <div className="testimonial-card">
-                     <div className="user-profile-row mb-2">
-                         <img src={getAvatarUrl("Julia S.")} className="avatar-xs" alt="Julia" />
+                     <div className="user-profile-row mb-2" style={{display:'flex', alignItems:'center', gap:10}}>
+                         <img src={getAvatarUrl("Julia Santos")} style={{width:40, height:40, borderRadius:'50%', objectFit:'cover'}} alt="Julia" />
                          <div>
-                            <small className="block font-bold text-gray-800 leading-tight">Julia S.</small>
+                            <small className="block font-bold text-gray-800 leading-tight" style={{display:'block', fontWeight:700}}>Julia Santos</small>
                             <div className="stars text-xs">⭐⭐⭐⭐⭐</div>
                          </div>
                     </div>
