@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState, useMemo } from 'react';
 import { ChevronLeft, Check, Crown, Star, ShieldCheck, Dog, X, Settings, Calendar, Clock, AlertCircle } from 'lucide-react';
 import { Package, Route, Subscription, Pet } from '../types';
@@ -229,7 +230,8 @@ export const PackagesView: React.FC<PackagesViewProps> = ({ onNavigate, session 
         return (
             <button 
                 className={`btn full-width ${processingId === pkg.id ? 'loading' : ''}`}
-                style={pkg.highlight ? { background: 'linear-gradient(135deg, var(--primary), #8E44AD)', color: 'white' } : {}}
+                // Se for destaque, usa a cor do tema, senão usa primária padrão ou secundária
+                style={pkg.highlight ? { background: `var(--pkg-theme)`, color: 'white', borderColor: 'transparent' } : {}}
                 onClick={() => handleInitiateSubscribe(pkg)}
                 disabled={processingId !== null}
             >
@@ -248,7 +250,7 @@ export const PackagesView: React.FC<PackagesViewProps> = ({ onNavigate, session 
 
             <div className="text-center mb-4 fade-in-up">
                 <p style={{ maxWidth: 500, margin: '0 auto', color: '#666' }}>
-                    Saúde e higiene recorrente para seu pet. <br/>
+                    Garanta saúde e higiene recorrente para seu pet com economia. <br/>
                     <strong>Cada pet precisa de sua própria assinatura.</strong>
                 </p>
             </div>
@@ -268,13 +270,25 @@ export const PackagesView: React.FC<PackagesViewProps> = ({ onNavigate, session 
                         const originalPrice = pkg.original_price ? Number(pkg.original_price) : null;
                         const petsOnThisPlan = getPetsOnPackage(pkg.id);
                         const hasSubs = petsOnThisPlan.length > 0;
+                        const themeColor = pkg.color_theme || 'var(--primary)';
                         
                         return (
-                        <div key={pkg.id} className={`card package-card fade-in-up ${pkg.highlight ? 'highlight-pkg' : ''} ${hasSubs ? 'active-plan-card' : ''}`} style={{ transitionDelay: `${idx * 0.1}s` }}>
-                            {pkg.highlight && <div className="pkg-badge"><Crown size={14} fill="white" /> POPULAR</div>}
+                        <div 
+                            key={pkg.id} 
+                            className={`card package-card fade-in-up ${pkg.highlight ? 'highlight-pkg' : ''} ${hasSubs ? 'active-plan-card' : ''}`} 
+                            style={{ 
+                                transitionDelay: `${idx * 0.1}s`,
+                                '--pkg-theme': themeColor 
+                            } as React.CSSProperties}
+                        >
+                            {pkg.highlight && (
+                                <div className="pkg-badge">
+                                    <Crown size={14} fill="white" /> POPULAR
+                                </div>
+                            )}
                             
-                            <div className="pkg-header" style={{ borderBottomColor: pkg.color_theme || 'var(--primary)' }}>
-                                <h3 style={{ color: pkg.highlight ? 'var(--primary)' : 'var(--secondary)' }}>{pkg.title}</h3>
+                            <div className="pkg-header">
+                                <h3 style={{ color: pkg.highlight ? 'var(--pkg-theme)' : 'var(--secondary)' }}>{pkg.title}</h3>
                                 <p className="pkg-desc">{pkg.description}</p>
                             </div>
                             
@@ -299,13 +313,13 @@ export const PackagesView: React.FC<PackagesViewProps> = ({ onNavigate, session 
                             <ul className="pkg-features">
                                 {(pkg.features || []).map((feat, i) => (
                                     <li key={i}>
-                                        <div className="check-icon" style={{ background: pkg.color_theme || 'var(--primary)' }}><Check size={12} color="white" strokeWidth={3} /></div>
+                                        <div className="check-icon"><Check size={12} color="white" strokeWidth={3} /></div>
                                         {feat}
                                     </li>
                                 ))}
                             </ul>
 
-                            <div style={{marginTop: 'auto'}}>{renderButton(pkg)}</div>
+                            <div className="pkg-action-area">{renderButton(pkg)}</div>
                         </div>
                     )})
                 )}

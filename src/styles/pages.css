@@ -379,3 +379,182 @@
     flex-wrap: wrap;
     align-items: center;
 }
+
+/* --- PACKAGES VIEW & GRID --- */
+.packages-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 24px;
+    margin-top: 32px;
+    align-items: flex-start;
+}
+
+@media (min-width: 768px) {
+    .packages-grid {
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 32px;
+    }
+}
+
+.package-card {
+    display: flex;
+    flex-direction: column;
+    padding: 0 !important; /* Reset padding to handle header image/color */
+    border: 1px solid var(--border-light);
+    transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+    height: 100%;
+    position: relative;
+    overflow: visible !important; /* Allow badge to float */
+}
+
+.package-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 15px 30px rgba(0,0,0,0.1);
+}
+
+.highlight-pkg {
+    border: 2px solid var(--pkg-theme, var(--primary));
+    box-shadow: 0 10px 40px rgba(155, 89, 182, 0.15);
+    transform: scale(1.02);
+    z-index: 1;
+}
+
+.highlight-pkg:hover {
+    transform: scale(1.05) translateY(-8px);
+}
+
+.pkg-badge {
+    position: absolute;
+    top: -12px;
+    right: 20px;
+    background: linear-gradient(135deg, #FF9F43, #F39C12);
+    color: white;
+    padding: 6px 16px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    box-shadow: 0 4px 10px rgba(243, 156, 18, 0.4);
+    z-index: 10;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.pkg-header {
+    padding: 32px 24px 24px;
+    text-align: center;
+    border-bottom: 1px solid #f0f0f0;
+    background: linear-gradient(to bottom, #FAFAFA, #FFFFFF);
+    border-radius: 16px 16px 0 0;
+}
+
+.pkg-header h3 {
+    font-size: 1.5rem;
+    margin-bottom: 8px;
+    letter-spacing: -0.03em;
+}
+
+.pkg-desc {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    line-height: 1.4;
+    margin: 0;
+}
+
+.pkg-price-area {
+    padding: 24px;
+    text-align: center;
+}
+
+.pkg-current-price {
+    display: flex;
+    align-items: baseline;
+    justify-content: center;
+    color: var(--secondary);
+    line-height: 1;
+}
+
+.pkg-current-price small {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text-muted);
+}
+
+.pkg-current-price strong {
+    font-size: 3rem;
+    font-weight: 800;
+    margin: 0 4px;
+    letter-spacing: -0.05em;
+}
+
+.pkg-old-price {
+    display: block;
+    text-decoration: line-through;
+    color: #b2bec3;
+    font-size: 0.9rem;
+    margin-bottom: 4px;
+}
+
+.pkg-features {
+    list-style: none;
+    padding: 0 24px 32px;
+    margin: 0;
+    flex: 1; /* Pushes button down */
+}
+
+.pkg-features li {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+    font-size: 0.95rem;
+    color: var(--text-body);
+}
+
+.check-icon {
+    width: 24px;
+    height: 24px;
+    background: var(--pkg-theme, var(--primary));
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+.pkg-action-area {
+    padding: 0 24px 24px;
+}
+
+/* Subscribed state overrides */
+.active-plan-card {
+    border-color: var(--brand-green);
+    background: #F0FDF4;
+}
+.subscribed-section {
+    padding: 12px 24px;
+    background: rgba(0, 184, 148, 0.08);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-top: 1px solid rgba(0, 184, 148, 0.1);
+    border-bottom: 1px solid rgba(0, 184, 148, 0.1);
+}
+.subscribed-avatars-row { display: flex; padding-left: 10px; }
+.sub-avatar-mini { 
+    width: 32px; height: 32px; 
+    border-radius: 50%; border: 2px solid white; 
+    margin-left: -10px; 
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+.btn-manage-link { 
+    background: none; border: none; font-size: 0.8rem; 
+    color: var(--brand-green); font-weight: 700; cursor: pointer; 
+    display: flex; align-items: center; gap: 4px;
+    padding: 4px 8px; border-radius: 6px;
+    transition: background 0.2s;
+}
+.btn-manage-link:hover { background: rgba(0,184,148,0.1); }
