@@ -1,6 +1,6 @@
 
 import React, { useState, useMemo } from 'react';
-import { ChevronLeft, Clock, CheckCircle, Droplet, Sparkles, X, Calendar, DollarSign, Scissors, CalendarClock, AlertCircle, ChevronRight, Activity, CalendarCheck, Crown, Hourglass } from 'lucide-react';
+import { ChevronLeft, Clock, CheckCircle, Droplet, Sparkles, X, Calendar, DollarSign, Scissors, CalendarClock, AlertCircle, ChevronRight, Activity, CalendarCheck, Crown, Hourglass, MessageCircle, MapPin, ShieldCheck, Phone } from 'lucide-react';
 import { Appointment, Pet, Route, Subscription } from '../types';
 import { formatCurrency, formatDate, getPetAvatarUrl } from '../utils/ui';
 import { api } from '../services/api';
@@ -195,11 +195,13 @@ export const AppointmentDetailsView: React.FC<AppointmentDetailsProps> = ({ sele
 
       if (!selectedAppointment) return null;
       const app = selectedAppointment;
+      
+      // Definição dos passos da Timeline
       const steps = [
-          { status: 'pending', label: 'Solicitado' },
-          { status: 'confirmed', label: 'Confirmado' },
-          { status: 'in_progress', label: 'Em Andamento' },
-          { status: 'completed', label: 'Pronto' }
+          { status: 'pending', label: 'Solicitado', desc: 'Aguardando confirmação da loja.' },
+          { status: 'confirmed', label: 'Confirmado', desc: 'Tudo certo! Aguardamos vocês.' },
+          { status: 'in_progress', label: 'Em Andamento', desc: `${app.pets?.name} está relaxando no banho.` },
+          { status: 'completed', label: 'Pronto', desc: 'Seu pet já pode ser retirado!' }
       ];
       
       const currentStepIdx = steps.findIndex(s => s.status === app.status);
@@ -262,101 +264,132 @@ export const AppointmentDetailsView: React.FC<AppointmentDetailsProps> = ({ sele
           }
       };
 
+      // Helper Text for Hero
+      const getHeroText = () => {
+          if(isCancelled) return "Serviço Cancelado";
+          switch(app.status) {
+              case 'pending': return "Aguardando Loja";
+              case 'confirmed': return "Confirmado!";
+              case 'in_progress': return "Em Atendimento";
+              case 'completed': return "Serviço Finalizado";
+              default: return "Processando";
+          }
+      };
+
+      const getHeroSubtext = () => {
+          if(isCancelled) return "Este agendamento foi cancelado.";
+          switch(app.status) {
+              case 'pending': return "Estamos verificando a disponibilidade.";
+              case 'confirmed': return `Te esperamos dia ${new Date(app.start_time).toLocaleDateString()}!`;
+              case 'in_progress': return `${app.pets?.name} está ficando lindo(a)! 🛁`;
+              case 'completed': return "Tudo pronto! Pode vir buscar.";
+              default: return "";
+          }
+      };
+
       return (
-        <div className="container page-enter" style={{ paddingTop: 20 }}>
+        <div className="container page-enter" style={{ paddingTop: 20, paddingBottom: 40 }}>
+            {/* Nav Header */}
             <div className="nav-header">
                <button className="btn-icon-sm" onClick={() => onNavigate('dashboard')}><ChevronLeft /></button>
                <h3>Acompanhamento</h3>
                <div style={{width: 44}}></div>
            </div>
 
-           <div className="card status-card reveal-on-scroll">
-               <div className="status-icon-lg pulse-animation">
-                   {app.status === 'pending' && <Clock size={40}/>}
-                   {app.status === 'confirmed' && <CheckCircle size={40}/>}
-                   {app.status === 'in_progress' && <Droplet size={40}/>}
-                   {app.status === 'completed' && <Sparkles size={40}/>}
-                   {app.status === 'cancelled' && <X size={40}/>}
-               </div>
-               <div className="status-title">
-                   {isCancelled ? 'Cancelado' : steps[currentStepIdx]?.label || 'Status Desconhecido'}
-               </div>
-               <p style={{margin:0}}>Pedido #{app.id}</p>
+           {/* --- HERO STATUS CARD (VISUAL) --- */}
+           <div className={`tracker-hero tracker-bg-${app.status} reveal-on-scroll`}>
+                <div className="hero-icon-lg pulse-animation">
+                    {app.status === 'pending' && <Clock size={40} color="white"/>}
+                    {app.status === 'confirmed' && <CalendarCheck size={40} color="white"/>}
+                    {app.status === 'in_progress' && <Droplet size={40} color="white"/>}
+                    {app.status === 'completed' && <Sparkles size={40} color="white"/>}
+                    {app.status === 'cancelled' && <X size={40} color="white"/>}
+                </div>
+                <h2 style={{color:'white', margin:0, fontSize:'1.8rem'}}>{getHeroText()}</h2>
+                <p style={{color:'rgba(255,255,255,0.9)', margin:0}}>{getHeroSubtext()}</p>
+           </div>
 
-               {!isCancelled && (
-                   <div className="progress-track" style={{marginTop: 32}}>
+           {/* --- INFO PRINCIPAL GRID --- */}
+           <div className="stats-row-mini reveal-on-scroll" style={{gridTemplateColumns: '1fr 1fr'}}>
+               <div className="detail-info-card">
+                   <div className="detail-icon-box"><CalendarClock size={24}/></div>
+                   <div>
+                       <span style={{fontSize:'0.75rem', color:'#999', display:'block'}}>Data & Hora</span>
+                       <strong>{new Date(app.start_time).toLocaleDateString()}</strong>
+                       <div style={{fontSize:'0.85rem'}}>{new Date(app.start_time).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</div>
+                   </div>
+               </div>
+               
+               <div className="detail-info-card">
+                   <div className="detail-icon-box"><DollarSign size={24}/></div>
+                   <div>
+                       <span style={{fontSize:'0.75rem', color:'#999', display:'block'}}>Valor Total</span>
+                       <strong>{formatCurrency(app.services?.price || 0)}</strong>
+                       <div style={{fontSize:'0.75rem', color:'var(--primary)'}}>Pagamento na loja</div>
+                   </div>
+               </div>
+           </div>
+
+           {/* --- VERTICAL TIMELINE --- */}
+           {!isCancelled && (
+               <div className="card reveal-on-scroll" style={{padding: '24px 20px'}}>
+                   <h3 style={{fontSize:'1.1rem', marginBottom: 4}}>Linha do Tempo</h3>
+                   <p style={{fontSize:'0.85rem', color:'#999'}}>Acompanhe cada etapa do processo</p>
+                   
+                   <div className="timeline-container">
+                       <div className="timeline-track"></div>
                        {steps.map((step, idx) => {
-                           const isActive = idx <= currentStepIdx;
+                           const isCompleted = idx < currentStepIdx;
+                           const isCurrent = idx === currentStepIdx;
+                           const isPending = idx > currentStepIdx;
+                           
                            return (
-                               <div key={step.status} className={`step ${isActive ? 'active' : ''}`}>
-                                   <div className={`step-circle ${isActive ? 'active' : ''}`}>
-                                       {idx + 1}
+                               <div key={step.status} className={`timeline-step ${isCompleted ? 'completed' : ''} ${isCurrent ? 'current' : ''} ${isPending ? 'pending' : ''} ${isCurrent ? 'active-text' : 'inactive-text'}`}>
+                                   <div className="step-dot">
+                                       {isCompleted ? <CheckCircle size={16} /> : (idx + 1)}
                                    </div>
-                                   <div className="step-label">{step.label}</div>
+                                   <div className="step-content">
+                                       <strong>{step.label}</strong>
+                                       <p>{step.desc}</p>
+                                   </div>
                                </div>
                            );
                        })}
                    </div>
-               )}
+               </div>
+           )}
+
+           {/* --- PET & SERVICE INFO --- */}
+           <div className="card reveal-on-scroll" style={{display:'flex', gap: 16, alignItems:'center'}}>
+                <img src={getPetAvatarUrl(app.pets?.name || '')} style={{width: 60, height: 60, borderRadius: '50%', objectFit:'cover'}} />
+                <div style={{flex:1}}>
+                    <strong style={{fontSize:'1.1rem', color:'var(--secondary)'}}>{app.pets?.name}</strong>
+                    <div style={{display:'flex', alignItems:'center', gap: 6, fontSize:'0.9rem', color:'#666', marginTop: 2}}>
+                        <Scissors size={14} /> {app.services?.name}
+                    </div>
+                </div>
            </div>
 
-           <div className="card reveal-on-scroll">
-               <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:20}}>
-                   <h3 style={{margin:0}}>Detalhes do Serviço</h3>
-                   
-                   {/* BOTÃO REAGENDAR */}
-                   {!isCancelled && app.status !== 'completed' && app.status !== 'in_progress' && (
-                       <button 
-                         className={`btn btn-sm ${canReschedule ? 'btn-ghost' : 'btn-secondary'}`} 
-                         disabled={!canReschedule}
-                         style={{border:'1px solid #ddd'}}
-                         onClick={() => setShowReschedule(true)}
-                       >
-                           {canReschedule ? <><CalendarClock size={16} style={{marginRight:6}}/> Reagendar</> : 'Bloqueado (<24h)'}
-                       </button>
-                   )}
-               </div>
-               
-               <div style={{display:'flex', alignItems:'center', gap:16, marginBottom: 16}}>
-                   <div className="service-preview-icon" style={{width: 48, height: 48, margin:0, fontSize:'1.2rem'}}><Scissors size={20}/></div>
-                   <div>
-                       <strong style={{display:'block', fontSize:'1.1rem'}}>{app.services?.name}</strong>
-                       <span style={{color:'#666'}}>{app.services?.duration_minutes} min • {formatCurrency(app.services?.price || 0)}</span>
-                   </div>
-               </div>
+           {/* --- ACTIONS FOOTER --- */}
+           <div style={{marginTop: 24, paddingBottom: 24}}>
+                {/* BOTÃO REAGENDAR */}
+                {!isCancelled && app.status !== 'completed' && app.status !== 'in_progress' && (
+                    <button 
+                        className={`btn full-width mb-4 ${canReschedule ? 'btn-white' : 'btn-secondary'}`} 
+                        disabled={!canReschedule}
+                        style={{border:'1px solid #ddd'}}
+                        onClick={() => setShowReschedule(true)}
+                    >
+                        {canReschedule ? <><CalendarClock size={18} style={{marginRight:8}}/> Alterar Data/Horário</> : 'Reagendamento Bloqueado (<24h)'}
+                    </button>
+                )}
 
-               <hr style={{border:'none', borderTop:'1px solid #eee', margin: '16px 0'}} />
-
-               <div style={{display:'grid', gap: 16}}>
-                   <div style={{display:'flex', alignItems:'center', gap: 12}}>
-                       <Calendar size={20} color="#FF8C42" />
-                       <div>
-                           <small style={{display:'block', color:'#999'}}>Data</small>
-                           <strong>{new Date(app.start_time).toLocaleDateString()}</strong>
-                       </div>
-                   </div>
-                   <div style={{display:'flex', alignItems:'center', gap: 12}}>
-                       <Clock size={20} color="#FF8C42" />
-                       <div>
-                           <small style={{display:'block', color:'#999'}}>Horário</small>
-                           <strong>{new Date(app.start_time).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</strong>
-                       </div>
-                   </div>
-                   <div style={{display:'flex', alignItems:'center', gap: 12}}>
-                       <div style={{width:20, textAlign:'center'}}>🐶</div>
-                       <div>
-                           <small style={{display:'block', color:'#999'}}>Pet</small>
-                           <strong>{app.pets?.name}</strong>
-                       </div>
-                   </div>
-                   <div style={{display:'flex', alignItems:'center', gap: 12}}>
-                       <DollarSign size={20} color="#00B894" />
-                       <div>
-                           <small style={{display:'block', color:'#999'}}>Total</small>
-                           <strong style={{color:'#00B894', fontSize:'1.1rem'}}>{formatCurrency(app.services?.price || 0)}</strong>
-                       </div>
-                   </div>
-               </div>
+                <button 
+                    className="btn btn-ghost full-width"
+                    onClick={() => window.open('https://wa.me/5511999999999', '_blank')}
+                >
+                    <MessageCircle size={18} style={{marginRight: 8}}/> Preciso de Ajuda
+                </button>
            </div>
 
            {/* MODAL REAGENDAR */}
