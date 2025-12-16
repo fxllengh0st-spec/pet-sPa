@@ -1,6 +1,6 @@
 
 /* =========================================
-   CHAT MODULE - WIDGET MODE (BOTTOM LEFT)
+   CHAT MODULE - WIDGET MODE (BOTTOM RIGHT)
    ========================================= */
 
 /* Bloqueia scroll do body apenas no mobile se estiver aberto */
@@ -16,12 +16,13 @@
 .chat-layout {
   display: flex;
   flex-direction: column;
-  background-color: var(--surface); /* Fundo branco para garantir contraste */
+  background-color: var(--surface); /* Fundo branco */
   
   /* WIDGET POSITIONING - DESKTOP */
   position: fixed;
   bottom: 20px;
-  left: 20px; /* Canto Inferior Esquerdo conforme solicitado */
+  right: 20px; /* ALTERADO: Canto Inferior Direito */
+  left: auto;  /* Reset do left */
   width: 360px;
   height: 600px;
   max-height: calc(100vh - 100px);
@@ -47,6 +48,7 @@
         border-radius: 0;
         bottom: 0;
         left: 0;
+        right: 0;
     }
 }
 
@@ -174,28 +176,26 @@
 }
 
 .chat-chip-btn {
-    /* CORREÇÃO: Fundo sólido para contraste com o chat */
-    background: #F3E5F5; /* Lilás bem claro */
-    border: 1px solid var(--primary); /* Borda visível */
-    color: var(--primary); /* Texto na cor primária */
+    /* CORREÇÃO VISUAL: Alto Contraste */
+    background: var(--primary); /* Fundo Roxo Sólido */
+    color: white; /* Texto Branco */
+    border: 1px solid transparent; 
     
     padding: 10px 16px; 
     border-radius: 20px;
-    font-size: 0.85rem; font-weight: 700;
+    font-size: 0.85rem; font-weight: 600;
     cursor: pointer; 
-    transition: all 0.2s;
-    box-shadow: 0 2px 4px rgba(155, 89, 182, 0.1);
+    transition: all 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
+    box-shadow: 0 4px 6px rgba(155, 89, 182, 0.2);
     
     /* Garante que o texto não quebre de forma feia */
     text-align: left;
 }
 
 .chat-chip-btn:hover { 
-    background: var(--primary); 
-    color: white; 
     transform: translateY(-2px); 
-    box-shadow: 0 4px 10px rgba(155, 89, 182, 0.3);
-    border-color: var(--primary);
+    box-shadow: 0 6px 12px rgba(155, 89, 182, 0.4);
+    filter: brightness(1.1);
 }
 
 .chat-chip-btn:active {
