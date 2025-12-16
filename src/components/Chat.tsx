@@ -1,6 +1,7 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { api } from '../services/api';
-import { geminiService } from '../services/gemini';
+import { botEngine, BotState, BotContext, BotOption } from '../services/bot-engine';
 import { Send, ChevronLeft } from 'lucide-react';
 import { useToast } from '../context/ToastContext';
 
@@ -9,24 +10,15 @@ const BASE_STORAGE_URL = 'https://vfryefavzurwoiuznkwv.supabase.co/storage/v1/ob
 
 interface ChatProps {
   onNavigate: (route: string) => void;
-  onActionSuccess?: () => void; // Call this when AI creates data to refresh App state
+  onActionSuccess?: () => void;
 }
 
 interface Message {
   id: string;
   sender: 'bot' | 'user';
   text: string;
-  options?: { label: string; action?: string; payload?: any; nextNode?: string }[];
+  options?: BotOption[];
 }
-
-// --- Tipos para o Cérebro Reserva (Fallback State Machine) ---
-type FallbackState = 
-  | 'IDLE' 
-  | 'CREATE_PET_NAME' 
-  | 'CREATE_PET_BREED' 
-  | 'SCHEDULE_PET' 
-  | 'SCHEDULE_SERVICE' 
-  | 'SCHEDULE_TIME';
 
 export const Chat: React.FC<ChatProps> = ({ onNavigate, onActionSuccess }) => {
   const [messages, setMessages] = useState<Message[]>([]);
@@ -38,17 +30,13 @@ export const Chat: React.FC<ChatProps> = ({ onNavigate, onActionSuccess }) => {
   const inputRef = useRef<HTMLInputElement>(null);
   const chatContainerRef = useRef<HTMLDivElement>(null);
   
-  // Inputs & Context
+  // Inputs
   const [inputValue, setInputValue] = useState('');
-  const [inputType, setInputType] = useState<'text' | 'password' | null>('text');
   
-  // User Session for AI Context
-  const [currentUserId, setCurrentUserId] = useState<string | undefined>(undefined);
+  // Bot Engine State
+  const [botState, setBotState] = useState<BotState>('START');
+  const [botContext, setBotContext] = useState<BotContext>({});
 
-  // --- Fallback Logic State (Cérebro Reserva Local) ---
-  const [fallbackState, setFallbackState] = useState<FallbackState>('IDLE');
-  const [fallbackData, setFallbackData] = useState<any>({}); 
-  
   const toast = useToast();
 
   // --- Mobile Keyboard Fix ---
@@ -60,13 +48,11 @@ export const Chat: React.FC<ChatProps> = ({ onNavigate, onActionSuccess }) => {
             scrollToBottom();
         }
     };
-
     if (window.visualViewport) {
         window.visualViewport.addEventListener('resize', handleResize);
         window.visualViewport.addEventListener('scroll', handleResize);
         handleResize(); 
     }
-
     return () => {
         if (window.visualViewport) {
             window.visualViewport.removeEventListener('resize', handleResize);
@@ -85,218 +71,81 @@ export const Chat: React.FC<ChatProps> = ({ onNavigate, onActionSuccess }) => {
     scrollToBottom();
   }, [messages, isTyping]);
 
-  // Load Session
+  // Initial Load & Session
   useEffect(() => {
-      api.auth.getSession().then(session => {
+      const initBot = async () => {
+          const session = await api.auth.getSession();
+          const initialContext: BotContext = {};
+          
           if (session) {
-              setCurrentUserId(session.user.id);
+              initialContext.userId = session.user.id;
+              initialContext.userName = session.user.user_metadata.full_name?.split(' ')[0];
           }
-      });
-      // Welcome Message
-      processNode('START');
+
+          setBotContext(initialContext);
+          
+          // Trigger first message
+          await processBotTurn('START', '', initialContext);
+      };
+      initBot();
   }, []);
 
-  const addMessage = (text: string, sender: 'bot' | 'user', options: any[] = []) => {
+  const addMessage = (text: string, sender: 'bot' | 'user', options: BotOption[] = []) => {
     setMessages(prev => [...prev, { id: Date.now().toString(), text, sender, options }]);
   };
 
-  // --- Logic Flow (Initial Greeting) ---
-  const processNode = async (nodeId: string) => {
-    setIsTyping(true);
-    await new Promise(r => setTimeout(r, 600)); 
-    setIsTyping(false);
+  const processBotTurn = async (currentState: BotState, input: string, context: BotContext, isOption: boolean = false) => {
+      if (currentState !== 'START') setIsTyping(true);
+      
+      // Simulate "Thinking" time for UX
+      await new Promise(r => setTimeout(r, 600));
 
-    let node: any = {};
-    const userSession = await api.auth.getSession();
+      try {
+          const response = await botEngine.processMessage(currentState, input, context, isOption);
+          
+          setIsTyping(false);
+          addMessage(response.text, 'bot', response.options);
+          
+          setBotState(response.nextState);
+          setBotContext(response.updatedContext);
 
-    switch (nodeId) {
-      case 'START':
-        if (userSession) {
-            const userName = userSession.user.user_metadata.full_name?.split(' ')[0] || 'Tutor';
-            node = {
-                message: `Olá, ${userName}! 🐶 Sou o assistente inteligente da PetSpa. Posso agendar banhos e cadastrar pets pra você. Como posso ajudar hoje?`,
-                options: [
-                    { label: '📅 Agendar Banho', action: 'triggerAI_Appointment' },
-                    { label: '🐶 Novo Pet', action: 'triggerAI_NewPet' }
-                ]
-            };
-        } else {
-            node = {
-                message: 'Olá! Sou o mascote da PetSpa 🐶. Para eu conseguir agendar pra você, preciso que você entre na sua conta.',
-                options: [
-                    { label: '🔐 Entrar / Cadastrar', action: 'navLogin' }
-                ]
-            };
-        }
-        break;
-      default:
-        break;
-    }
-
-    if (node.message) addMessage(node.message, 'bot', node.options);
-  };
-
-  const handleOption = (opt: any) => {
-    if (opt.nextNode) processNode(opt.nextNode);
-    
-    // Navigation Actions
-    if (opt.action === 'navLogin') onNavigate('login');
-    else if (opt.action === 'navHome') onNavigate('home');
-    
-    // Quick actions
-    else if (opt.action === 'triggerAI_Appointment') {
-        handleInputSubmit(null, "Quero agendar um serviço");
-    }
-    else if (opt.action === 'triggerAI_NewPet') {
-        handleInputSubmit(null, "Quero cadastrar um novo pet");
-    }
-    // Fallback Options Logic
-    else if (opt.action === 'fallback_select_pet') {
-        handleFallbackFlowInput(opt.payload); // Payload is pet ID
-    }
-    else if (opt.action === 'fallback_select_service') {
-        handleFallbackFlowInput(opt.payload); // Payload is service object
-    }
-  };
-
-  // --- BACKUP BRAIN (Fallback) ---
-  const activateBackupBrain = async (text: string) => {
-    const t = text.toLowerCase();
-    
-    if (t.includes('pet') || t.includes('cadastra') || t.includes('novo')) {
-         setFallbackState('CREATE_PET_NAME');
-         setFallbackData({});
-         return {
-          message: "Minha conexão com a nuvem oscilou, mas eu mesmo faço isso pra você! 🐶\n\nQual é o **nome** do pet?",
-          options: []
-        };
-    }
-    
-    if (t.includes('agenda') || t.includes('marca') || t.includes('banho')) {
-       if (currentUserId) {
-           try {
-               const pets = await api.booking.getMyPets(currentUserId);
-               if (pets.length > 0) {
-                   setFallbackState('SCHEDULE_PET');
-                   setFallbackData({});
-                   return {
-                       message: "Certo, vou agendar manualmente pra você. Para qual pet seria?",
-                       options: pets.map(p => ({ label: p.name, action: 'fallback_select_pet', payload: p.id }))
-                   };
-               }
-           } catch(e) {}
-       }
-       return {
-         message: "Estou com dificuldade de acessar minha inteligência avançada. 🧠🔌\nPor favor, use o botão abaixo para agendar visualmente:",
-         options: [
-           { label: '📅 Abrir Assistente de Agendamento', action: 'navServices' }
-         ]
-       };
-    }
-
-    return {
-      message: "Minha inteligência principal está fora do ar momentaneamente. 🛠️\nComo posso ajudar?",
-      options: [
-         { label: '📅 Agendar', action: 'triggerAI_Appointment' },
-         { label: '🐶 Cadastrar Pet', action: 'triggerAI_NewPet' }
-      ]
-    };
-  };
-
-  const handleFallbackFlowInput = async (input: any) => {
-      const textInput = typeof input === 'string' ? input : '';
-      setIsTyping(true);
-      await new Promise(r => setTimeout(r, 500));
-      setIsTyping(false);
-
-      if (fallbackState === 'CREATE_PET_NAME') {
-          setFallbackData({ ...fallbackData, name: textInput });
-          addMessage(textInput, 'user');
-          setFallbackState('CREATE_PET_BREED');
-          addMessage(`Ótimo nome! E qual é a raça dx ${textInput}? (Ou digite "não sei")`, 'bot');
-          return;
-      }
-
-      if (fallbackState === 'CREATE_PET_BREED') {
-          addMessage(textInput, 'user');
-          setIsTyping(true);
-          try {
-              await api.booking.createPet(currentUserId!, {
-                  name: fallbackData.name,
-                  breed: textInput
-              });
-              setIsTyping(false);
-              addMessage(`Prontinho! 🎉 Cadastrei o(a) **${fallbackData.name}** com sucesso! O que deseja fazer agora?`, 'bot', [
-                  { label: '📅 Agendar Banho', action: 'triggerAI_Appointment' }
-              ]);
-              if (onActionSuccess) onActionSuccess(); // Trigger App Refresh
-          } catch (e) {
-              setIsTyping(false);
-              addMessage("Ops, tive um erro ao salvar no banco de dados.", 'bot');
+          if (response.shouldRefreshApp && onActionSuccess) {
+              onActionSuccess();
           }
-          setFallbackState('IDLE');
-          setFallbackData({});
+
+      } catch (error) {
+          setIsTyping(false);
+          console.error("Bot Error:", error);
+          addMessage("Desculpe, tive um erro interno. Podemos recomeçar?", 'bot', [{ label: 'Reiniciar', value: 'menu' }]);
+          setBotState('MAIN_MENU');
+      }
+  };
+
+  const handleOptionClick = (opt: BotOption) => {
+      if (opt.action === 'link' && opt.value === 'login') {
+          onNavigate('login');
           return;
       }
       
-      // ... Outros estados do fallback (simplificado para brevity)
-      if (fallbackState !== 'IDLE') {
-          addMessage("Desculpe, o modo manual está limitado no momento. Vamos tentar o automático?", 'bot');
-          setFallbackState('IDLE');
-      }
+      // Add user selection as a message
+      addMessage(opt.label, 'user');
+      processBotTurn(botState, opt.value, botContext, true);
   };
 
-  const handleInputSubmit = async (e: React.FormEvent | null, textOverride?: string) => {
-    if (e) e.preventDefault();
-    const textToSend = textOverride || inputValue;
-    if (!textToSend.trim()) return;
+  const handleInputSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!inputValue.trim()) return;
 
-    if (fallbackState !== 'IDLE') {
-        handleFallbackFlowInput(textToSend);
-        setInputValue('');
-        return;
-    }
-
-    addMessage(textToSend, 'user');
+    addMessage(inputValue, 'user');
+    const textToSend = inputValue;
     setInputValue('');
-    setIsTyping(true);
-
-    try {
-        const historyContext = messages.slice(-10).map(m => ({
-            role: m.sender === 'user' ? 'user' : 'model',
-            parts: [{ text: m.text }]
-        })) as { role: 'user' | 'model', parts: [{ text: string }] }[];
-
-        // CALL GEMINI
-        const { text, refreshRequired } = await geminiService.sendMessage(
-            historyContext, 
-            textToSend, 
-            currentUserId 
-        );
-
-        setIsTyping(false);
-        addMessage(text, 'bot');
-
-        // STATE SYNC MAGIC
-        if (refreshRequired) {
-            toast.success("Dados atualizados com sucesso!");
-            if (onActionSuccess) {
-                console.log("Refreshing App Data from Chat...");
-                onActionSuccess();
-            }
-        }
-
-    } catch (err) {
-        setIsTyping(false);
-        console.error("AI Error", err);
-        const fallback = await activateBackupBrain(textToSend);
-        addMessage(fallback.message, 'bot', fallback.options);
-    }
+    
+    processBotTurn(botState, textToSend, botContext, false);
   };
 
   return (
     <div className="chat-layout" ref={chatContainerRef}>
-      {/* Modern Header */}
+      {/* Header */}
       <div className="chat-header-modern">
         <button onClick={() => onNavigate('home')} className="chat-back-btn">
           <ChevronLeft size={24} />
@@ -308,14 +157,13 @@ export const Chat: React.FC<ChatProps> = ({ onNavigate, onActionSuccess }) => {
                 src={botAvatarSrc} 
                 className="bot-avatar-img" 
                 alt="Bot" 
-                onError={(e) => { (e.target as HTMLImageElement).src = 'https://ui-avatars.com/api/?name=AI&background=FF8C42&color=fff'; }}
              />
           </div>
           <div className="chat-title-group">
-            <h3>Assistente IA</h3>
+            <h3>Assistente PetSpa</h3>
             <div className="chat-status">
-              <span className={`status-indicator ${fallbackState !== 'IDLE' ? 'bg-yellow-500' : ''}`}></span>
-              {fallbackState !== 'IDLE' ? 'Modo Manual' : (currentUserId ? 'Conectado' : 'Visitante')}
+              <span className="status-indicator"></span>
+              Online
             </div>
           </div>
         </div>
@@ -328,19 +176,20 @@ export const Chat: React.FC<ChatProps> = ({ onNavigate, onActionSuccess }) => {
           <div key={msg.id} className={`chat-row ${msg.sender === 'user' ? 'row-user' : 'row-bot'}`}>
             {msg.sender === 'bot' && (
                 <div className="chat-msg-avatar">
-                   <img src={botAvatarSrc} alt="bot" onError={(e) => { (e.target as HTMLImageElement).src = 'https://ui-avatars.com/api/?name=AI&background=FF8C42&color=fff'; }} />
+                   <img src={botAvatarSrc} alt="bot" />
                 </div>
             )}
             
             <div style={{maxWidth: '100%'}}>
                 <div className={`chat-bubble ${msg.sender === 'user' ? 'bubble-user' : 'bubble-bot'}`}>
+                  {/* Markdown-like simple bold parsing */}
                   <div dangerouslySetInnerHTML={{ __html: msg.text.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>').replace(/\n/g, '<br/>') }} />
                 </div>
                 
-                {msg.sender === 'bot' && msg.options && (
+                {msg.sender === 'bot' && msg.options && msg.options.length > 0 && (
                   <div className="chat-options-grid delay-options">
                     {msg.options.map((opt, idx) => (
-                      <button key={idx} className="chat-chip-btn" onClick={() => handleOption(opt)}>
+                      <button key={idx} className="chat-chip-btn" onClick={() => handleOptionClick(opt)}>
                         {opt.label}
                       </button>
                     ))}
@@ -361,19 +210,20 @@ export const Chat: React.FC<ChatProps> = ({ onNavigate, onActionSuccess }) => {
         <div ref={messagesEndRef} style={{ height: 1 }} />
       </div>
 
-      <form onSubmit={(e) => handleInputSubmit(e)} className="chat-footer-modern">
+      <form onSubmit={handleInputSubmit} className="chat-footer-modern">
          <div className="input-wrapper">
              <input 
                ref={inputRef}
-               type={inputType === 'password' ? 'password' : 'text'}
+               type="text"
                className="chat-input-modern" 
                value={inputValue} 
                onChange={e => setInputValue(e.target.value)}
-               placeholder={fallbackState !== 'IDLE' ? "Responda aqui..." : "Digite aqui..."}
+               placeholder={botState.includes('SELECT') ? "Selecione uma opção..." : "Digite aqui..."}
                autoFocus
+               disabled={isTyping}
              />
          </div>
-         <button type="submit" className="chat-send-btn" disabled={!inputValue.trim()}>
+         <button type="submit" className="chat-send-btn" disabled={!inputValue.trim() || isTyping}>
             <Send size={20} />
          </button>
       </form>
