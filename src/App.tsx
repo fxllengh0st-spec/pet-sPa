@@ -108,7 +108,6 @@ export default function App() {
       } else { 
           setProfile(null); 
           setPets([]); setApps([]); 
-          // Se não estiver em registro ou login, volta pra home ao fazer logout
           if (view !== 'register' && view !== 'login') setView('home'); 
       }
     });
@@ -193,11 +192,10 @@ export default function App() {
 
        {/* MOBILE TOP BAR (Logo Only) */}
        <div className="mobile-top-bar">
-          {/* Logo exibido normalmente (com cores), sem a prop variant="white" */}
           <Logo height={44} onClick={() => navigateTo('home')} />
        </div>
 
-       {/* MOBILE BOTTOM NAV (App-like Experience) */}
+       {/* MOBILE BOTTOM NAV */}
        <nav className="mobile-bottom-nav">
           <button className={`nav-item-mobile ${view === 'home' ? 'active' : ''}`} onClick={() => navigateTo('home')}>
              <Home size={24} strokeWidth={view === 'home' ? 2.5 : 2} />
@@ -232,7 +230,7 @@ export default function App() {
           )}
        </nav>
 
-       {/* DESKTOP NAV (Sticky Header) */}
+       {/* DESKTOP NAV */}
        <header className="desktop-nav">
           <Logo height={36} onClick={() => navigateTo('home')} />
           <nav className="nav-links-desktop">
@@ -260,7 +258,15 @@ export default function App() {
           {view === 'market' && <Marketplace onNavigate={navigateTo} />}
           {view === 'login' && <LoginPage onNavigate={navigateTo} setLoginStage={setLoginStage} />}
           {view === 'register' && <RegisterPage onNavigate={navigateTo} setLoginStage={setLoginStage} />}
-          {view === 'chat' && <Chat onNavigate={(r) => navigateTo(r as Route)} />}
+          
+          {/* Chat with State Sync capability */}
+          {view === 'chat' && (
+              <Chat 
+                  onNavigate={(r) => navigateTo(r as Route)} 
+                  onActionSuccess={() => { if(session) loadUserData(session.user.id); }} 
+              />
+          )}
+          
           {view === 'about' && <AboutUs onNavigate={navigateTo} />}
           {view === 'dashboard' && <Dashboard profile={profile} pets={pets} apps={apps} onNavigate={navigateTo} setSelectedPet={setSelectedPet} setSelectedAppointment={setSelectedAppointment} onOpenBooking={() => setShowBookingModal(true)} />}
           {view === 'admin' && <AdminPanel />}

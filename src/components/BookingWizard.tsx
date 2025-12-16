@@ -8,8 +8,7 @@ import { Pet, Service } from '../types';
 // Configuração de Negócio
 const BUSINESS_CONFIG = {
     OPEN_HOUR: 9, // 09:00
-    CLOSE_HOUR: 18, // 18:00 (Último agendamento deve terminar antes ou começar antes?) 
-                    // Vamos assumir que fecha as 18h, então ultimo slot de 30min seria 17:30
+    CLOSE_HOUR: 18, // 18:00
     WORK_DAYS: [1, 2, 3, 4, 5, 6], // 0=Dom (Fechado)
     SLOT_INTERVAL: 30 // minutos
 };
@@ -52,29 +51,40 @@ export const BookingWizard: React.FC<BookingWizardProps> = ({
         setSelectedDate(today.toISOString().split('T')[0]);
     }, []);
 
-    // Gera os slots de tempo baseados na data selecionada
+    // Gera os slots de tempo baseados na data selecionada E duração do serviço
     const timeSlots = useMemo(() => {
-        if (!selectedDate) return [];
+        if (!selectedDate || !wizService) return [];
 
         const slots: string[] = [];
         const now = new Date();
         const isToday = selectedDate === now.toISOString().split('T')[0];
         
-        // Loop das 09:00 até as 17:30 (considerando fechar as 18:00)
-        // Se o serviço for longo (ex: 60min), talvez devêssemos limitar o ultimo slot, 
-        // mas para UX simples, vamos listar os slots de inicio.
-        
         let currentHour = BUSINESS_CONFIG.OPEN_HOUR;
         let currentMinute = 0;
 
+        // Limite para o inicio do serviço: Horario Fechamento - Duração do Serviço
+        const serviceDurationHours = wizService.duration_minutes / 60;
+        const lastPossibleStartHour = BUSINESS_CONFIG.CLOSE_HOUR - serviceDurationHours;
+
+        // Loop até o fechamento
         while (currentHour < BUSINESS_CONFIG.CLOSE_HOUR) {
             // Formatar HH:mm
             const timeStr = `${currentHour.toString().padStart(2, '0')}:${currentMinute.toString().padStart(2, '0')}`;
             
+            // Verifica se o serviço terminaria DEPOIS do fechamento
+            // Convert current time to decimal hours (ex: 17:30 = 17.5)
+            const currentDecimalTime = currentHour + (currentMinute / 60);
+            
+            if (currentDecimalTime > lastPossibleStartHour) {
+                // Se começar agora, termina depois das 18h. Para o loop.
+                break;
+            }
+
             // Validação de "Passado" para o dia de hoje
             let isValid = true;
             if (isToday) {
-                const slotDate = new Date(`${selectedDate}T${timeStr}`);
+                // Use ISO string construction for consistent parsing
+                const slotDate = new Date(`${selectedDate}T${timeStr}:00`);
                 if (slotDate < now) isValid = false;
             }
 
@@ -90,14 +100,12 @@ export const BookingWizard: React.FC<BookingWizardProps> = ({
             }
         }
         return slots;
-    }, [selectedDate]);
+    }, [selectedDate, wizService]);
 
     // Validação de Dia da Semana (Domingo)
     const isDayValid = useMemo(() => {
         if (!selectedDate) return false;
-        const dt = new Date(selectedDate);
-        // getDay: 0 = Domingo. Ajuste de fuso pode ser tricky, mas YYYY-MM-DD costuma ser UTC ou local dependendo do browser.
-        // Vamos forçar o parse correto adicionando T12:00 para evitar problemas de timezone shift
+        // Fix de timezone simples: Setar hora para meio dia para evitar virada de dia por UTC
         const dayOfWeek = new Date(`${selectedDate}T12:00:00`).getDay();
         return BUSINESS_CONFIG.WORK_DAYS.includes(dayOfWeek);
     }, [selectedDate]);
@@ -249,7 +257,7 @@ export const BookingWizard: React.FC<BookingWizardProps> = ({
                             </div>
 
                             {/* Time Slot Grid */}
-                            {isDayValid && selectedDate && (
+                            {isDayValid && selectedDate && wizService && (
                                 <div className="fade-in">
                                     <label style={{display:'block', marginBottom:8, fontWeight:700, fontSize:'0.85rem', color:'var(--secondary)'}}>
                                         Horários Disponíveis ({timeSlots.length})
@@ -257,7 +265,7 @@ export const BookingWizard: React.FC<BookingWizardProps> = ({
                                     
                                     {timeSlots.length === 0 ? (
                                         <div className="p-4 bg-gray-100 rounded-lg text-center text-gray-500 text-sm">
-                                            Não há mais horários para hoje. Tente outra data.
+                                            Não há horários suficientes para este serviço hoje. (Fecha às 18h)
                                         </div>
                                     ) : (
                                         <div style={{

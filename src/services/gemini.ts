@@ -1,45 +1,39 @@
 import { GoogleGenAI, Content, Part, FunctionDeclaration, Type } from "@google/genai";
 import { api } from "./api";
-import { toLocalISOString } from "../utils/ui";
 
 const SYSTEM_INSTRUCTION = `
 Você é o **Assistente IA Oficial da PetSpa**.
 Seu objetivo é **REALIZAR AÇÕES** para o cliente.
 
 **REGRA DE OURO (IMPORTANTE):**
-NUNCA, em hipótese alguma, diga para o usuário "acessar a página tal" ou "ir no menu tal".
-VOCÊ deve fazer o trabalho. Se o usuário quer cadastrar um pet, PERGUNTE os dados e use a ferramenta \`create_pet\`. Se quer agendar, PERGUNTE os dados e use \`create_appointment\`.
+NUNCA diga para o usuário "acessar a página tal". VOCÊ deve fazer o trabalho.
+Se o usuário quer cadastrar um pet, PERGUNTE os dados e use a ferramenta \`create_pet\`.
+Se quer agendar, PERGUNTE os dados e use \`create_appointment\`.
 
 **Seu Fluxo de Trabalho:**
 1. O usuário pede algo (ex: "Quero agendar").
 2. Você verifica se tem todos os dados (Qual pet? Qual serviço? Qual horário?).
-3. Se faltar dados, **PERGUNTE** ao usuário (ex: "Para qual pet seria o agendamento?").
+3. Se faltar dados, **PERGUNTE** ao usuário.
 4. Quando tiver os dados, CHAME A FERRAMENTA (Tool).
-5. Confirme o sucesso.
+5. Confirme o sucesso e seja cordial.
 
 **Suas Ferramentas (Tools):**
-- \`list_my_pets\`: Use para saber os nomes e IDs dos pets do usuário.
-- \`list_services\`: Use para ver preços e IDs dos serviços (Banho, Tosa, etc).
-- \`create_pet\`: Cadastra um pet. Argumentos: userId, name, breed (opcional), weight (opcional).
-- \`create_appointment\`: Cria agendamento. Argumentos: userId, petId, serviceId, dateTimeIso.
-
-**Tom de Voz:**
-- Proativo: "Posso agendar para você, qual o nome do pet?"
-- Nunca dê desculpas de "não consigo acessar". Se a tool falhar, diga que houve um erro técnico, mas tente novamente.
+- \`list_my_pets\`: Consulta pets do usuário.
+- \`list_services\`: Consulta catálogo de serviços.
+- \`create_pet\`: Cadastra pet. Args: userId, name, breed (opcional), weight (opcional).
+- \`create_appointment\`: Cria agendamento. Args: userId, petId, serviceId, dateTimeIso.
 `;
-
-// --- Tool Definitions ---
 
 const toolsDef = [
   {
     functionDeclarations: [
       {
         name: "list_services",
-        description: "Lista todos os serviços disponíveis (Banho, Tosa, etc), seus preços e IDs.",
+        description: "Lista todos os serviços disponíveis (Banho, Tosa, etc), preços e IDs.",
       },
       {
         name: "list_my_pets",
-        description: "Lista os pets cadastrados do usuário atual para encontrar seus nomes e IDs.",
+        description: "Lista os pets cadastrados do usuário atual.",
         parameters: {
           type: Type.OBJECT,
           properties: {
@@ -56,8 +50,8 @@ const toolsDef = [
           properties: {
             userId: { type: Type.STRING, description: "ID do dono do pet" },
             name: { type: Type.STRING, description: "Nome do pet" },
-            breed: { type: Type.STRING, description: "Raça do pet (opcional)" },
-            weight: { type: Type.NUMBER, description: "Peso aproximado (opcional)" },
+            breed: { type: Type.STRING, description: "Raça do pet" },
+            weight: { type: Type.NUMBER, description: "Peso aproximado" },
           },
           required: ["userId", "name"]
         }
@@ -69,9 +63,9 @@ const toolsDef = [
           type: Type.OBJECT,
           properties: {
             userId: { type: Type.STRING, description: "ID do usuário" },
-            petId: { type: Type.STRING, description: "ID do pet (obtido via list_my_pets)" },
-            serviceId: { type: Type.NUMBER, description: "ID do serviço (obtido via list_services)" },
-            dateTimeIso: { type: Type.STRING, description: "Data e hora no formato ISO 8601 (ex: 2024-12-25T14:00:00)" }
+            petId: { type: Type.STRING, description: "ID do pet" },
+            serviceId: { type: Type.NUMBER, description: "ID do serviço" },
+            dateTimeIso: { type: Type.STRING, description: "Data e hora ISO 8601 (ex: 2024-12-25T14:00:00)" }
           },
           required: ["userId", "petId", "serviceId", "dateTimeIso"]
         }
@@ -80,20 +74,30 @@ const toolsDef = [
   }
 ];
 
-// --- Execution Logic ---
+// Interface interna para resposta da Tool
+interface ToolExecutionResult {
+    result: any;
+    refreshRequired: boolean; // Flag para indicar se o App deve recarregar dados
+}
 
-async function executeFunction(name: string, args: any): Promise<any> {
+async function executeFunction(name: string, args: any): Promise<ToolExecutionResult> {
   console.log(`[Gemini Tool] Executing ${name}`, args);
   try {
     switch (name) {
       case "list_services":
         const services = await api.booking.getServices();
-        return services.map(s => ({ id: s.id, name: s.name, price: s.price, duration: s.duration_minutes }));
+        return { 
+            result: services.map(s => ({ id: s.id, name: s.name, price: s.price, duration: s.duration_minutes })),
+            refreshRequired: false
+        };
 
       case "list_my_pets":
-        if (!args.userId) return { error: "Usuário não identificado." };
+        if (!args.userId) return { result: { error: "Usuário não identificado." }, refreshRequired: false };
         const pets = await api.booking.getMyPets(args.userId);
-        return pets.map(p => ({ id: p.id, name: p.name, breed: p.breed }));
+        return { 
+            result: pets.map(p => ({ id: p.id, name: p.name, breed: p.breed })),
+            refreshRequired: false
+        };
 
       case "create_pet":
         await api.booking.createPet(args.userId, { 
@@ -101,11 +105,13 @@ async function executeFunction(name: string, args: any): Promise<any> {
           breed: args.breed, 
           weight: args.weight 
         });
-        return { success: true, message: `Pet ${args.name} cadastrado com sucesso!` };
+        return { 
+            result: { success: true, message: `Pet ${args.name} cadastrado com sucesso!` },
+            refreshRequired: true // MUDANÇA DE ESTADO
+        };
 
       case "create_appointment":
-        // Calculate end time based on service duration (default 60 min if service fetch fails logic here, but simpler for AI)
-        // For robustness, we re-fetch service to get duration
+        // Verifica duração para calcular fim
         const serviceList = await api.booking.getServices();
         const service = serviceList.find(s => s.id === args.serviceId);
         const duration = service ? service.duration_minutes : 60;
@@ -113,15 +119,27 @@ async function executeFunction(name: string, args: any): Promise<any> {
         const start = new Date(args.dateTimeIso);
         const end = new Date(start.getTime() + duration * 60000);
         
+        // Verifica disponibilidade antes de agendar (Camada de segurança extra na IA)
+        const isAvailable = await api.booking.checkAvailability(start.toISOString(), end.toISOString());
+        if (!isAvailable) {
+            return {
+                result: { error: "Horário indisponível. Peça para o usuário escolher outro horário." },
+                refreshRequired: false
+            };
+        }
+
         await api.booking.createAppointment(args.userId, args.petId, args.serviceId, start.toISOString(), end.toISOString());
-        return { success: true, message: "Agendamento realizado!", details: { service: service?.name, start: start.toLocaleString() } };
+        return { 
+            result: { success: true, message: "Agendamento realizado!", details: { service: service?.name, start: start.toLocaleString() } },
+            refreshRequired: true // MUDANÇA DE ESTADO
+        };
 
       default:
-        return { error: "Função desconhecida" };
+        return { result: { error: "Função desconhecida" }, refreshRequired: false };
     }
   } catch (e: any) {
     console.error("Tool Execution Error", e);
-    return { error: e.message || "Erro ao executar ação." };
+    return { result: { error: e.message || "Erro ao executar ação." }, refreshRequired: false };
   }
 }
 
@@ -137,25 +155,22 @@ const getAiClient = () => {
 export const geminiService = {
   /**
    * Main entry point for Chat interaction
+   * Retorna objeto com texto e flag de refresh
    */
   async sendMessage(
       history: { role: 'user' | 'model', parts: [{ text: string }] }[], 
       message: string,
       userId?: string
-  ) {
-    // Removed the internal try-catch to allow the error to propagate to the Chat component.
-    // This allows the Chat component to activate the "Backup Brain".
+  ): Promise<{ text: string, refreshRequired: boolean }> {
     
     const ai = getAiClient();
-    const modelId = 'gemini-2.5-flash';
+    const modelId = 'gemini-2.5-flash'; 
     
-    // Prepare history
     const chatHistory: Content[] = history.map(h => ({
       role: h.role,
       parts: h.parts as Part[]
     }));
 
-    // Initialize Chat with Tools
     const chat = ai.chats.create({
       model: modelId,
       config: {
@@ -166,8 +181,6 @@ export const geminiService = {
       history: chatHistory
     });
 
-    // 1. Send user message
-    // We append userId to the context implicitly if available, so the model knows it for tool calls
     let msgToSend = message;
     if (userId) {
       msgToSend += ` [System Context: Current User ID is "${userId}"]`;
@@ -175,32 +188,33 @@ export const geminiService = {
 
     let result = await chat.sendMessage({ message: msgToSend });
     
-    // 2. Loop for Function Calls (Multi-turn tool use)
-    // The model might want to call multiple tools or call a tool and then speak.
-    // We loop while there are function calls.
-    
-    // We limit loops to avoid infinite recursion
+    let shouldRefreshApp = false;
     let maxTurns = 5; 
     
+    // Function Call Loop
     while (result.functionCalls && result.functionCalls.length > 0 && maxTurns > 0) {
         maxTurns--;
-        const call = result.functionCalls[0]; // Handle one call at a time for simplicity (or iterate all)
+        const call = result.functionCalls[0];
         
-        // Execute tool
-        const functionResponse = await executeFunction(call.name, call.args);
+        // Execute tool and capture refresh flag
+        const { result: funcResult, refreshRequired } = await executeFunction(call.name, call.args);
+        
+        if (refreshRequired) shouldRefreshApp = true;
         
         // Send result back to model
         result = await chat.sendMessage({
           message: [{
             functionResponse: {
               name: call.name,
-              response: { result: functionResponse }
+              response: { result: funcResult }
             }
           }]
         });
     }
 
-    // 3. Final Text Response
-    return result.text || "Desculpe, processei a ação mas fiquei sem palavras!";
+    return {
+        text: result.text || "Desculpe, processei a ação mas fiquei sem palavras!",
+        refreshRequired: shouldRefreshApp
+    };
   }
 };
