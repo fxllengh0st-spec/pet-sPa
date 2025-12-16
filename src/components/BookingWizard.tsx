@@ -45,10 +45,11 @@ export const BookingWizard: React.FC<BookingWizardProps> = ({
     
     const toast = useToast();
 
-    // Inicializa a data com hoje
+    // Inicializa a data com hoje (Local Time)
     useEffect(() => {
         const today = new Date();
-        setSelectedDate(today.toISOString().split('T')[0]);
+        // toLocaleDateString('en-CA') returns YYYY-MM-DD in local time
+        setSelectedDate(today.toLocaleDateString('en-CA'));
     }, []);
 
     // Gera os slots de tempo baseados na data selecionada E duração do serviço
@@ -57,7 +58,9 @@ export const BookingWizard: React.FC<BookingWizardProps> = ({
 
         const slots: string[] = [];
         const now = new Date();
-        const isToday = selectedDate === now.toISOString().split('T')[0];
+        
+        // Fix Timezone: Compare local date strings
+        const isToday = selectedDate === now.toLocaleDateString('en-CA');
         
         let currentHour = BUSINESS_CONFIG.OPEN_HOUR;
         let currentMinute = 0;
@@ -75,17 +78,21 @@ export const BookingWizard: React.FC<BookingWizardProps> = ({
             // Convert current time to decimal hours (ex: 17:30 = 17.5)
             const currentDecimalTime = currentHour + (currentMinute / 60);
             
-            if (currentDecimalTime > lastPossibleStartHour) {
-                // Se começar agora, termina depois das 18h. Para o loop.
+            // Allow equality (start exactly at last possible moment)
+            // Use epsilon for float comparison safety
+            if (currentDecimalTime > lastPossibleStartHour + 0.001) {
                 break;
             }
 
             // Validação de "Passado" para o dia de hoje
             let isValid = true;
             if (isToday) {
-                // Use ISO string construction for consistent parsing
+                // Creates date object in local time
                 const slotDate = new Date(`${selectedDate}T${timeStr}:00`);
-                if (slotDate < now) isValid = false;
+                // Buffer de 30min para agendamento em cima da hora
+                const slotBuffer = new Date(now.getTime() + 30 * 60000);
+                
+                if (slotDate < slotBuffer) isValid = false;
             }
 
             if (isValid) {
@@ -242,7 +249,7 @@ export const BookingWizard: React.FC<BookingWizardProps> = ({
                                     type="date" 
                                     className="input-lg"
                                     value={selectedDate} 
-                                    min={new Date().toISOString().split('T')[0]}
+                                    min={new Date().toLocaleDateString('en-CA')}
                                     onChange={(e) => {
                                         setSelectedDate(e.target.value);
                                         setSelectedTime(null); // Reset time on date change
@@ -265,7 +272,7 @@ export const BookingWizard: React.FC<BookingWizardProps> = ({
                                     
                                     {timeSlots.length === 0 ? (
                                         <div className="p-4 bg-gray-100 rounded-lg text-center text-gray-500 text-sm">
-                                            Não há horários suficientes para este serviço hoje. (Fecha às 18h)
+                                            {new Date(`${selectedDate}T00:00:00`) < new Date(new Date().setHours(0,0,0,0)) ? 'Data passada.' : 'Sem horários disponíveis hoje.'}
                                         </div>
                                     ) : (
                                         <div style={{

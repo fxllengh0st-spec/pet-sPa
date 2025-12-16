@@ -117,6 +117,16 @@ async function executeFunction(name: string, args: any): Promise<ToolExecutionRe
         const duration = service ? service.duration_minutes : 60;
         
         const start = new Date(args.dateTimeIso);
+        const now = new Date();
+        
+        // Prevent booking in the past
+        if (start < now) {
+            return {
+                result: { error: "Não é possível agendar em uma data/hora que já passou." },
+                refreshRequired: false
+            };
+        }
+
         const end = new Date(start.getTime() + duration * 60000);
         
         // Verifica disponibilidade antes de agendar (Camada de segurança extra na IA)
