@@ -1,61 +1,57 @@
 
-
 /* =========================================
-   TOKENS (Design System) - VIBRANT BRAND UPDATE
+   TOKENS (Design System) - HIGH CONTRAST UPDATE
    ========================================= */
 
 :root {
-  /* Paleta Vibrante Baseada na Imagem da Marca */
-  
-  /* Roxo (Primary) - Sofisticação e "Spa" */
+  /* Brand Palette */
   --primary: #9B59B6;       
   --primary-hover: #8E44AD;
   --primary-glow: rgba(155, 89, 182, 0.4); 
   
-  /* Ciano (Secondary Action) - Limpeza e Frescor */
   --brand-cyan: #00CEC9;
-  
-  /* Amarelo (Accent/Warning) - Energia */
   --brand-yellow: #FDCB6E;
-  
-  /* Verde (Success) - Saúde */
   --brand-green: #00B894;
 
-  /* Neutros */
+  /* Neutrals */
   --secondary: #2D3436;     /* Texto Escuro */
   --secondary-light: #636E72;
   
-  --accent: #FDF2FA;        /* Roxo muito pálido para fundos de ícones */
+  --accent: #FDF2FA;        /* Roxo muito pálido */
   --surface: #FFFFFF;
   
-  /* AJUSTE DE CONTRASTE: Fundo levemente mais escuro para destacar cards brancos */
-  --bg-app: #EEF2F6;        
-  --bg-input: #F0F2F5;      
+  /* --- CORREÇÃO DE CONTRASTE --- */
+  /* Fundo da aplicação agora é um cinza frio, não branco puro */
+  --bg-app: #EFF3F8;        
+  /* Fundo de inputs levemente diferente do branco para indicar interatividade */
+  --bg-input: #F8FAFC;      
+  /* Borda padrão para delimitar áreas brancas */
+  --border-light: #E2E8F0;  
   
   --text-main: #2D3436;
-  --text-body: #636E72;     
+  --text-body: #566573;
   --text-muted: #95a5a6;
   
-  /* Status Colors (Updated to match Brand Palette) */
-  --status-pending-bg: #FFF8E1; --status-pending-text: #F39C12; /* Amarelo/Laranja */
-  --status-confirmed-bg: #E0F2F1; --status-confirmed-text: #00B894; /* Verde Marca */
-  --status-progress-bg: #E0F7FA; --status-progress-text: #00CEC9; /* Ciano Marca */
-  --status-completed-bg: #F3E5F5; --status-completed-text: #9B59B6; /* Roxo Marca */
-  --status-cancelled-bg: #FFEBEE; --status-cancelled-text: #FF7675; /* Vermelho Suave */
+  /* Status Colors */
+  --status-pending-bg: #FFF8E1; --status-pending-text: #F39C12;
+  --status-confirmed-bg: #E0F2F1; --status-confirmed-text: #00B894;
+  --status-progress-bg: #E0F7FA; --status-progress-text: #00CEC9;
+  --status-completed-bg: #F3E5F5; --status-completed-text: #9B59B6;
+  --status-cancelled-bg: #FFEBEE; --status-cancelled-text: #FF7675;
 
-  /* Formas */
+  /* Dimensions */
   --radius-sm: 8px;
   --radius-md: 16px;        
   --radius-lg: 24px;
   --radius-pill: 999px;     
   
-  /* Sombras - Intensificadas levemente para contraste */
-  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.04);
-  --shadow-card: 0 4px 20px rgba(140, 100, 170, 0.12), 0 1px 3px rgba(0,0,0,0.05);
-  --shadow-float: 0 10px 25px -5px rgba(155, 89, 182, 0.3); 
-  --shadow-inner: inset 0 1px 3px rgba(0,0,0,0.03);
+  /* Sombras Refinadas */
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.1);
+  --shadow-card: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --shadow-float: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  --shadow-inner: inset 0 2px 4px 0 rgba(0, 0, 0, 0.06);
   
-  /* Z-Index Hierarchy */
+  /* Z-Index */
   --z-back: 0;
   --z-normal: 10;
   --z-fixed: 100;
