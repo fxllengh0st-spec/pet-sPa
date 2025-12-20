@@ -30,6 +30,7 @@ export default function App() {
   const [view, setView] = useState<Route>('home');
   const [session, setSession] = useState<any>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
+  const [isLoadingData, setIsLoadingData] = useState(false);
   
   // Theme State
   const [theme, setTheme] = useState<'light' | 'dark'>(() => {
@@ -77,18 +78,19 @@ export default function App() {
         
         if (existingSession) {
             setSession(existingSession);
-            loadProfile(existingSession.user.id);
-            loadUserData(existingSession.user.id);
+            // Sequencial para garantir que o Dashboard tenha tudo
+            await loadProfile(existingSession.user.id);
+            await loadUserData(existingSession.user.id);
         }
     };
     initApp();
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
       setSession(session);
       if (session) {
-         if (loginStage === 'idle' && !profile) {
-             loadProfile(session.user.id);
-             loadUserData(session.user.id);
+         if (loginStage === 'idle') {
+             await loadProfile(session.user.id);
+             await loadUserData(session.user.id);
          }
       } else { 
           setProfile(null); 
@@ -103,10 +105,11 @@ export default function App() {
     try {
       const p = await api.auth.getUserProfile(uid);
       setProfile(p);
-    } catch (e) { console.error(e); }
+    } catch (e) { console.error("Erro perfil:", e); }
   };
 
   const loadUserData = async (uid: string) => {
+      setIsLoadingData(true);
       try {
          const [p, a, s, subs] = await Promise.all([
              api.booking.getMyPets(uid),
@@ -114,12 +117,17 @@ export default function App() {
              api.booking.getServices(),
              api.packages.getMySubscriptions(uid)
          ]);
-         setPets(p);
-         setApps(a);
-         setServices(s);
+         setPets(p || []);
+         setApps(a || []);
+         setServices(s || []);
          setSubscriptions(subs || []);
          return { pets: p, apps: a, subscriptions: subs };
-      } catch (e) { console.error(e); return { pets: [], apps: [], subscriptions: [] }; }
+      } catch (e) { 
+          console.error("Erro carregamento dados:", e); 
+          return { pets: [], apps: [], subscriptions: [] }; 
+      } finally {
+          setIsLoadingData(false);
+      }
   };
 
   const handleLogout = async () => {
@@ -146,7 +154,7 @@ export default function App() {
           session={session}
           onComplete={(hasPets) => { 
               setLoginStage('idle'); 
-              navigateTo('dashboard'); // Unified view
+              navigateTo('dashboard');
               if (!hasPets) {
                   setTimeout(() => {
                       setShowPetWizard(true);
@@ -208,7 +216,6 @@ export default function App() {
              <span>Ajudar</span>
           </button>
           
-          {/* FAB Central Button - Toggles Chat Modal */}
           <button className={`nav-item-mobile fab ${isChatOpen ? 'active' : ''}`} onClick={toggleChat}>
              <Sparkles size={24} fill={isChatOpen ? 'currentColor' : 'none'} />
           </button>
@@ -249,12 +256,10 @@ export default function App() {
              <a href="#" className={`nav-link-item ${view === 'packages' && 'active'}`} onClick={() => navigateTo('packages')}>Clube VIP</a>
              <a href="#" className={`nav-link-item ${view === 'market' && 'active'}`} onClick={() => navigateTo('market')}>Adoção</a>
              
-             {/* Theme Toggle Desktop */}
              <button className="nav-link-item theme-icon-desktop" onClick={toggleTheme} title="Trocar Tema">
                 {theme === 'light' ? <Moon size={20} /> : <Sun size={20} />}
              </button>
 
-             {/* Chat button toggles modal now */}
              <a href="#" className={`nav-link-item nav-link-cta ${isChatOpen && 'active'}`} onClick={toggleChat}>Assistente IA</a>
              {session ? (
                <>
@@ -285,6 +290,7 @@ export default function App() {
           )}
           
           {view === 'about' && <AboutUs onNavigate={navigateTo} />}
+          
           {(view === 'dashboard' || view === 'user-profile') && (
             <Dashboard 
                 profile={profile} 
@@ -298,6 +304,7 @@ export default function App() {
                 onAddPet={() => setShowPetWizard(true)}
             />
           )}
+          
           {view === 'admin' && <AdminPanel />}
           {view === 'pet-details' && <PetDetailsView selectedPet={selectedPet} apps={apps} subscriptions={subscriptions} onNavigate={navigateTo} setSelectedAppointment={setSelectedAppointment} />}
           {view === 'appointment-details' && <AppointmentDetailsView selectedAppointment={selectedAppointment} onNavigate={navigateTo} />}
