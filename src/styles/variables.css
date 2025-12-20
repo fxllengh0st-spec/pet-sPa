@@ -14,17 +14,17 @@
   --brand-yellow: #FDCB6E;
   --brand-green: #00B894;
 
-  /* Temas de Superfície - LIGHT MODE (Ajustado para Contraste) */
-  --bg-app: #F1F3F5;        /* Cinza neutro moderno para contraste com cards brancos */
+  /* Temas de Superfície - LIGHT MODE (Default) */
+  --bg-app: #F4F1F6;        
   --surface: #FFFFFF;
-  --surface-alt: #E9ECEF;   
-  --bg-input: #E9ECEF;      /* Inputs ligeiramente mais escuros para destaque */
-  --border-light: #DEE2E6;  /* Bordas mais nítidas */
+  --surface-alt: #FAFAFA;   
+  --bg-input: #F8FAFC;      
+  --border-light: #E2E8F0;  
   --text-main: #2D3436;
-  --text-body: #495057;     
-  --text-muted: #6C757D;
-  --secondary: #212529;
-  --secondary-light: #495057;
+  --text-body: #566573;     
+  --text-muted: #95a5a6;
+  --secondary: #2D3436;
+  --secondary-light: #636E72;
   --accent: #FDF2FA;
 
   /* Status Colors */
@@ -34,10 +34,10 @@
   --status-completed-bg: #F3E5F5; --status-completed-text: #9B59B6; 
   --status-cancelled-bg: #FFEBEE; --status-cancelled-text: #FF7675; 
 
-  /* Sombras (Ajustadas para o novo fundo) */
-  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.08);
-  --shadow-card: 0 12px 24px -10px rgba(0, 0, 0, 0.12);
-  --shadow-float: 0 20px 40px -5px rgba(155, 89, 182, 0.2);
+  /* Sombras */
+  --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.05);
+  --shadow-card: 0 10px 30px -5px rgba(0, 0, 0, 0.05);
+  --shadow-float: 0 20px 40px -5px rgba(155, 89, 182, 0.15);
   
   /* Outros */
   --radius-sm: 8px;
@@ -65,7 +65,7 @@
   --secondary-light: #94A3B8;
   --accent: #2e1e3b;        /* Roxo profundo pálido */
 
-  /* Sombras para Modo Escuro */
+  /* Sombras para Modo Escuro (mais suaves) */
   --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.2);
   --shadow-card: 0 10px 30px -5px rgba(0, 0, 0, 0.3);
   --shadow-float: 0 20px 40px -5px rgba(0, 0, 0, 0.5);
