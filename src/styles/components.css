@@ -1,6 +1,4 @@
 
-
-
 /* =========================================
    UI COMPONENTS
    ========================================= */
@@ -13,7 +11,7 @@
   box-shadow: var(--shadow-card);
   
   /* Borda Sutil para definição em telas LCD/Retina */
-  border: 1px solid rgba(255, 255, 255, 0.5); /* Borda "Glassy" */
+  border: 1px solid var(--border-light); 
   position: relative;
   
   margin-bottom: 16px;
@@ -26,7 +24,7 @@
 .card:hover {
     transform: translateY(-3px);
     box-shadow: var(--shadow-float);
-    border-color: rgba(155, 89, 182, 0.2); 
+    border-color: var(--primary); 
     z-index: 2;
 }
 
@@ -39,7 +37,7 @@
     color: white; border: none;
     display: flex; flex-direction: column; justify-content: space-between;
     min-height: 140px; 
-    box-shadow: 0 15px 35px -5px rgba(155, 89, 182, 0.4); /* Sombra mais intensa e colorida */
+    box-shadow: 0 15px 35px -5px rgba(155, 89, 182, 0.4); 
 }
 
 /* --- TRACKING / ACTIVE STATUS CARD (NEW) --- */
@@ -50,7 +48,7 @@
     margin-bottom: 24px;
     position: relative;
     overflow: hidden;
-    box-shadow: 0 15px 35px -5px rgba(0,0,0,0.15); /* Sombra profunda */
+    box-shadow: 0 15px 35px -5px rgba(0,0,0,0.15); 
     border: 1px solid rgba(255,255,255,0.2);
     display: flex;
     flex-direction: column;
@@ -94,15 +92,12 @@
 
 .status-bg-pending {
     background: linear-gradient(135deg, #F39C12, #F1C40F);
-    box-shadow: 0 10px 20px rgba(243, 156, 18, 0.3);
 }
 .status-bg-confirmed {
     background: linear-gradient(135deg, #00B894, #00CEC9);
-    box-shadow: 0 10px 20px rgba(0, 184, 148, 0.3);
 }
 .status-bg-in_progress {
     background: linear-gradient(135deg, #0984E3, #74B9FF);
-    box-shadow: 0 10px 20px rgba(9, 132, 227, 0.3);
 }
 
 .active-status-header {
@@ -128,15 +123,15 @@
 .history-list-item {
     display: flex; align-items: center; justify-content: space-between;
     padding: 16px;
-    border-bottom: 1px solid #F1F5F9;
+    border-bottom: 1px solid var(--border-light);
     transition: background 0.2s;
 }
 .history-list-item:last-child { border-bottom: none; }
-.history-list-item:hover { background: #F8FAFC; }
+.history-list-item:hover { background: var(--surface-alt); }
 
 .history-icon-box {
     width: 44px; height: 44px; border-radius: 12px;
-    background: #F1F5F9; color: var(--secondary);
+    background: var(--bg-app); color: var(--secondary);
     display: flex; align-items: center; justify-content: center;
     margin-right: 16px; flex-shrink: 0;
 }
@@ -202,36 +197,24 @@
 }
 
 .btn-secondary {
-    background: var(--secondary); color: white;
-    box-shadow: 0 4px 6px -1px rgba(45, 52, 54, 0.3);
+    background: var(--secondary); color: var(--surface);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
 }
-.btn-secondary:hover { transform: translateY(-1px); box-shadow: 0 10px 15px -3px rgba(45, 52, 54, 0.4); }
+.btn-secondary:hover { transform: translateY(-1px); }
 
 .btn-white {
     background: white; color: var(--primary);
     font-weight: 800;
     box-shadow: 0 4px 10px rgba(0,0,0,0.1);
 }
-.cta-card-gradient .btn-white {
-    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-}
 
 .btn-ghost { 
     background: transparent; color: var(--secondary); 
-    border: 1px solid #CBD5E0; 
+    border: 1px solid var(--border-light); 
 }
 .btn-ghost:hover { 
-    border-color: var(--secondary); 
-    background: white;
-}
-.btn-ghost-white {
-    background: rgba(255,255,255,0.2); color: white;
-    box-shadow: none;
-    backdrop-filter: blur(4px);
-    border: 1px solid rgba(255,255,255,0.3);
-}
-.btn-ghost-white:hover {
-    background: rgba(255,255,255,0.3); color: white;
+    border-color: var(--primary); 
+    background: var(--surface-alt);
 }
 
 .btn-sm { height: 36px; padding: 0 16px; font-size: 0.85rem; }
@@ -240,7 +223,7 @@
     border: none; border-radius: 50%; 
     width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; 
     cursor: pointer; transition: all 0.2s;
-    background: white; box-shadow: var(--shadow-sm); color: var(--secondary);
+    background: var(--surface); box-shadow: var(--shadow-sm); color: var(--secondary);
     border: 1px solid var(--border-light); 
 }
 .btn-icon-sm:hover { 
@@ -249,30 +232,27 @@
     box-shadow: var(--shadow-card); 
     border-color: var(--primary); 
 }
-.btn-icon-brand { background: var(--accent); color: var(--primary); border-color: transparent; }
 
 /* Inputs */
 .form-group { margin-bottom: 16px; }
 label { display: block; font-weight: 700; margin-bottom: 6px; color: var(--secondary); font-size: 0.85rem; margin-left: 4px; }
 input, select, textarea {
-  width: 100%; height: 48px; /* Aumentado para melhor toque no mobile */
+  width: 100%; height: 48px; 
   padding: 0 16px;
-  /* Borda mais visível e fundo com contraste contra o card branco */
-  border: 1px solid #CBD5E1; 
+  border: 1px solid var(--border-light); 
   border-radius: 12px; 
-  background: var(--bg-input); /* Fundo sutil para input dentro de card branco */
+  background: var(--bg-input); 
   font-family: 'Inter', sans-serif; font-size: 0.95rem; color: var(--text-main);
   transition: all 0.2s ease;
-  box-shadow: inset 0 2px 4px rgba(0,0,0,0.02); /* Sombra interna sutil */
   caret-color: var(--primary);
 }
 .input-lg { height: 54px; font-size: 1rem; }
 input:focus, select:focus, textarea:focus { 
-    outline: none; background: white; 
+    outline: none; background: var(--surface); 
     border-color: var(--primary); 
     box-shadow: 0 0 0 4px var(--primary-glow);
 }
-input::placeholder { color: #A0AEC0; opacity: 1; }
+input::placeholder { color: var(--text-muted); opacity: 1; }
 
 /* Badges & Tags */
 .status-badge {
@@ -280,77 +260,11 @@ input::placeholder { color: #A0AEC0; opacity: 1; }
     font-size: 0.7rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em;
     display: inline-block; white-space: nowrap;
 }
-.tag-pending { background: var(--status-pending-bg); color: var(--status-pending-text); border: 1px solid rgba(243, 156, 18, 0.2); }
-.tag-confirmed { background: var(--status-confirmed-bg); color: var(--status-confirmed-text); border: 1px solid rgba(0, 184, 148, 0.2); }
-.tag-in_progress { background: var(--status-progress-bg); color: var(--status-progress-text); border: 1px solid rgba(0, 206, 201, 0.2); }
-.tag-completed { background: var(--status-completed-bg); color: var(--status-completed-text); border: 1px solid rgba(155, 89, 182, 0.2); }
-.tag-cancelled { background: var(--status-cancelled-bg); color: var(--status-cancelled-text); border: 1px solid rgba(255, 118, 117, 0.2); }
+.tag-pending { background: var(--status-pending-bg); color: var(--status-pending-text); }
+.tag-confirmed { background: var(--status-confirmed-bg); color: var(--status-confirmed-text); }
+.tag-in_progress { background: var(--status-progress-bg); color: var(--status-progress-text); }
+.tag-completed { background: var(--status-completed-bg); color: var(--status-completed-text); }
+.tag-cancelled { background: var(--status-cancelled-bg); color: var(--status-cancelled-text); }
 
-.tag-pill { background: #EDF2F7; padding: 4px 10px; border-radius: 16px; font-size: 0.75rem; color: var(--text-body); border: 1px solid #E2E8F0; }
-.tag-pill-price { background: var(--status-confirmed-bg); color: var(--brand-green); padding: 4px 10px; border-radius: 16px; font-size: 0.75rem; font-weight: 700; border: 1px solid rgba(0, 184, 148, 0.2); }
-
-/* --- DATA TABLES --- */
-.table-wrapper {
-    width: 100%;
-    overflow-x: auto;
-    border-radius: var(--radius-md);
-    border: 1px solid var(--border-light);
-}
-
-.data-table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 0.9rem;
-    background: white;
-}
-
-.data-table th {
-    background: #F8FAFC;
-    color: var(--secondary);
-    font-weight: 700;
-    text-align: left;
-    padding: 14px 16px;
-    border-bottom: 2px solid #E2E8F0;
-    white-space: nowrap;
-}
-
-.data-table td {
-    padding: 12px 16px;
-    border-bottom: 1px solid #F1F5F9;
-    color: var(--text-body);
-}
-
-.data-table tr:last-child td { border-bottom: none; }
-.data-table tr:hover { background-color: #F8FAFC; }
-
-/* --- TABS --- */
-.admin-tabs {
-    display: flex;
-    gap: 12px;
-    margin-bottom: 24px;
-    overflow-x: auto;
-    padding-bottom: 4px;
-}
-
-.tab-btn {
-    display: flex; align-items: center;
-    padding: 8px 16px;
-    border-radius: 20px;
-    background: white;
-    border: 1px solid #CBD5E0;
-    color: var(--text-body);
-    font-weight: 600;
-    font-size: 0.9rem;
-    cursor: pointer;
-    transition: all 0.2s;
-    white-space: nowrap;
-}
-
-.tab-btn:hover { background: #F8FAFC; color: var(--secondary); border-color: var(--secondary); }
-
-.tab-btn.active {
-    background: var(--secondary);
-    color: white;
-    border-color: var(--secondary);
-    box-shadow: 0 4px 6px -1px rgba(45, 52, 54, 0.3);
-}
+.tag-pill { background: var(--surface-alt); padding: 4px 10px; border-radius: 16px; font-size: 0.75rem; color: var(--text-body); border: 1px solid var(--border-light); }
+.tag-pill-price { background: var(--status-confirmed-bg); color: var(--brand-green); padding: 4px 10px; border-radius: 16px; font-size: 0.75rem; font-weight: 700; }

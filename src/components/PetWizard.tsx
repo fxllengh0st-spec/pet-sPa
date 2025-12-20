@@ -28,42 +28,60 @@ export const PetWizard: React.FC<PetWizardProps> = ({ onClose, session, onSucces
     // Optimized Image Upload with Compression
     const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
-        if (file) {
-            setIsCompressing(true);
-            try {
-                // Comprime a imagem antes de setar no estado (Economia de Storage)
-                const compressedBase64 = await compressImage(file);
-                setAvatarUrl(compressedBase64);
-                toast.success('Foto processada e otimizada! 📸');
-            } catch (err) {
-                console.error("Erro ao comprimir imagem", err);
-                toast.error('Erro ao processar imagem. Tente outra.');
-            } finally {
-                setIsCompressing(false);
-            }
+        if (!file) return;
+
+        setIsCompressing(true);
+        try {
+            // Comprime a imagem antes de setar no estado (Economia de Storage)
+            const compressedBase64 = await compressImage(file);
+            setAvatarUrl(compressedBase64);
+            toast.success('Foto processada e otimizada! 📸');
+        } catch (err) {
+            console.error("Erro ao comprimir imagem:", err);
+            toast.error('Não conseguimos processar essa foto. Tente outra ou continue sem foto.');
+        } finally {
+            setIsCompressing(false);
         }
     };
 
     const handleSave = async () => {
-        if (!name) return;
+        if (!name.trim()) {
+            toast.error("O nome do pet é obrigatório.");
+            setStep(1);
+            return;
+        }
+
         setIsSaving(true);
         try {
+            // Saneamento dos dados para evitar erros de tipo no PostgreSQL
+            // 1. Tratar o peso (aceitar vírgula e garantir número válido ou null)
+            const cleanWeight = weight ? parseFloat(weight.replace(',', '.')) : null;
+            
+            // 2. Montar o payload garantindo null em strings vazias (essencial para o campo DATE)
             const petPayload = {
-                name,
-                breed: breed || null,
-                birth_date: birthDate || null,
-                weight: weight ? parseFloat(weight) : null,
-                notes: notes || null,
-                avatar_url: avatarUrl || null
+                name: name.trim(),
+                breed: breed.trim() || null,
+                birth_date: birthDate || null, // Se for "", o Supabase/Postgres reclama se não for null
+                weight: isNaN(Number(cleanWeight)) ? null : cleanWeight,
+                notes: notes.trim() || null,
+                avatar_url: avatarUrl // Já é base64 ou null
             };
 
             await api.booking.createPet(session.user.id, petPayload);
-            await onSuccess();
-            toast.success(`${name} foi cadastrado com sucesso! 🐶`);
+            
+            // Tenta dar refresh nos dados, mas não deixa travar se o refresh falhar
+            try {
+                await onSuccess();
+            } catch (refreshErr) {
+                console.warn("Pet salvo, mas falha ao atualizar lista:", refreshErr);
+            }
+
+            toast.success(`${name} cadastrado com sucesso! 🐶`);
             onClose();
         } catch (e: any) {
-            console.error(e);
-            toast.error('Erro ao cadastrar pet. Tente novamente.');
+            console.error("Erro fatal ao salvar pet:", e);
+            const errorMessage = e.message || 'Erro desconhecido ao salvar.';
+            toast.error(`Não foi possível salvar: ${errorMessage}`);
         } finally {
             setIsSaving(false);
         }
@@ -74,7 +92,7 @@ export const PetWizard: React.FC<PetWizardProps> = ({ onClose, session, onSucces
             <div className="modal-content">
                 <div className="modal-header">
                     <h3>Novo Pet</h3>
-                    <button onClick={onClose} className="btn-icon-sm"><X size={20}/></button>
+                    <button onClick={onClose} className="btn-icon-sm" disabled={isSaving}><X size={20}/></button>
                 </div>
                 
                 <div className="wizard-steps">
@@ -120,7 +138,7 @@ export const PetWizard: React.FC<PetWizardProps> = ({ onClose, session, onSucces
                                 />
                             </div>
 
-                            <button className="btn btn-primary full-width mt-4" disabled={!name} onClick={() => setStep(2)}>
+                            <button className="btn btn-primary full-width mt-4" disabled={!name.trim()} onClick={() => setStep(2)}>
                                 Próximo
                             </button>
                         </div>
@@ -143,11 +161,11 @@ export const PetWizard: React.FC<PetWizardProps> = ({ onClose, session, onSucces
                             <div className="form-group">
                                 <label><Weight size={14} style={{marginRight:4, verticalAlign:'text-bottom'}}/> Peso (kg)</label>
                                 <input 
-                                    type="number" 
-                                    step="0.1"
+                                    type="text" 
+                                    inputMode="decimal"
                                     value={weight} 
                                     onChange={e => setWeight(e.target.value)} 
-                                    placeholder="Ex: 12.5"
+                                    placeholder="Ex: 12,5"
                                 />
                             </div>
 
@@ -202,12 +220,12 @@ export const PetWizard: React.FC<PetWizardProps> = ({ onClose, session, onSucces
                                     )}
                                 </div>
                                 
-                                <label className={`btn btn-sm btn-ghost mt-4 ${isCompressing ? 'opacity-50 pointer-events-none' : ''}`} style={{cursor: 'pointer'}}>
+                                <label className={`btn btn-sm btn-ghost mt-4 ${isCompressing || isSaving ? 'opacity-50 pointer-events-none' : ''}`} style={{cursor: 'pointer'}}>
                                     <Upload size={16} style={{marginRight: 6}} />
                                     {avatarUrl ? 'Trocar Foto' : 'Escolher Foto'}
-                                    <input type="file" accept="image/*" onChange={handleImageUpload} style={{display:'none'}} disabled={isCompressing} />
+                                    <input type="file" accept="image/*" onChange={handleImageUpload} style={{display:'none'}} disabled={isCompressing || isSaving} />
                                 </label>
-                                <small style={{color:'#999', marginTop:4, fontSize:'0.75rem'}}>A foto será otimizada automaticamente.</small>
+                                <small style={{color:'#999', marginTop:4, fontSize:'0.75rem'}}>A foto será otimizada para ocupar menos espaço.</small>
                             </div>
 
                             <div className="summary-card">
@@ -217,7 +235,7 @@ export const PetWizard: React.FC<PetWizardProps> = ({ onClose, session, onSucces
                             </div>
 
                             <div className="wizard-actions">
-                                <button className="btn btn-ghost" onClick={() => setStep(3)}>Voltar</button>
+                                <button className="btn btn-ghost" disabled={isSaving} onClick={() => setStep(3)}>Voltar</button>
                                 <button 
                                   className={`btn btn-primary ${isSaving ? 'loading' : ''}`} 
                                   disabled={isSaving || isCompressing} 

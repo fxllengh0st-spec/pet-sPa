@@ -1,131 +1,207 @@
-# 🐾 PetSpa - Plataforma de Gestão e Agendamento Inteligente
+
+# 🐾 PetSpa - Plataforma SaaS de Gestão para Petshops
 
 <div align="center">
-  <img src="https://img.shields.io/badge/React-18-blue?logo=react" />
-  <img src="https://img.shields.io/badge/TypeScript-5-blue?logo=typescript" />
-  <img src="https://img.shields.io/badge/Vite-5-purple?logo=vite" />
-  <img src="https://img.shields.io/badge/Supabase-Database-green?logo=supabase" />
-  <img src="https://img.shields.io/badge/Gemini-AI-orange?logo=google-gemini" />
+  <img src="https://img.shields.io/badge/React-18-blue?logo=react&style=for-the-badge" />
+  <img src="https://img.shields.io/badge/TypeScript-5-blue?logo=typescript&style=for-the-badge" />
+  <img src="https://img.shields.io/badge/Vite-5-purple?logo=vite&style=for-the-badge" />
+  <img src="https://img.shields.io/badge/Supabase-PostgreSQL-green?logo=supabase&style=for-the-badge" />
 </div>
 
 <br />
 
-Bem-vindo ao **PetSpa**, uma aplicação web **Mobile-First** desenvolvida para modernizar o agendamento de serviços de pet shop. O sistema não é apenas uma vitrine, mas uma plataforma completa de gestão que integra um **Assistente de IA Real (Action-Driven)**, lógica de agendamento complexa com slots de tempo e um sistema de assinaturas recorrentes.
+Bem-vindo ao **PetSpa**, uma aplicação web **PWA (Progressive Web App)** Mobile-First completa. O sistema gerencia agendamentos, assinaturas recorrentes (Clube VIP), fluxo de caixa e atendimento via Chatbot Híbrido.
 
 ---
 
-## ✨ Funcionalidades Principais
+## ✨ Funcionalidades
 
-### 📱 Para o Cliente (Mobile & Desktop)
-- **🤖 Assistente IA (Gemini 2.5)**: 
-  - Chatbot contextual que realiza ações reais no banco de dados (`Function Calling`).
-  - **Sincronização em Tempo Real**: Quando a IA agenda um banho ou cadastra um pet, a interface do aplicativo atualiza automaticamente sem recarregar a página.
-  - **Fallback Mode**: Um "cérebro reserva" local que funciona mesmo se a API da IA oscilar.
-- **📅 Agendamento Inteligente (Wizard)**: 
-  - Sistema de **Slots de Tempo**: Gera horários de 30 em 30 minutos dinamicamente.
-  - **Validação de Negócio**: Impede agendamentos que ultrapassem o horário de fechamento (Ex: Se fecha às 18h e o serviço dura 1h, o último slot é 17h).
-- **👑 Clube VIP (Assinaturas)**: Sistema de planos mensais onde o cliente associa uma assinatura específica a um pet.
-- **❤️ Marketplace de Adoção**: Área social para conectar clientes a ONGs parceiras.
-- **👤 Gestão de Perfil**: Histórico completo de banhos, status do serviço (Kanban visual) e gestão de múltiplos pets.
+### 📱 Cliente (App)
+- **Agendamento Inteligente:** Wizard com validação de horários, bloqueio de conflitos e slots automáticos baseados na duração do serviço.
+- **Chatbot Determinístico:** Assistente virtual (`bot-engine.ts`) que guia o usuário sem alucinações de IA, permitindo agendamento via chat.
+- **Clube de Assinaturas:** Gestão de planos mensais (ex: 4 banhos/mês) com agendamento automático.
+- **Gestão de Pets:** Cadastro detalhado com upload de fotos otimizado (compressão no cliente).
+- **Acompanhamento em Tempo Real:** Status do banho (Aguardando -> No Banho -> Pronto).
 
-### 🛡️ Para o Administrador (Backoffice)
-- **📊 Dashboard Operacional**: KPIs em tempo real (Receita Estimada, Taxa de Ocupação, Ticket Médio).
-- **📋 Kanban de Serviços**: Gestão visual do fluxo de trabalho (Pendente -> Confirmado -> Em Andamento -> Concluído).
-- **🗓️ Agenda Semanal Visual**: Visualização cronológica estilo "Google Calendar" com cálculo de altura dos cards baseado na duração do serviço.
-- **⚙️ Gerenciador de Catálogo**: CRUD completo para Serviços e Pacotes de Assinatura.
+### 🛡️ Admin (Backoffice)
+- **Dashboard Executivo:** KPIs de receita, ocupação e serviços mais vendidos.
+- **Agenda Visual:** Estilo Google Calendar com visualização semanal.
+- **Kanban Operacional:** Controle de fluxo (Check-in / Banho / Check-out).
+- **Gestão de Catálogo:** CRUD de Serviços e Pacotes.
 
 ---
 
-## 🚀 Arquitetura e Tecnologias
+## 🛠️ Como Duplicar e Rodar o Projeto
 
-### Frontend
-- **Framework**: React 18 + TypeScript.
-- **Build Tool**: Vite.
-- **Estilização**: CSS Puro Moderno (CSS Variables, CSS Modules concept) com animações nativas (`fade-in-up`, `pop-in`).
-- **Icons**: Lucide React.
-- **State Management**: React Context (Toast) + Props Drilling otimizado + Callbacks de Sincronização.
+Para rodar este projeto em sua própria infraestrutura, você precisará configurar o **Supabase** (Backend as a Service).
 
-### Backend & AI
-- **Database & Auth**: Supabase (PostgreSQL).
-- **AI SDK**: `@google/genai` (Google Gemini API).
-- **Lógica de Negócio**:
-  - Validação de colisão de horários no Backend e Frontend.
-  - Lógica de "slots" gerada no cliente para UX instantânea.
+### 1. Pré-requisitos
+*   Node.js v18+
+*   NPM ou Yarn
+*   Conta no [Supabase](https://supabase.com) (Plano Gratuito funciona perfeitamente)
 
----
+### 2. Instalação Local
 
-## 🛠️ Instalação e Configuração
-
-### Pré-requisitos
-- Node.js (v18+)
-- Conta no [Supabase](https://supabase.com)
-- Chave de API do [Google AI Studio](https://aistudio.google.com/)
-
-### 1. Clonar e Instalar
 ```bash
-git clone https://github.com/seu-usuario/petspa-react.git
-cd petspa-react
+# 1. Clone o repositório
+git clone https://github.com/seu-usuario/petspa.git
+
+# 2. Entre na pasta
+cd petspa
+
+# 3. Instale as dependências
 npm install
-```
 
-### 2. Variáveis de Ambiente
-Crie um arquivo `.env` na raiz:
-
-```env
-# Chave da API do Google Gemini
-GEMINI_API_KEY=sua_chave_aqui_xyz
-```
-
-> **Nota:** As credenciais do Supabase já estão configuradas em `src/lib/supabase.ts` para o ambiente de demonstração. Em produção, mova-as para o `.env`.
-
-### 3. Rodar a Aplicação
-```bash
+# 4. Inicie o servidor de desenvolvimento
 npm run dev
 ```
-Acesse `http://localhost:3000`.
 
----
+### 3. ⚠️ Configuração do Banco de Dados (Supabase)
 
-## 🧠 Detalhes Técnicos Importantes
+Para o sistema funcionar, você deve criar um projeto no Supabase e rodar o seguinte script SQL no **SQL Editor** do painel do Supabase para criar a estrutura necessária:
 
-### 1. O Cérebro da IA (`src/services/gemini.ts`)
-Diferente de chatbots comuns, nossa implementação usa um loop de execução de ferramentas.
-1. O usuário pede: *"Agende um banho para o Rex amanhã às 14h"*.
-2. A IA identifica a intenção e chama a tool `create_appointment`.
-3. O código executa a ação no Supabase.
-4. **O Diferencial:** A função retorna uma flag `refreshRequired: true`. O componente de Chat intercepta isso e dispara um `loadUserData()` global, atualizando o saldo, agenda e lista de pets do usuário instantaneamente.
+```sql
+-- 1. Tabela de Perfis (Estende auth.users)
+create table public.profiles (
+  id uuid references auth.users not null primary key,
+  email text,
+  full_name text,
+  phone text,
+  role text default 'client' check (role in ('client', 'admin', 'employee')),
+  created_at timestamp with time zone default timezone('utc'::text, now()) not null
+);
 
-### 2. Lógica de Slots (`src/components/BookingWizard.tsx`)
-Para evitar erros de agendamento:
-```typescript
-// Exemplo simplificado da lógica
-const serviceDurationHours = service.duration / 60;
-const lastPossibleStartHour = CLOSING_HOUR - serviceDurationHours;
+-- 2. Tabela de Pets
+create table public.pets (
+  id uuid default gen_random_uuid() primary key,
+  owner_id uuid references public.profiles(id) not null,
+  name text not null,
+  breed text,
+  weight numeric,
+  birth_date date,
+  notes text,
+  avatar_url text, -- Armazena Base64 ou URL do Storage
+  created_at timestamp with time zone default timezone('utc'::text, now()) not null
+);
 
-// Se o serviço leva 1h e fechamos as 18h, o último slot gerado será 17:00.
-// Slots passados (hoje) são filtrados automaticamente.
+-- 3. Tabela de Serviços
+create table public.services (
+  id bigint generated by default as identity primary key,
+  name text not null,
+  description text,
+  price numeric not null,
+  duration_minutes integer default 60,
+  active boolean default true,
+  created_at timestamp with time zone default timezone('utc'::text, now()) not null
+);
+
+-- 4. Tabela de Agendamentos
+create table public.appointments (
+  id bigint generated by default as identity primary key,
+  client_id uuid references public.profiles(id) not null,
+  pet_id uuid references public.pets(id) not null,
+  service_id bigint references public.services(id) not null,
+  start_time timestamp with time zone not null,
+  end_time timestamp with time zone not null,
+  status text default 'pending' check (status in ('pending', 'confirmed', 'in_progress', 'completed', 'cancelled')),
+  created_at timestamp with time zone default timezone('utc'::text, now()) not null
+);
+
+-- 5. Pacotes / Assinaturas
+create table public.packages (
+  id bigint generated by default as identity primary key,
+  title text not null,
+  description text,
+  price numeric not null,
+  original_price numeric,
+  bath_count integer default 4,
+  features text[], -- Array de strings
+  highlight boolean default false,
+  color_theme text default '#9B59B6',
+  service_id bigint references public.services(id), -- Vincula ao serviço base
+  active boolean default true
+);
+
+create table public.subscriptions (
+  id bigint generated by default as identity primary key,
+  user_id uuid references public.profiles(id) not null,
+  pet_id uuid references public.pets(id) not null,
+  package_id bigint references public.packages(id) not null,
+  status text default 'active',
+  created_at timestamp with time zone default timezone('utc'::text, now()) not null
+);
+
+-- TRIGGERS IMPORTANTES (Cria perfil ao registrar usuário)
+create or replace function public.handle_new_user()
+returns trigger as $$
+begin
+  insert into public.profiles (id, email, full_name, phone, role)
+  values (new.id, new.email, new.raw_user_meta_data->>'full_name', new.raw_user_meta_data->>'phone', 'client');
+  return new;
+end;
+$$ language plpgsql security definer;
+
+create trigger on_auth_user_created
+  after insert on auth.users
+  for each row execute procedure public.handle_new_user();
 ```
 
+> **Dica:** Lembre-se de desabilitar o RLS (Row Level Security) ou configurar as Políticas de Segurança adequadas para permitir leitura/escrita nas tabelas.
+
+### 4. Conectando ao Frontend
+
+1.  No painel do Supabase, vá em **Project Settings > API**.
+2.  Copie a `Project URL` e a `anon public key`.
+3.  Abra o arquivo `src/lib/supabase.ts` e substitua as constantes (ou melhor, use variáveis de ambiente).
+
+**Recomendado (Arquivo .env):**
+Crie um arquivo `.env` na raiz do projeto:
+
+```env
+VITE_SUPABASE_URL=sua_url_do_projeto
+VITE_SUPABASE_ANON_KEY=sua_chave_anonima
+```
+
+E atualize `src/lib/supabase.ts` para usar `import.meta.env.VITE_SUPABASE_URL`.
+
 ---
 
-## 📂 Estrutura de Pastas
+## 📂 Estrutura do Projeto
 
 ```
 src/
-├── components/      # Componentes UI (Chat, Wizard, AdminPanel)
-├── context/         # React Context (Toast)
-├── lib/             # Configurações de terceiros (Supabase)
-├── services/        # Camada de API (Auth, Booking, Gemini)
-├── styles/          # CSS Modular (Base, Layout, Pages, Animations)
-├── utils/           # Helpers (Formatadores, Geradores de Avatar)
-├── views/           # Páginas (Home, Dashboard, Profile)
-├── App.tsx          # Roteamento e Gestão de Estado Global
-└── types.ts         # Definições de Tipos TypeScript
+├── components/       # Componentes React (UI)
+│   ├── Admin.tsx     # Painel Administrativo Completo
+│   ├── BookingWizard # Lógica complexa de agendamento (Slots)
+│   ├── Chat.tsx      # Interface do Chat Widget
+│   └── ...
+├── context/          # Context API (Toast Notifications)
+├── services/
+│   ├── api.ts        # Camada de abstração do Supabase
+│   └── bot-engine.ts # Máquina de estados do Chatbot
+├── styles/           # CSS Modular e Design System
+├── utils/            # Helpers (Formatadores, Compressão de img)
+└── views/            # Páginas (Home, Dashboard, Profile)
 ```
+
+## 🎨 Design System
+
+O projeto utiliza CSS puro organizado em módulos (`styles/`) para garantir performance máxima sem dependências pesadas de build, mas com variáveis CSS modernas para facilitar a customização de temas (Dark Mode ready).
+
+*   **Cores:** Definidas em `src/styles/variables.css`.
+*   **Animações:** `fade-in-up`, `pop-in` definidas em `src/styles/animations.css`.
+
+## 🤖 Bot Engine
+
+O Chatbot localizado em `src/services/bot-engine.ts` **não** usa LLMs (ChatGPT/Gemini) diretamente para o fluxo conversacional para garantir:
+1.  **Custo Zero:** Não gasta tokens de API.
+2.  **Latência Zero:** Resposta imediata.
+3.  **Segurança:** Não inventa horários ou preços (Alucinação).
+
+Ele funciona como uma máquina de estados finita que navega o usuário pelo fluxo de agendamento.
 
 ---
 
 ## 📝 Licença
 
-Desenvolvido como projeto demonstrativo de **Engenharia Frontend Sênior**.
-Sinta-se à vontade para estudar o código e adaptar para seus projetos.
+Este projeto é de código aberto sob a licença MIT. Sinta-se livre para usar, modificar e comercializar.
