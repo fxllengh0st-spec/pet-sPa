@@ -3,7 +3,6 @@ import React, { useEffect, useState, useMemo } from 'react';
 import { api } from '../services/api';
 import { Appointment } from '../types';
 import { formatDate, formatCurrency, getPetAvatarUrl } from '../utils/ui';
-// Added CalendarCheck and Droplet to the imports
 import { 
   Calendar as CalendarIcon, LayoutDashboard, ListTodo, User, Phone, 
   TrendingUp, DollarSign, Users, Activity, BarChart3, PieChart, Settings,
@@ -54,7 +53,7 @@ export const AdminPanel: React.FC = () => {
      const todayPending = todayApps.filter(a => a.status === 'pending').length;
      const todayInProgress = todayApps.filter(a => a.status === 'in_progress').length;
 
-     // 2. Revenue (Estimated based on price)
+     // 2. Revenue
      const totalRevenue = activeApps.reduce((acc, curr) => acc + (curr.services?.price || 0), 0);
      
      // 3. Occupancy
@@ -105,7 +104,6 @@ export const AdminPanel: React.FC = () => {
   const DashboardView = () => (
       <div className="admin-grid-layout fade-in">
           
-          {/* Top Row: KPIs */}
           <div className="kpi-row" style={{ gridColumn: '1 / -1' }}>
               <div className="kpi-card glass-morphism">
                   <div className="kpi-header">
@@ -142,7 +140,6 @@ export const AdminPanel: React.FC = () => {
               </div>
           </div>
 
-          {/* Today's Agenda Summary */}
           <div className="card admin-main-card reveal-on-scroll">
               <div className="card-header-flex">
                   <div>
@@ -177,7 +174,6 @@ export const AdminPanel: React.FC = () => {
               </div>
           </div>
 
-          {/* Volume Weekly */}
           <div className="card admin-side-card reveal-on-scroll">
               <div className="card-header-flex">
                   <h3>Volume Semanal</h3>
@@ -190,27 +186,6 @@ export const AdminPanel: React.FC = () => {
                              <div className="chart-bar-fill" style={{ height: `${d.heightPct}%` }}></div>
                           </div>
                           <span className="chart-label">{d.label}</span>
-                      </div>
-                  ))}
-              </div>
-          </div>
-
-          {/* Top Services */}
-          <div className="card admin-side-card reveal-on-scroll">
-              <div className="card-header-flex">
-                  <h3>Mix de Serviços</h3>
-                  <PieChart size={20} className="text-muted"/>
-              </div>
-              <div className="service-mix-list">
-                  {kpis.topServices.map(s => (
-                      <div key={s.name} className="service-mix-item">
-                          <div className="mix-info">
-                              <span>{s.name}</span>
-                              <span className="mix-count">{s.count}</span>
-                          </div>
-                          <div className="mix-progress-bg">
-                              <div className="mix-progress-fill" style={{ width: `${s.pct}%` }}></div>
-                          </div>
                       </div>
                   ))}
               </div>
@@ -237,7 +212,7 @@ export const AdminPanel: React.FC = () => {
       const endOfWeek = new Date(startOfWeek);
       endOfWeek.setDate(endOfWeek.getDate() + 6);
 
-      const hours = Array.from({ length: 11 }, (_, i) => i + 8); // 8h to 18h
+      const hours = Array.from({ length: 11 }, (_, i) => i + 8); 
       const PIXELS_PER_HOUR = 60;
 
       const weekApps = appointments.filter(app => {

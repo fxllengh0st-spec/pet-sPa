@@ -1,7 +1,276 @@
 
-/* ... existing styles ... */
+/* =========================================
+   PAGE SPECIFIC STYLES - DESKTOP ENHANCED
+   ========================================= */
 
-/* --- SUBSCRIPTION SUMMARY CARD --- */
+/* --- AUTH PAGE --- */
+.auth-container {
+    background: linear-gradient(135deg, #FDFBFD 0%, #F2F0F7 100%);
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 20px;
+}
+
+.auth-card {
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    box-shadow: 0 20px 40px rgba(155, 89, 182, 0.1);
+}
+
+.auth-error-banner {
+    background-color: #FFF5F5; color: #C0392B; padding: 12px 16px;
+    border-radius: 12px; margin-bottom: 20px; display: flex; align-items: center; gap: 8px;
+    font-size: 0.85rem; font-weight: 600; border: 1px solid #FEB2B2;
+}
+
+/* --- ADMIN PANEL ENHANCEMENTS --- */
+.admin-panel-page {
+    padding: 30px 20px 100px;
+    background-color: var(--bg-app);
+}
+
+.admin-page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-bottom: 30px;
+    gap: 20px;
+    flex-wrap: wrap;
+}
+
+.admin-page-header h1 { font-size: 2rem; margin-bottom: 4px; }
+.admin-page-header p { color: var(--text-muted); margin: 0; }
+
+.admin-nav-tabs {
+    display: flex;
+    background: var(--surface);
+    padding: 6px;
+    border-radius: 16px;
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--border-light);
+    gap: 4px;
+}
+
+.admin-tab {
+    border: none;
+    background: none;
+    padding: 10px 20px;
+    border-radius: 12px;
+    font-weight: 700;
+    font-size: 0.9rem;
+    color: var(--text-muted);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.2s;
+}
+
+.admin-tab.active {
+    background: var(--primary);
+    color: white;
+    box-shadow: 0 4px 10px rgba(155, 89, 182, 0.2);
+}
+
+/* Dashboard List Today */
+.card-header-flex {
+    display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 24px;
+}
+
+.today-agenda-list { display: flex; flex-direction: column; gap: 12px; }
+.today-item {
+    display: flex; align-items: center; gap: 16px; padding: 12px 16px;
+    background: var(--surface-alt); border-radius: 16px; border: 1px solid var(--border-light);
+    transition: transform 0.2s;
+}
+.today-item:hover { transform: scale(1.01); background: var(--surface); border-color: var(--primary); }
+
+.status-pill {
+    padding: 6px 12px; border-radius: 20px; font-size: 0.7rem; font-weight: 800; text-transform: uppercase;
+}
+.pill-pending { background: #FFF8E1; color: #F39C12; }
+.pill-in_progress { background: #E0F7FA; color: #00CEC9; }
+.pill-confirmed { background: #E0F2F1; color: #00B894; }
+
+/* Admin Management CRUD */
+.admin-tabs {
+    display: flex;
+    gap: 10px;
+}
+
+.tab-btn {
+    background: var(--surface);
+    border: 1px solid var(--border-light);
+    padding: 10px 20px;
+    border-radius: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+}
+
+.tab-btn.active {
+    background: var(--primary);
+    color: white;
+    border-color: var(--primary);
+}
+
+.data-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.data-table th {
+    text-align: left;
+    padding: 16px;
+    background: var(--surface-alt);
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    font-weight: 800;
+}
+
+.data-table td {
+    padding: 16px;
+    border-bottom: 1px solid var(--border-light);
+}
+
+/* --- CLUBE VIP (PACKAGES) VIEW --- */
+.packages-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 24px;
+    margin-top: 20px;
+}
+
+.package-card {
+    border: 2px solid transparent;
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    background: var(--surface);
+    display: flex;
+    flex-direction: column;
+    min-height: 500px;
+}
+
+.package-card:hover {
+    transform: translateY(-10px);
+    border-color: var(--pkg-theme);
+    box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+}
+
+.package-card.highlight-pkg {
+    background: linear-gradient(135deg, var(--surface) 0%, var(--accent) 100%);
+}
+
+.pkg-badge {
+    position: absolute;
+    top: 20px;
+    right: -30px;
+    background: var(--pkg-theme);
+    color: white;
+    padding: 8px 40px;
+    transform: rotate(45deg);
+    font-size: 0.75rem;
+    font-weight: 800;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+}
+
+.package-card h3 {
+    font-size: 1.6rem;
+    margin-bottom: 8px;
+    color: var(--secondary);
+}
+
+.pkg-desc {
+    font-size: 0.9rem;
+    color: var(--text-muted);
+    margin-bottom: 24px;
+    min-height: 48px;
+}
+
+.pkg-price-area {
+    margin-bottom: 30px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--border-light);
+}
+
+.pkg-current-price {
+    display: flex;
+    align-items: baseline;
+    gap: 4px;
+    color: var(--secondary);
+}
+
+.pkg-current-price strong {
+    font-size: 2.5rem;
+    font-weight: 900;
+    line-height: 1;
+}
+
+.pkg-current-price small {
+    font-weight: 700;
+    opacity: 0.8;
+}
+
+.pkg-features {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 30px 0;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.pkg-features li {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: var(--text-body);
+}
+
+.pkg-features li strong {
+    color: var(--secondary);
+}
+
+.subscribed-section {
+    background: var(--bg-app);
+    padding: 12px;
+    border-radius: 12px;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.subscribed-avatars-row {
+    display: flex;
+    margin-left: 8px;
+}
+
+.sub-avatar-mini {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: 2px solid white;
+    margin-left: -8px;
+    box-shadow: var(--shadow-sm);
+}
+
+.btn-manage-link {
+    background: none;
+    border: none;
+    color: var(--primary);
+    font-size: 0.75rem;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    cursor: pointer;
+}
+
+/* --- SUBSCRIPTION SUMMARY CARD (REVISÃO) --- */
 .subscription-summary-card {
     background: #F8FAFC;
     border: 1px solid var(--border-light);
@@ -104,5 +373,3 @@
     flex-shrink: 0;
     margin-top: 2px;
 }
-
-/* ... existing styles ... */
