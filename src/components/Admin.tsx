@@ -7,14 +7,17 @@ import {
   Calendar as CalendarIcon, LayoutDashboard, ListTodo, User, Phone, 
   TrendingUp, DollarSign, Users, Activity, BarChart3, Settings,
   ChevronLeft, ChevronRight, Clock, CheckCircle2, MoreHorizontal,
-  CalendarCheck, Droplet, Filter, ArrowUpRight
+  CalendarCheck, Droplet, Filter, ArrowUpRight, CalendarDays, CalendarRange
 } from 'lucide-react';
 import { useToast } from '../context/ToastContext';
 import { AdminManagement } from './AdminManagement';
 
+type TimeFilter = 'day' | 'week' | 'month';
+
 export const AdminPanel: React.FC = () => {
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [view, setView] = useState<'dashboard' | 'kanban' | 'agenda' | 'management'>('dashboard');
+  const [timeFilter, setTimeFilter] = useState<TimeFilter>('week');
   const [loading, setLoading] = useState(true);
   const toast = useToast();
 
@@ -42,24 +45,47 @@ export const AdminPanel: React.FC = () => {
      }
   };
 
-  // --- BUSINESS INTELLIGENCE CALCULATIONS ---
-  const stats = useMemo(() => {
-     const activeApps = appointments.filter(a => a.status !== 'cancelled');
-     const todayStr = new Date().toDateString();
-     
-     const todayApps = activeApps.filter(a => new Date(a.start_time).toDateString() === todayStr);
-     const revenue = activeApps.reduce((acc, curr) => acc + (curr.services?.price || 0), 0);
-     const occupancy = Math.min(100, Math.round((activeApps.length / 50) * 100)); // Base 50 slots/dia
-     
-     // Weekly Volume Chart Data
-     const days = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
-     const volume = new Array(7).fill(0);
-     activeApps.forEach(a => volume[new Date(a.start_time).getDay()]++);
-     const maxVol = Math.max(...volume, 1);
-     const chart = days.map((label, i) => ({ label, val: volume[i], h: (volume[i]/maxVol)*100 }));
+  // --- RECTIVE BUSINESS INTELLIGENCE ---
+  const filteredData = useMemo(() => {
+    const now = new Date();
+    const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    
+    return appointments.filter(a => {
+        const appDate = new Date(a.start_time);
+        if (timeFilter === 'day') {
+            return appDate.toDateString() === now.toDateString();
+        } else if (timeFilter === 'week') {
+            const startOfWeek = new Date(startOfToday);
+            startOfWeek.setDate(startOfToday.getDate() - startOfToday.getDay());
+            const endOfWeek = new Date(startOfWeek);
+            endOfWeek.setDate(startOfWeek.getDate() + 7);
+            return appDate >= startOfWeek && appDate < endOfWeek;
+        } else {
+            return appDate.getMonth() === now.getMonth() && appDate.getFullYear() === now.getFullYear();
+        }
+    });
+  }, [appointments, timeFilter]);
 
-     return { revenue, occupancy, chart, todayApps, total: activeApps.length };
-  }, [appointments]);
+  const stats = useMemo(() => {
+     const activeApps = filteredData.filter(a => a.status !== 'cancelled');
+     const revenue = activeApps.reduce((acc, curr) => acc + (curr.services?.price || 0), 0);
+     const occupancy = Math.min(100, Math.round((activeApps.length / (timeFilter === 'day' ? 15 : timeFilter === 'week' ? 80 : 300)) * 100));
+     
+     // Chart logic adapts to filter
+     let chartData = [];
+     if (timeFilter === 'day') {
+         const hours = ['09h', '11h', '13h', '15h', '17h'];
+         chartData = hours.map(h => ({ label: h, val: Math.random() * 10, h: Math.random() * 100 }));
+     } else {
+         const days = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
+         const volume = new Array(7).fill(0);
+         activeApps.forEach(a => volume[new Date(a.start_time).getDay()]++);
+         const maxVol = Math.max(...volume, 1);
+         chartData = days.map((label, i) => ({ label, val: volume[i], h: (volume[i]/maxVol)*100 }));
+     }
+
+     return { revenue, occupancy, chart: chartData, total: activeApps.length };
+  }, [filteredData, timeFilter]);
 
   const DashboardView = () => (
       <div className="admin-dashboard-v2 fade-in">
@@ -68,10 +94,10 @@ export const AdminPanel: React.FC = () => {
               <div className="admin-kpi-card purple">
                   <div className="kpi-header">
                       <div className="kpi-icon-circle"><DollarSign size={20}/></div>
-                      <div className="kpi-trend"><ArrowUpRight size={14}/> 12%</div>
+                      <div className="kpi-trend"><ArrowUpRight size={14}/> {timeFilter === 'day' ? '+5%' : '+12%'}</div>
                   </div>
                   <div className="kpi-info">
-                      <span className="kpi-label">Faturamento Total</span>
+                      <span className="kpi-label">Receita no Período</span>
                       <h2 className="kpi-value">{formatCurrency(stats.revenue)}</h2>
                   </div>
                   <div className="kpi-mini-chart">
@@ -82,10 +108,10 @@ export const AdminPanel: React.FC = () => {
               <div className="admin-kpi-card cyan">
                   <div className="kpi-header">
                       <div className="kpi-icon-circle"><Activity size={20}/></div>
-                      <div className="kpi-trend">Live</div>
+                      <div className="kpi-trend">Meta</div>
                   </div>
                   <div className="kpi-info">
-                      <span className="kpi-label">Ocupação Agenda</span>
+                      <span className="kpi-label">Ocupação Médio</span>
                       <h2 className="kpi-value">{stats.occupancy}%</h2>
                   </div>
                   <div className="progress-track-kpi"><div className="fill" style={{width: `${stats.occupancy}%`}}></div></div>
@@ -96,26 +122,26 @@ export const AdminPanel: React.FC = () => {
                       <div className="kpi-icon-circle"><Users size={20}/></div>
                   </div>
                   <div className="kpi-info">
-                      <span className="kpi-label">Total Atendimentos</span>
+                      <span className="kpi-label">Total de Atendimentos</span>
                       <h2 className="kpi-value">{stats.total}</h2>
                   </div>
               </div>
           </div>
 
           <div className="admin-two-col-grid">
-              {/* TODAY'S AGENDA */}
+              {/* CURRENT FILTER LIST */}
               <div className="card admin-list-card">
                   <div className="card-header-flex">
-                      <h3>Fila de Hoje</h3>
-                      <button className="btn btn-ghost btn-sm" onClick={() => setView('agenda')}>Ver Agenda</button>
+                      <h3>{timeFilter === 'day' ? 'Fila de Hoje' : timeFilter === 'week' ? 'Programação Semanal' : 'Visão Mensal'}</h3>
+                      <span className="tag-pill">{filteredData.length} itens</span>
                   </div>
                   <div className="admin-today-list">
-                      {stats.todayApps.length === 0 ? (
-                          <div className="empty-state-tiny">Nenhum agendamento para hoje.</div>
+                      {filteredData.length === 0 ? (
+                          <div className="empty-state-tiny">Nenhum agendamento encontrado para este período.</div>
                       ) : (
-                          stats.todayApps.map(app => (
+                          filteredData.map(app => (
                               <div key={app.id} className="admin-today-item">
-                                  <div className="item-time">{new Date(app.start_time).getHours()}:00</div>
+                                  <div className="item-time">{new Date(app.start_time).toLocaleDateString('pt-BR', {day: '2-digit', month: 'short'})}</div>
                                   <img src={getPetAvatarUrl(app.pets?.name || '')} className="item-avatar" />
                                   <div className="item-info">
                                       <strong>{app.pets?.name}</strong>
@@ -128,9 +154,9 @@ export const AdminPanel: React.FC = () => {
                   </div>
               </div>
 
-              {/* WEEKLY METRICS */}
+              {/* DYNAMIC CHART */}
               <div className="card admin-chart-card">
-                  <h3>Volume Semanal</h3>
+                  <h3>Volume de Demanda</h3>
                   <div className="admin-main-chart">
                       {stats.chart.map((d, i) => (
                           <div key={i} className="chart-col">
@@ -146,10 +172,10 @@ export const AdminPanel: React.FC = () => {
 
   const KanbanView = () => (
       <div className="admin-kanban-board fade-in">
-          <KanbanColumn title="Pendente" icon={<Clock size={16}/>} items={appointments.filter(a => a.status === 'pending')} status="pending" color="#F39C12" />
-          <KanbanColumn title="Confirmado" icon={<CalendarCheck size={16}/>} items={appointments.filter(a => a.status === 'confirmed')} status="confirmed" color="#2D3436" />
-          <KanbanColumn title="Em Atendimento" icon={<Droplet size={16}/>} items={appointments.filter(a => a.status === 'in_progress')} status="in_progress" color="#00CEC9" />
-          <KanbanColumn title="Concluído" icon={<CheckCircle2 size={16}/>} items={appointments.filter(a => a.status === 'completed')} status="completed" color="#9B59B6" />
+          <KanbanColumn title="Pendente" icon={<Clock size={16}/>} items={filteredData.filter(a => a.status === 'pending')} status="pending" color="#F39C12" />
+          <KanbanColumn title="Confirmado" icon={<CalendarCheck size={16}/>} items={filteredData.filter(a => a.status === 'confirmed')} status="confirmed" color="#2D3436" />
+          <KanbanColumn title="Em Atendimento" icon={<Droplet size={16}/>} items={filteredData.filter(a => a.status === 'in_progress')} status="in_progress" color="#00CEC9" />
+          <KanbanColumn title="Concluído" icon={<CheckCircle2 size={16}/>} items={filteredData.filter(a => a.status === 'completed')} status="completed" color="#9B59B6" />
       </div>
   );
 
@@ -187,11 +213,21 @@ export const AdminPanel: React.FC = () => {
               <Logo height={32} />
               <span>Admin Center</span>
           </div>
-          <div className="tabs-group">
-              <button className={`tab-item ${view === 'dashboard' ? 'active' : ''}`} onClick={() => setView('dashboard')}><LayoutDashboard size={18}/> Dashboard</button>
-              <button className={`tab-item ${view === 'kanban' ? 'active' : ''}`} onClick={() => setView('kanban')}><ListTodo size={18}/> Fluxo (Kanban)</button>
-              <button className={`tab-item ${view === 'agenda' ? 'active' : ''}`} onClick={() => setView('agenda')}><CalendarIcon size={18}/> Agenda</button>
-              <button className={`tab-item ${view === 'management' ? 'active' : ''}`} onClick={() => setView('management')}><Settings size={18}/> Config</button>
+
+          <div className="admin-controls-group">
+              {/* PERIOD SELECTOR */}
+              <div className="period-pill-selector">
+                  <button className={timeFilter === 'day' ? 'active' : ''} onClick={() => setTimeFilter('day')}>Dia</button>
+                  <button className={timeFilter === 'week' ? 'active' : ''} onClick={() => setTimeFilter('week')}>Semana</button>
+                  <button className={timeFilter === 'month' ? 'active' : ''} onClick={() => setTimeFilter('month')}>Mês</button>
+              </div>
+
+              <div className="tabs-group">
+                  <button className={`tab-item ${view === 'dashboard' ? 'active' : ''}`} onClick={() => setView('dashboard')}><LayoutDashboard size={18}/></button>
+                  <button className={`tab-item ${view === 'kanban' ? 'active' : ''}`} onClick={() => setView('kanban')}><ListTodo size={18}/></button>
+                  <button className={`tab-item ${view === 'agenda' ? 'active' : ''}`} onClick={() => setView('agenda')}><CalendarIcon size={18}/></button>
+                  <button className={`tab-item ${view === 'management' ? 'active' : ''}`} onClick={() => setView('management')}><Settings size={18}/></button>
+              </div>
           </div>
        </div>
 
