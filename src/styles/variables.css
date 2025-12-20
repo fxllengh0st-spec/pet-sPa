@@ -1,11 +1,9 @@
 
 /* =========================================
-   TOKENS (Design System) - VIBRANT BRAND UPDATE
+   TOKENS (Design System) - FIXED DARK MODE
    ========================================= */
 
 :root {
-  /* Paleta Vibrante Baseada na Imagem da Marca */
-  
   /* Cores de Marca (Constantes) */
   --primary: #9B59B6;       
   --primary-hover: #8E44AD;
@@ -14,31 +12,31 @@
   --brand-yellow: #FDCB6E;
   --brand-green: #00B894;
 
-  /* Temas de Superfície - LIGHT MODE (Default) */
-  --bg-app: #F4F1F6;        
-  --surface: #FFFFFF;
-  --surface-alt: #FAFAFA;   
-  --bg-input: #F8FAFC;      
-  --border-light: #E2E8F0;  
-  --text-main: #2D3436;
-  --text-body: #566573;     
-  --text-muted: #95a5a6;
-  --secondary: #2D3436;
-  --secondary-light: #636E72;
-  --accent: #FDF2FA;
+  /* --- DARK MODE (ÚNICO E PADRÃO) --- */
+  --bg-app: #0F172A;        /* Slate 900 */
+  --surface: #1E293B;       /* Slate 800 */
+  --surface-alt: #161E2E;   
+  --bg-input: #0F172A;      
+  --border-light: #334155;  /* Slate 700 */
+  --text-main: #F8FAFC;     /* Slate 50 */
+  --text-body: #CBD5E1;     /* Slate 300 */
+  --text-muted: #94A3B8;    /* Slate 400 */
+  --secondary: #F8FAFC;
+  --secondary-light: #94A3B8;
+  --accent: #2e1e3b;        /* Roxo profundo pálido */
 
-  /* Status Colors */
-  --status-pending-bg: #FFF8E1; --status-pending-text: #F39C12; 
-  --status-confirmed-bg: #E0F2F1; --status-confirmed-text: #00B894; 
-  --status-progress-bg: #E0F7FA; --status-progress-text: #00CEC9; 
-  --status-completed-bg: #F3E5F5; --status-completed-text: #9B59B6; 
-  --status-cancelled-bg: #FFEBEE; --status-cancelled-text: #FF7675; 
+  /* Sombras Dark */
+  --shadow-sm: 0 4px 6px -1px rgba(0, 0, 0, 0.2);
+  --shadow-card: 0 10px 25px -5px rgba(0, 0, 0, 0.4);
+  --shadow-float: 0 20px 40px -5px rgba(0, 0, 0, 0.5);
 
-  /* Sombras */
-  --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.05);
-  --shadow-card: 0 10px 30px -5px rgba(0, 0, 0, 0.05);
-  --shadow-float: 0 20px 40px -5px rgba(155, 89, 182, 0.15);
-  
+  /* Status Colors Dark */
+  --status-pending-bg: rgba(243, 156, 18, 0.15); --status-pending-text: #F39C12;
+  --status-confirmed-bg: rgba(0, 184, 148, 0.15); --status-confirmed-text: #00B894;
+  --status-progress-bg: rgba(0, 206, 201, 0.15); --status-progress-text: #00CEC9;
+  --status-completed-bg: rgba(155, 89, 182, 0.15); --status-completed-text: #9B59B6;
+  --status-cancelled-bg: rgba(255, 118, 117, 0.15); --status-cancelled-text: #FF7675;
+
   /* Outros */
   --radius-sm: 8px;
   --radius-md: 16px;        
@@ -46,34 +44,6 @@
   --radius-pill: 999px;     
   --z-fixed: 100;
   --z-modal: 2000;
-  --z-overlay: 2500;
   --z-toast: 3000;
   --mobile-header-height: 56px;
-}
-
-/* DARK MODE OVERRIDES */
-[data-theme='dark'] {
-  --bg-app: #0F172A;        /* Slate 900 */
-  --surface: #1E293B;       /* Slate 800 */
-  --surface-alt: #1a2233;   
-  --bg-input: #0F172A;      
-  --border-light: #334155;  /* Slate 700 */
-  --text-main: #F8FAFC;     /* Slate 50 */
-  --text-body: #CBD5E1;     /* Slate 300 */
-  --text-muted: #64748B;    /* Slate 500 */
-  --secondary: #F8FAFC;
-  --secondary-light: #94A3B8;
-  --accent: #2e1e3b;        /* Roxo profundo pálido */
-
-  /* Sombras para Modo Escuro (mais suaves) */
-  --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.2);
-  --shadow-card: 0 10px 30px -5px rgba(0, 0, 0, 0.3);
-  --shadow-float: 0 20px 40px -5px rgba(0, 0, 0, 0.5);
-
-  /* Ajuste de Status para fundo escuro */
-  --status-pending-bg: #3e2e13; 
-  --status-confirmed-bg: #064e3b; 
-  --status-progress-bg: #0c4a6e; 
-  --status-completed-bg: #4c1d95; 
-  --status-cancelled-bg: #450a0a; 
 }
