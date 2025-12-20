@@ -278,15 +278,9 @@ export const api = {
               if (!linkedService) return { success: true, message: 'Assinatura criada, mas erro ao agendar banhos.' };
 
               const totalBaths = pkg.bath_count;
-              
-              // NEW: Interval logic based on package frequency
-              let intervalDays = 7; // Default weekly
-              if (pkg.frequency === 'biweekly') intervalDays = 14;
-              if (pkg.frequency === 'monthly') intervalDays = 30;
-              // Fallback calculation if not explicit
-              if (!pkg.frequency) intervalDays = Math.floor(30 / totalBaths); 
-
+              const intervalDays = Math.floor(30 / totalBaths); // Ex: 4 banhos = cada 7 dias
               const duration = linkedService.duration_minutes;
+
               const firstDate = new Date(firstBathStartIso);
 
               // Loop para criar agendamentos
@@ -295,7 +289,7 @@ export const api = {
                   let targetDate = new Date(firstDate);
                   targetDate.setDate(targetDate.getDate() + (i * intervalDays));
 
-                  // Encontrar slot livre
+                  // Se for o primeiro, usa a hora exata escolhida. 
                   const validStartDate = await findNextValidSlot(targetDate, duration);
                   const validEndDate = new Date(validStartDate.getTime() + duration * 60000);
 

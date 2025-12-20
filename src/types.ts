@@ -65,8 +65,6 @@ export interface Employee {
   profiles?: Profile;
 }
 
-export type PackageFrequency = 'weekly' | 'biweekly' | 'monthly';
-
 export interface Package {
     id: number;
     title: string;
@@ -74,7 +72,6 @@ export interface Package {
     price: number;
     original_price?: number; 
     bath_count: number;
-    frequency: PackageFrequency; // New field
     features: string[];
     highlight: boolean; 
     color_theme?: string; 
