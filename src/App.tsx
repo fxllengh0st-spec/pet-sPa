@@ -24,13 +24,13 @@ import { ServicesPage } from './views/Services';
 import { PackagesView } from './views/Packages';
 import { LoginPage, RegisterPage } from './views/Login';
 import { Dashboard } from './views/Dashboard';
+import { UserProfileView } from './views/Profile';
 import { PetDetailsView, AppointmentDetailsView } from './views/Details';
 
 export default function App() {
   const [view, setView] = useState<Route>('home');
   const [session, setSession] = useState<any>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
-  const [isLoadingData, setIsLoadingData] = useState(false);
   
   // Theme State
   const [theme, setTheme] = useState<'light' | 'dark'>(() => {
@@ -71,6 +71,22 @@ export default function App() {
 
   const toggleTheme = () => setTheme(prev => prev === 'light' ? 'dark' : 'light');
 
+  // Scroll Observer
+  useEffect(() => {
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('visible');
+        }
+      });
+    }, { threshold: 0.1 });
+
+    const elements = document.querySelectorAll('.reveal-on-scroll');
+    elements.forEach(el => observer.observe(el));
+
+    return () => observer.disconnect();
+  }, [view, pets, apps]);
+
   // Initial Load Logic
   useEffect(() => {
     const initApp = async () => {
@@ -78,19 +94,18 @@ export default function App() {
         
         if (existingSession) {
             setSession(existingSession);
-            // Sequencial para garantir que o Dashboard tenha tudo
-            await loadProfile(existingSession.user.id);
-            await loadUserData(existingSession.user.id);
+            loadProfile(existingSession.user.id);
+            loadUserData(existingSession.user.id);
         }
     };
     initApp();
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
       if (session) {
-         if (loginStage === 'idle') {
-             await loadProfile(session.user.id);
-             await loadUserData(session.user.id);
+         if (loginStage === 'idle' && !profile) {
+             loadProfile(session.user.id);
+             loadUserData(session.user.id);
          }
       } else { 
           setProfile(null); 
@@ -105,11 +120,10 @@ export default function App() {
     try {
       const p = await api.auth.getUserProfile(uid);
       setProfile(p);
-    } catch (e) { console.error("Erro perfil:", e); }
+    } catch (e) { console.error(e); }
   };
 
   const loadUserData = async (uid: string) => {
-      setIsLoadingData(true);
       try {
          const [p, a, s, subs] = await Promise.all([
              api.booking.getMyPets(uid),
@@ -117,17 +131,12 @@ export default function App() {
              api.booking.getServices(),
              api.packages.getMySubscriptions(uid)
          ]);
-         setPets(p || []);
-         setApps(a || []);
-         setServices(s || []);
+         setPets(p);
+         setApps(a);
+         setServices(s);
          setSubscriptions(subs || []);
          return { pets: p, apps: a, subscriptions: subs };
-      } catch (e) { 
-          console.error("Erro carregamento dados:", e); 
-          return { pets: [], apps: [], subscriptions: [] }; 
-      } finally {
-          setIsLoadingData(false);
-      }
+      } catch (e) { console.error(e); return { pets: [], apps: [], subscriptions: [] }; }
   };
 
   const handleLogout = async () => {
@@ -154,7 +163,7 @@ export default function App() {
           session={session}
           onComplete={(hasPets) => { 
               setLoginStage('idle'); 
-              navigateTo('dashboard');
+              navigateTo('user-profile');
               if (!hasPets) {
                   setTimeout(() => {
                       setShowPetWizard(true);
@@ -216,6 +225,7 @@ export default function App() {
              <span>Ajudar</span>
           </button>
           
+          {/* FAB Central Button - Toggles Chat Modal */}
           <button className={`nav-item-mobile fab ${isChatOpen ? 'active' : ''}`} onClick={toggleChat}>
              <Sparkles size={24} fill={isChatOpen ? 'currentColor' : 'none'} />
           </button>
@@ -226,7 +236,7 @@ export default function App() {
           </button>
 
           {session ? (
-             <button className={`nav-item-mobile ${view === 'dashboard' || view === 'user-profile' ? 'active' : ''}`} onClick={() => navigateTo('dashboard')}>
+             <button className={`nav-item-mobile ${view === 'dashboard' ? 'active' : ''}`} onClick={() => navigateTo('dashboard')}>
                 <User size={24} strokeWidth={view === 'dashboard' ? 2.5 : 2} />
                 <span>Perfil</span>
              </button>
@@ -256,14 +266,16 @@ export default function App() {
              <a href="#" className={`nav-link-item ${view === 'packages' && 'active'}`} onClick={() => navigateTo('packages')}>Clube VIP</a>
              <a href="#" className={`nav-link-item ${view === 'market' && 'active'}`} onClick={() => navigateTo('market')}>Adoção</a>
              
+             {/* Theme Toggle Desktop */}
              <button className="nav-link-item theme-icon-desktop" onClick={toggleTheme} title="Trocar Tema">
                 {theme === 'light' ? <Moon size={20} /> : <Sun size={20} />}
              </button>
 
+             {/* Chat button toggles modal now */}
              <a href="#" className={`nav-link-item nav-link-cta ${isChatOpen && 'active'}`} onClick={toggleChat}>Assistente IA</a>
              {session ? (
                <>
-                 <a href="#" className={`btn btn-primary btn-sm ${(view === 'dashboard' || view === 'user-profile') && 'active'}`} onClick={() => navigateTo('dashboard')}>Minha Conta</a>
+                 <a href="#" className="btn btn-primary btn-sm" onClick={() => navigateTo('dashboard')}>Minha Conta</a>
                  {profile?.role === 'admin' && <a href="#" className="nav-link-item" onClick={() => navigateTo('admin')}>Admin</a>}
                  <a href="#" className="logout-link" onClick={handleLogout} style={{marginLeft: 20}}>Sair</a>
                </>
@@ -281,6 +293,7 @@ export default function App() {
           {view === 'login' && <LoginPage onNavigate={navigateTo} setLoginStage={setLoginStage} />}
           {view === 'register' && <RegisterPage onNavigate={navigateTo} setLoginStage={setLoginStage} />}
           
+          {/* Chat is now a global overlay widget */}
           {isChatOpen && (
               <Chat 
                   onClose={() => setIsChatOpen(false)}
@@ -290,22 +303,9 @@ export default function App() {
           )}
           
           {view === 'about' && <AboutUs onNavigate={navigateTo} />}
-          
-          {(view === 'dashboard' || view === 'user-profile') && (
-            <Dashboard 
-                profile={profile} 
-                pets={pets} 
-                apps={apps} 
-                subscriptions={subscriptions}
-                onNavigate={navigateTo} 
-                setSelectedPet={setSelectedPet} 
-                setSelectedAppointment={setSelectedAppointment} 
-                onOpenBooking={() => setShowBookingModal(true)}
-                onAddPet={() => setShowPetWizard(true)}
-            />
-          )}
-          
+          {view === 'dashboard' && <Dashboard profile={profile} pets={pets} apps={apps} onNavigate={navigateTo} setSelectedPet={setSelectedPet} setSelectedAppointment={setSelectedAppointment} onOpenBooking={() => setShowBookingModal(true)} />}
           {view === 'admin' && <AdminPanel />}
+          {view === 'user-profile' && <UserProfileView profile={profile} session={session} pets={pets} apps={apps} subscriptions={subscriptions} onNavigate={navigateTo} setSelectedPet={setSelectedPet} onAddPet={() => setShowPetWizard(true)} />}
           {view === 'pet-details' && <PetDetailsView selectedPet={selectedPet} apps={apps} subscriptions={subscriptions} onNavigate={navigateTo} setSelectedAppointment={setSelectedAppointment} />}
           {view === 'appointment-details' && <AppointmentDetailsView selectedAppointment={selectedAppointment} onNavigate={navigateTo} />}
        </main>
