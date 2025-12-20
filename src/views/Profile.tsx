@@ -1,6 +1,11 @@
 
 import React, { useMemo } from 'react';
-import { ChevronLeft, Plus, LayoutDashboard, Clock, TrendingUp, Sparkles, Award, Crown, Calendar, LogOut, Settings, HelpCircle, User, History } from 'lucide-react';
+import { 
+  ChevronRight, Plus, LayoutDashboard, Clock, 
+  TrendingUp, Sparkles, Award, Crown, 
+  LogOut, Settings, HelpCircle, User, 
+  ShieldCheck, Wallet, ChevronLeft
+} from 'lucide-react';
 import { Profile, Pet, Route, Subscription } from '../types';
 import { useToast } from '../context/ToastContext';
 import { getAvatarUrl, getPetAvatarUrl, formatCurrency } from '../utils/ui';
@@ -34,237 +39,146 @@ export const UserProfileView: React.FC<UserProfileProps> = ({
         onNavigate('login');
     };
     
-    // --- CÁLCULO DE ESTATÍSTICAS RICAS ---
     const stats = useMemo(() => {
         const completedApps = apps.filter(a => a.status === 'completed');
         const totalInvested = completedApps.reduce((acc, curr) => acc + (curr.services?.price || 0), 0);
-        const totalMinutes = completedApps.reduce((acc, curr) => acc + (curr.services?.duration_minutes || 0), 0);
-        const totalHours = Math.max(0, Math.round(totalMinutes / 60));
-        
-        const serviceCounts: Record<string, number> = {};
-        completedApps.forEach(a => {
-            const name = a.services?.name || 'Outro';
-            serviceCounts[name] = (serviceCounts[name] || 0) + 1;
-        });
-        
-        let favoriteService = '—';
-        let maxCount = 0;
-        
-        Object.entries(serviceCounts).forEach(([name, count]) => {
-            if (count > maxCount) {
-                maxCount = count;
-                favoriteService = name;
-            }
-        });
-
         const totalCount = completedApps.length;
-        let loyaltyTier = 'Bronze';
-        let nextTierCount = 5;
-        let tierColor = '#CD7F32';
         
+        let loyaltyTier = 'Bronze';
+        let tierColor = '#CD7F32';
+        let nextTierCount = 5;
+
         if (totalCount >= 20) {
             loyaltyTier = 'Diamante';
+            tierColor = '#74B9FF';
             nextTierCount = 50;
-            tierColor = '#b9f2ff';
         } else if (totalCount >= 10) {
             loyaltyTier = 'Ouro';
+            tierColor = '#F1C40F';
             nextTierCount = 20;
-            tierColor = '#FFD700';
         } else if (totalCount >= 5) {
             loyaltyTier = 'Prata';
+            tierColor = '#95A5A6';
             nextTierCount = 10;
-            tierColor = '#C0C0C0';
         }
 
         const progressPercent = Math.min(100, Math.round((totalCount / nextTierCount) * 100));
 
-        return { totalInvested, totalHours, favoriteService, loyaltyTier, totalCount, nextTierCount, progressPercent, tierColor };
+        return { totalInvested, loyaltyTier, totalCount, nextTierCount, progressPercent, tierColor };
     }, [apps]);
 
     return (
-    <div className="container page-enter" style={{ paddingTop: 20, paddingBottom: 100 }}>
+    <div className="container page-enter profile-view-container">
        
-       {/* HEADER TRANSPARENTE COM AÇÕES */}
-       <div className="profile-header-modern reveal-on-scroll">
-           <div style={{display:'flex', alignItems:'center', gap: 16}}>
-               <div className="profile-avatar-lg">
-                  <img 
-                    src={getAvatarUrl(profile?.full_name || 'User')} 
-                    alt="Avatar" 
-                  />
+       {/* HEADER: Identidade e Logout */}
+       <div className="profile-hero-section reveal-on-scroll">
+           <div className="profile-main-info">
+               <div className="profile-avatar-wrapper">
+                  <img src={getAvatarUrl(profile?.full_name || 'User')} alt="Avatar" className="profile-img" />
+                  <div className="status-dot-online"></div>
                </div>
-               <div>
-                   <h2 style={{color:'var(--secondary)', marginBottom: 2, fontSize:'1.4rem'}}>{profile?.full_name?.split(' ')[0]}</h2>
-                   <div style={{display:'flex', alignItems:'center', gap: 6}}>
-                       <span className="tier-badge" style={{backgroundColor: stats.tierColor + '30', color: 'var(--secondary)', borderColor: stats.tierColor}}>
-                           {stats.loyaltyTier}
-                       </span>
-                       {profile?.role === 'admin' && <span className="status-badge tag-confirmed">Admin</span>}
-                   </div>
+               <div className="profile-text-content">
+                   <h2 className="user-name">{profile?.full_name?.split(' ')[0]}</h2>
+                   <p className="user-email">{profile?.email}</p>
                </div>
            </div>
-           <button className="btn-icon-sm" onClick={handleLogout} title="Sair">
-               <LogOut size={18} color="#FF7675" />
+           <button className="logout-circle-btn" onClick={handleLogout} title="Sair">
+               <LogOut size={20} />
            </button>
        </div>
 
-       {/* ADMIN ACCESS CARD */}
+       {/* ADMIN ACCESS (Contextual) */}
        {profile?.role === 'admin' && (
-           <div 
-             className="card clickable-card reveal-on-scroll" 
-             onClick={() => onNavigate('admin')}
-             style={{
-                 marginTop: 0, 
-                 marginBottom: 24, 
-                 background: 'var(--secondary)', 
-                 color: 'white', 
-                 display:'flex', 
-                 alignItems:'center', 
-                 gap: 16,
-                 border: 'none',
-                 position: 'relative',
-                 overflow: 'hidden'
-             }}
-           >
-                <div style={{width: 44, height: 44, background: 'rgba(255,255,255,0.15)', borderRadius: '50%', display:'flex', alignItems:'center', justifyContent:'center', zIndex: 2}}>
-                    <LayoutDashboard size={22} color="white" />
+           <div className="card admin-quick-access reveal-on-scroll" onClick={() => onNavigate('admin')}>
+                <div className="admin-icon-box"><ShieldCheck size={24} /></div>
+                <div className="admin-text">
+                    <strong>Modo Administrativo</strong>
+                    <span>Gerenciar loja e agendamentos</span>
                 </div>
-                <div style={{zIndex: 2}}>
-                    <h3 style={{color:'white', fontSize:'1rem', margin:0}}>Painel de Controle</h3>
-                    <p style={{color:'rgba(255,255,255,0.7)', margin:0, fontSize:'0.8rem'}}>Gestão de Loja & Agendamentos</p>
-                </div>
-                <LayoutDashboard size={100} color="white" style={{position:'absolute', right: -20, bottom: -30, opacity: 0.05}} />
+                <ChevronRight size={20} className="ml-auto opacity-50" />
            </div>
        )}
 
-       {/* QUICK ACTIONS ROW */}
-       <div className="quick-actions-grid reveal-on-scroll">
-           <button className="quick-action-btn" onClick={() => onNavigate('dashboard')}>
-               <div className="qa-icon" style={{background:'#E3F2FD', color:'#2196F3'}}><History size={20}/></div>
-               <span>Histórico</span>
-           </button>
-           <button className="quick-action-btn">
-               <div className="qa-icon" style={{background:'#F3E5F5', color:'#9C27B0'}}><User size={20}/></div>
-               <span>Dados</span>
-           </button>
-           <button className="quick-action-btn">
-               <div className="qa-icon" style={{background:'#E0F2F1', color:'#009688'}}><HelpCircle size={20}/></div>
-               <span>Ajuda</span>
-           </button>
-           <button className="quick-action-btn" onClick={handleLogout}>
-               <div className="qa-icon" style={{background:'#FFEBEE', color:'#F44336'}}><Settings size={20}/></div>
-               <span>Config</span>
-           </button>
+       {/* CARD FIDELIDADE: Estilo Wallet/Cartão de Crédito Premium */}
+       <div className="loyalty-wallet-card reveal-on-scroll" style={{ '--tier-color': stats.tierColor } as any}>
+            <div className="wallet-content">
+                <div className="wallet-header">
+                    <div className="brand-logo-mini"><Award size={18} /> PetSpa Rewards</div>
+                    <div className="tier-tag">{stats.loyaltyTier}</div>
+                </div>
+                <div className="wallet-balance">
+                    <span className="balance-label">Visitas Acumuladas</span>
+                    <h4 className="balance-value">{stats.totalCount}</h4>
+                </div>
+                <div className="wallet-progress-container">
+                    <div className="progress-label-row">
+                        <span>Progresso para o próximo nível</span>
+                        <span>{stats.progressPercent}%</span>
+                    </div>
+                    <div className="wallet-progress-bar">
+                        <div className="progress-fill" style={{ width: `${stats.progressPercent}%` }}></div>
+                    </div>
+                </div>
+            </div>
+            <div className="wallet-bg-decoration">
+                <Award size={140} className="deco-icon" />
+            </div>
        </div>
 
-       {/* PETS SECTION (HORIZONTAL SCROLL / GRID) */}
-       <div className="section-header-row reveal-on-scroll">
+       {/* ACTIONS GRID: Grid 2x2 de ações frequentes */}
+       <div className="actions-grid-modern reveal-on-scroll">
+            <div className="action-card-item" onClick={() => onNavigate('dashboard')}>
+                <div className="action-icon purple"><Clock size={22} /></div>
+                <span>Histórico</span>
+            </div>
+            <div className="action-card-item" onClick={() => onNavigate('packages')}>
+                <div className="action-icon gold"><Crown size={22} /></div>
+                <span>Clube VIP</span>
+            </div>
+            <div className="action-card-item">
+                <div className="action-icon blue"><User size={22} /></div>
+                <span>Meus Dados</span>
+            </div>
+            <div className="action-card-item">
+                <div className="action-icon gray"><Settings size={22} /></div>
+                <span>Ajustes</span>
+            </div>
+       </div>
+
+       {/* SEÇÃO PETS: Horizontal com visual de "Stories" ou cards limpos */}
+       <div className="section-header-modern reveal-on-scroll">
             <h3>Meus Pets</h3>
-            <button className="btn-text-action" onClick={() => onAddPet ? onAddPet() : toast.info('Funcionalidade indisponível')}>
-                <Plus size={16}/> Adicionar
+            <button className="add-pet-inline-btn" onClick={() => onAddPet?.()}>
+                <Plus size={16} /> Novo Pet
             </button>
        </div>
-       
-       {pets.length === 0 ? (
-           <div className="empty-state-card reveal-on-scroll" onClick={() => onAddPet && onAddPet()}>
-               <div className="empty-icon-bg"><Plus size={32} color="var(--primary)"/></div>
-               <p>Cadastre seu primeiro pet</p>
-           </div>
-       ) : (
-         <div className="pets-grid-modern reveal-on-scroll">
-           {pets.map(p => (
-              <div key={p.id} className="pet-modern-card clickable-card" onClick={() => { setSelectedPet(p); onNavigate('pet-details'); }}>
-                 <img src={getPetAvatarUrl(p.name)} className="pet-img-cover" alt={p.name} />
-                 <div className="pet-card-info">
-                     <strong>{p.name}</strong>
-                     <span>{p.breed || 'Pet Amado'}</span>
-                 </div>
-              </div>
-           ))}
-         </div>
-       )}
 
-       {/* SUBSCRIPTIONS */}
-       {subscriptions.length > 0 && (
-           <div className="reveal-on-scroll mt-4">
-               <h3 className="section-title-sm">Assinaturas Ativas</h3>
-               <div style={{display:'flex', flexDirection:'column', gap: 12}}>
-                   {subscriptions.map(sub => {
-                       const pet = pets.find(p => p.id === sub.pet_id);
-                       const expireDate = new Date(sub.created_at);
-                       expireDate.setDate(expireDate.getDate() + 30);
-                       const daysLeft = Math.ceil((expireDate.getTime() - new Date().getTime()) / (1000 * 3600 * 24));
-                       
-                       return (
-                           <div key={sub.id} className="card sub-compact-card clickable-card" onClick={() => { if(pet) { setSelectedPet(pet); onNavigate('pet-details'); } }}>
-                               <div className="sub-icon-box">
-                                   <Crown size={20} color="white" />
-                               </div>
-                               <div style={{flex:1}}>
-                                   <strong style={{display:'block', fontSize:'0.9rem', color:'var(--secondary)'}}>{sub.packages?.title}</strong>
-                                   <div style={{fontSize:'0.75rem', color:'var(--text-muted)'}}>Pet: {pet?.name}</div>
-                               </div>
-                               <div className="sub-status-tag" style={{color: daysLeft < 5 ? '#e17055' : '#00b894', background: daysLeft < 5 ? '#fab1a030' : '#55efc420'}}>
-                                   {daysLeft} dias
-                               </div>
-                           </div>
-                       );
-                   })}
+       <div className="pets-scroll-container reveal-on-scroll">
+           {pets.length === 0 ? (
+               <div className="pet-empty-state" onClick={() => onAddPet?.()}>
+                   <div className="plus-icon-circle"><Plus size={24} /></div>
+                   <span>Adicionar primeiro pet</span>
                </div>
-           </div>
-       )}
-
-       {/* FIDELITY CARD */}
-       <div className="reveal-on-scroll mt-4">
-          <h3 className="section-title-sm">Clube de Fidelidade</h3>
-          <div className="loyalty-card-modern">
-              <div className="loyalty-bg-pattern"></div>
-              <div className="loyalty-content">
-                  <div className="loyalty-top">
-                      <div className="loyalty-brand">
-                          <Award size={20} color={stats.tierColor} />
-                          <span>PetSpa Rewards</span>
-                      </div>
-                      <span className="loyalty-tier-text" style={{color: stats.tierColor}}>{stats.loyaltyTier}</span>
-                  </div>
-                  
-                  <div className="loyalty-middle">
-                      <div className="big-stat">
-                          <span className="label">Banhos Realizados</span>
-                          <span className="value">{stats.totalCount}</span>
-                      </div>
-                      <div className="big-stat right">
-                          <span className="label">Próximo Nível</span>
-                          <span className="value">{stats.nextTierCount}</span>
-                      </div>
-                  </div>
-
-                  <div className="loyalty-bar-container">
-                      <div className="loyalty-bar-fill" style={{width: `${stats.progressPercent}%`, background: stats.tierColor}}></div>
-                  </div>
-                  <div className="loyalty-footer">
-                      <span>Faltam {Math.max(0, stats.nextTierCount - stats.totalCount)} visitas para subir de nível</span>
-                  </div>
-              </div>
-          </div>
+           ) : (
+               <div className="pets-flex-row">
+                    {pets.map(p => (
+                        <div key={p.id} className="pet-mini-card" onClick={() => { setSelectedPet(p); onNavigate('pet-details'); }}>
+                            <div className="pet-img-ring">
+                                <img src={getPetAvatarUrl(p.name)} alt={p.name} />
+                            </div>
+                            <strong>{p.name}</strong>
+                        </div>
+                    ))}
+               </div>
+           )}
        </div>
 
-       {/* FUN STATS */}
-       <div className="stats-row-mini reveal-on-scroll">
-           <div className="mini-stat">
-               <Clock size={16} className="text-purple-500 mb-1"/>
-               <strong>{stats.totalHours}h</strong>
-               <span>de Mimo</span>
-           </div>
-           <div className="mini-stat">
-               <TrendingUp size={16} className="text-green-500 mb-1"/>
+       {/* TOTAL INVESTED MINI BANNER */}
+       <div className="invested-mini-card reveal-on-scroll">
+           <div className="invested-icon"><Wallet size={20} /></div>
+           <div className="invested-info">
+               <span>Total investido em bem-estar</span>
                <strong>{formatCurrency(stats.totalInvested)}</strong>
-               <span>Investidos</span>
-           </div>
-           <div className="mini-stat">
-               <Sparkles size={16} className="text-orange-500 mb-1"/>
-               <strong>{stats.favoriteService}</strong>
-               <span>Favorito</span>
            </div>
        </div>
 
