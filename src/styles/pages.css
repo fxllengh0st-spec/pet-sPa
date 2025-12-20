@@ -1,373 +1,433 @@
 
 /* =========================================
-   PROFILE VIEW ENHANCEMENTS
+   PET DETAILS & PASSPORT UI
    ========================================= */
 
-.profile-view-container {
-    padding-top: 20px;
+.pet-profile-container {
+    padding-top: 10px;
     padding-bottom: 120px;
 }
 
-.profile-hero-section {
+.nav-header-modern {
     display: flex;
-    align-items: center;
     justify-content: space-between;
+    align-items: center;
     margin-bottom: 24px;
 }
 
-.profile-main-info {
-    display: flex;
-    align-items: center;
-    gap: 16px;
-}
-
-.profile-avatar-wrapper {
-    position: relative;
-    width: 64px;
-    height: 64px;
-}
-
-.profile-img {
-    width: 100%;
-    height: 100%;
-    border-radius: 50%;
-    object-fit: cover;
-    border: 3px solid var(--surface);
-    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-}
-
-.status-dot-online {
-    position: absolute;
-    bottom: 2px;
-    right: 2px;
-    width: 14px;
-    height: 14px;
-    background: var(--brand-green);
-    border: 3px solid var(--surface);
-    border-radius: 50%;
-}
-
-.user-name {
-    margin: 0;
-    font-size: 1.5rem;
-    color: var(--secondary);
-}
-
-.user-email {
-    margin: 0;
-    font-size: 0.85rem;
-    color: var(--text-muted);
-}
-
-.logout-circle-btn {
+.btn-icon-back {
     width: 44px;
     height: 44px;
-    border-radius: 50%;
-    border: none;
+    border-radius: 12px;
+    border: 1px solid var(--border-light);
     background: var(--surface);
-    color: #FF7675;
+    color: var(--secondary);
     display: flex;
     align-items: center;
     justify-content: center;
-    box-shadow: var(--shadow-sm);
     cursor: pointer;
     transition: all 0.2s;
 }
 
-.logout-circle-btn:hover {
-    transform: rotate(15deg) scale(1.1);
-    background: #FFF5F5;
+.header-actions {
+    display: flex;
+    gap: 8px;
 }
 
-/* Admin Quick Access */
-.admin-quick-access {
-    display: flex;
-    align-items: center;
-    gap: 16px;
-    background: var(--secondary);
-    color: white;
-    padding: 16px;
-    margin-bottom: 24px;
+.btn-icon-ghost {
+    background: transparent;
     border: none;
+    color: var(--text-muted);
+    padding: 8px;
+    cursor: pointer;
 }
 
-.admin-icon-box {
-    width: 44px;
-    height: 44px;
-    background: rgba(255,255,255,0.15);
-    border-radius: 12px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.admin-text strong { display: block; font-size: 0.95rem; }
-.admin-text span { font-size: 0.75rem; opacity: 0.7; }
-
-/* Loyalty Wallet Card */
-.loyalty-wallet-card {
-    background: linear-gradient(135deg, var(--secondary) 0%, #000 100%);
+/* Pet Passport Card */
+.pet-passport-card {
+    background: var(--surface);
     border-radius: 24px;
     padding: 24px;
-    color: white;
     position: relative;
     overflow: hidden;
     margin-bottom: 24px;
-    box-shadow: 0 12px 24px rgba(0,0,0,0.2);
-    border: 1px solid rgba(255,255,255,0.1);
+    box-shadow: var(--shadow-card);
+    border: 1px solid var(--border-light);
 }
 
-.wallet-content {
-    position: relative;
-    z-index: 2;
+.passport-pattern {
+    position: absolute;
+    top: 0; left: 0; width: 100%; height: 6px;
+    background: linear-gradient(to right, var(--primary), var(--brand-cyan));
 }
 
-.wallet-header {
+.passport-content {
     display: flex;
-    justify-content: space-between;
     align-items: center;
-    margin-bottom: 20px;
+    gap: 20px;
 }
 
-.brand-logo-mini {
+.pet-photo-section {
+    position: relative;
+}
+
+.photo-ring {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    padding: 4px;
+    border: 2px solid var(--primary);
+}
+
+.photo-ring img {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.pet-species-icon {
+    position: absolute;
+    bottom: -2px;
+    right: -2px;
+    background: white;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+    box-shadow: var(--shadow-sm);
+}
+
+.pet-identity-name {
+    margin: 0;
+    font-size: 1.6rem;
+    color: var(--secondary);
+}
+
+.pet-identity-breed {
+    margin: 0 0 12px 0;
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    font-weight: 600;
+}
+
+.pet-vital-stats-row {
+    display: flex;
+    gap: 12px;
+}
+
+.vital-stat {
     display: flex;
     align-items: center;
     gap: 6px;
     font-size: 0.75rem;
     font-weight: 700;
-    letter-spacing: 0.05em;
-    opacity: 0.8;
+    color: var(--text-body);
+    background: var(--bg-app);
+    padding: 4px 10px;
+    border-radius: 10px;
 }
 
-.tier-tag {
-    background: var(--tier-color, var(--primary));
-    color: black;
-    font-weight: 800;
-    font-size: 0.65rem;
-    padding: 4px 12px;
-    border-radius: 20px;
-    text-transform: uppercase;
+.vital-stat.status-active {
+    background: #E0F2F1;
+    color: var(--brand-green);
 }
 
-.wallet-balance {
-    margin-bottom: 20px;
-}
-
-.balance-label {
-    font-size: 0.75rem;
+.vital-icon {
     opacity: 0.6;
-    display: block;
 }
 
-.balance-value {
-    font-size: 2.2rem;
-    margin: 0;
-    font-family: 'Quicksand', sans-serif;
+/* Wellness Dashboard */
+.wellness-dashboard-card {
+    background: var(--secondary);
+    color: white;
+    border-radius: 20px;
+    padding: 20px;
+    margin-bottom: 24px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.15);
 }
 
-.wallet-progress-container {
-    margin-top: 10px;
+.wellness-tag {
+    font-size: 0.65rem;
+    font-weight: 800;
+    letter-spacing: 0.05em;
+    color: var(--brand-yellow);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 4px;
 }
 
-.progress-label-row {
+.wellness-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    margin-bottom: 16px;
+}
+
+.wellness-progress-area {
+    margin-top: 12px;
+}
+
+.progress-bar-bg {
+    height: 8px;
+    background: rgba(255,255,255,0.1);
+    border-radius: 10px;
+    margin-bottom: 8px;
+}
+
+.progress-bar-fill {
+    height: 100%;
+    background: var(--primary);
+    border-radius: 10px;
+    box-shadow: 0 0 12px var(--primary);
+}
+
+.progress-info-row {
     display: flex;
     justify-content: space-between;
-    font-size: 0.7rem;
-    margin-bottom: 6px;
+    font-size: 0.75rem;
     opacity: 0.7;
 }
 
-.wallet-progress-bar {
-    height: 6px;
-    background: rgba(255,255,255,0.1);
-    border-radius: 10px;
-    overflow: hidden;
-}
-
-.wallet-progress-bar .progress-fill {
-    height: 100%;
-    background: var(--tier-color, var(--primary));
-    box-shadow: 0 0 10px var(--tier-color, var(--primary));
-}
-
-.wallet-bg-decoration {
-    position: absolute;
-    right: -20px;
-    bottom: -30px;
-    opacity: 0.1;
-    z-index: 1;
-    transform: rotate(-15deg);
-}
-
-/* Actions Grid Modern */
-.actions-grid-modern {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 12px;
-    margin-bottom: 24px;
-}
-
-.action-card-item {
-    background: var(--surface);
+/* Upsell Banner */
+.upsell-mini-banner {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    background: var(--accent);
     padding: 16px;
     border-radius: 20px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 10px;
-    box-shadow: var(--shadow-sm);
-    border: 1px solid var(--border-light);
+    margin-bottom: 24px;
     cursor: pointer;
-    transition: all 0.2s;
 }
 
-.action-card-item:active { transform: scale(0.95); }
-
-.action-icon {
-    width: 48px;
-    height: 48px;
+.upsell-icon {
+    width: 44px;
+    height: 44px;
+    background: white;
     border-radius: 14px;
     display: flex;
     align-items: center;
     justify-content: center;
-}
-
-.action-icon.purple { background: #F3E5F5; color: #9C27B0; }
-.action-icon.gold { background: #FFF8E1; color: #FFB300; }
-.action-icon.blue { background: #E3F2FD; color: #1E88E5; }
-.action-icon.gray { background: #F5F5F5; color: #616161; }
-
-.action-card-item span {
-    font-size: 0.85rem;
-    font-weight: 700;
-    color: var(--secondary);
-}
-
-/* Pets Scroll Section */
-.section-header-modern {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 16px;
-}
-
-.add-pet-inline-btn {
-    background: var(--accent);
-    color: var(--primary);
-    border: none;
-    padding: 6px 14px;
-    border-radius: 12px;
-    font-size: 0.8rem;
-    font-weight: 700;
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    cursor: pointer;
-}
-
-.pets-scroll-container {
-    margin-bottom: 24px;
-}
-
-.pets-flex-row {
-    display: flex;
-    gap: 16px;
-    overflow-x: auto;
-    padding: 4px 4px 12px;
-    scrollbar-width: none;
-}
-
-.pets-flex-row::-webkit-scrollbar { display: none; }
-
-.pet-mini-card {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 8px;
-    min-width: 80px;
-    cursor: pointer;
-}
-
-.pet-img-ring {
-    width: 70px;
-    height: 70px;
-    border-radius: 50%;
-    padding: 3px;
-    border: 2px solid var(--border-light);
-    transition: all 0.2s;
-}
-
-.pet-mini-card:hover .pet-img-ring {
-    border-color: var(--primary);
-    transform: scale(1.05);
-}
-
-.pet-img-ring img {
-    width: 100%;
-    height: 100%;
-    border-radius: 50%;
-    object-fit: cover;
-}
-
-.pet-mini-card strong {
-    font-size: 0.8rem;
-    color: var(--secondary);
-}
-
-.pet-empty-state {
-    background: var(--surface-alt);
-    border: 2px dashed var(--border-light);
-    padding: 24px;
-    border-radius: 20px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 10px;
-    cursor: pointer;
-    color: var(--text-muted);
-}
-
-.plus-icon-circle {
-    width: 44px;
-    height: 44px;
-    background: var(--surface);
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
     color: var(--primary);
     box-shadow: var(--shadow-sm);
 }
 
-/* Invested Mini Card */
-.invested-mini-card {
-    background: var(--accent);
-    padding: 16px;
-    border-radius: 16px;
-    display: flex;
-    align-items: center;
-    gap: 12px;
+.upsell-text strong { display: block; font-size: 0.9rem; color: var(--secondary); }
+.upsell-text span { font-size: 0.75rem; color: var(--text-muted); }
+
+/* Timeline Modern */
+.timeline-section {
+    margin-top: 32px;
 }
 
-.invested-icon {
+.count-badge {
+    background: var(--bg-app);
+    color: var(--text-muted);
+    font-size: 0.75rem;
+    font-weight: 800;
+    padding: 2px 8px;
+    border-radius: 10px;
+}
+
+.modern-timeline {
+    margin-top: 20px;
+    display: flex;
+    flex-direction: column;
+}
+
+.timeline-node {
+    display: flex;
+    gap: 16px;
+    cursor: pointer;
+}
+
+.node-sidebar {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 20px;
+}
+
+.node-dot {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: var(--bg-app);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2;
+}
+
+.node-dot.dot-completed { background: var(--brand-green); color: white; }
+.node-dot.dot-pending { background: var(--brand-yellow); color: white; }
+.node-dot.dot-confirmed { background: var(--primary); color: white; }
+
+.node-line {
+    width: 2px;
+    flex: 1;
+    background: var(--border-light);
+    margin: 4px 0;
+}
+
+.node-card {
+    flex: 1;
+    margin-bottom: 16px;
+    padding: 16px;
+    display: flex;
+    gap: 12px;
+    align-items: center;
+}
+
+.node-service-icon {
     width: 40px;
     height: 40px;
-    background: white;
+    background: var(--bg-app);
     border-radius: 12px;
     display: flex;
     align-items: center;
     justify-content: center;
-    color: var(--primary);
-    box-shadow: 0 4px 8px rgba(155, 89, 182, 0.1);
+    color: var(--secondary);
 }
 
-.invested-info span {
-    display: block;
+.node-content {
+    flex: 1;
+}
+
+.node-top {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 4px;
+}
+
+.node-top strong { font-size: 0.9rem; color: var(--secondary); }
+.node-price { font-size: 0.85rem; font-weight: 700; color: var(--primary); }
+
+.node-bottom {
+    display: flex;
+    justify-content: space-between;
     font-size: 0.75rem;
     color: var(--text-muted);
 }
 
-.invested-info strong {
-    font-size: 1.1rem;
-    color: var(--secondary);
+.status-pill {
+    font-weight: 800;
+    text-transform: uppercase;
+    font-size: 0.65rem;
+}
+
+.pill-completed { color: var(--brand-green); }
+.pill-pending { color: var(--brand-yellow); }
+
+/* Tutor Notes */
+.notes-display-card {
+    background: #FFFDE7;
+    border: 1px solid #FFF59D;
+    padding: 20px;
+    border-radius: 20px;
+    margin-top: 24px;
+}
+
+.notes-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 700;
+    font-size: 0.9rem;
+    margin-bottom: 8px;
+    color: #FBC02D;
+}
+
+.notes-display-card p {
+    margin: 0;
+    font-size: 0.85rem;
+    color: #5D4037;
+    line-height: 1.5;
+}
+
+.empty-timeline-state {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--text-muted);
+}
+
+.empty-circle {
+    width: 64px;
+    height: 64px;
+    background: var(--bg-app);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 16px;
+    opacity: 0.5;
+}
+
+/* Appointment Details Adjustments */
+.appointment-details-view {
+    padding-bottom: 40px;
+}
+
+.detailed-app-card {
+    padding: 0;
+    overflow: hidden;
+    margin-bottom: 24px;
+}
+
+.status-banner {
+    padding: 12px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 700;
+    font-size: 0.85rem;
+}
+
+.banner-completed { background: #E0F2F1; color: var(--brand-green); }
+.banner-pending { background: #FFF8E1; color: var(--brand-yellow); }
+
+.app-main-info {
+    padding: 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid var(--border-light);
+}
+
+.app-pet-snapshot img {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    margin-bottom: 8px;
+}
+
+.app-pet-snapshot h4 { margin: 0; font-size: 1rem; }
+
+.app-service-snapshot { text-align: right; }
+.app-service-snapshot strong { font-size: 1.2rem; color: var(--primary); display: block; }
+
+.app-time-location {
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.info-row {
+    display: flex;
+    gap: 16px;
+    align-items: center;
+    color: var(--text-body);
+}
+
+.info-row span { font-size: 0.75rem; color: var(--text-muted); display: block; }
+.info-row strong { font-size: 0.95rem; }
+
+.btn-outline-danger {
+    background: transparent;
+    border: 2px solid #FF7675;
+    color: #FF7675;
 }
