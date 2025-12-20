@@ -63,6 +63,10 @@ export const AdminManagement: React.FC = () => {
             if (tab === 'packages' && !data.color_theme) {
                 data.color_theme = '#9B59B6';
             }
+            // Default frequency if missing
+            if (tab === 'packages' && !data.frequency) {
+                data.frequency = 'weekly';
+            }
             setFormData(data);
         } else {
             setEditingId(null);
@@ -72,7 +76,8 @@ export const AdminManagement: React.FC = () => {
             } else {
                 setFormData({ 
                     title: '', price: 0, original_price: 0, 
-                    bath_count: 1, features: '', highlight: false, 
+                    bath_count: 4, frequency: 'weekly', // Default: 4 baths, once a week
+                    features: '', highlight: false, 
                     color_theme: '#9B59B6', active: true, description: '',
                     service_id: '' // Start empty
                 });
@@ -198,7 +203,7 @@ export const AdminManagement: React.FC = () => {
                                     <th>ID</th>
                                     <th>Nome/Título</th>
                                     <th>Preço</th>
-                                    {tab === 'services' ? <th>Duração</th> : <th>Banhos / Serviço</th>}
+                                    {tab === 'services' ? <th>Duração</th> : <th>Banhos / Freq.</th>}
                                     <th>Status</th>
                                     <th style={{textAlign:'right'}}>Ações</th>
                                 </tr>
@@ -218,6 +223,7 @@ export const AdminManagement: React.FC = () => {
                                     </tr>
                                 )) : packages.map(p => {
                                     const linkedService = services.find(s => s.id === p.service_id);
+                                    const freqLabels = { weekly: 'Semanal', biweekly: 'Quinzenal', monthly: 'Mensal' };
                                     return (
                                         <tr key={p.id}>
                                             <td>#{p.id}</td>
@@ -230,8 +236,8 @@ export const AdminManagement: React.FC = () => {
                                                 {p.original_price && Number(p.original_price) > Number(p.price) && <small style={{textDecoration:'line-through', color:'#999', marginLeft:4}}>{formatCurrency(Number(p.original_price))}</small>}
                                             </td>
                                             <td>
-                                                {p.bath_count}x 
-                                                {linkedService && <span style={{display:'inline-block', marginLeft:6, fontSize:'0.75rem', color:'var(--primary)', fontWeight:600}}>{linkedService.name}</span>}
+                                                {p.bath_count}x - <strong>{freqLabels[p.frequency] || 'S/D'}</strong>
+                                                <div style={{fontSize:'0.7rem', color:'var(--primary)'}}>{linkedService?.name}</div>
                                             </td>
                                             <td>{p.active ? <span className="status-badge tag-confirmed">Ativo</span> : <span className="status-badge tag-cancelled">Inativo</span>}</td>
                                             <td style={{textAlign:'right'}}>
@@ -349,10 +355,6 @@ export const AdminManagement: React.FC = () => {
                                                         />
                                                     </div>
                                                 </div>
-
-                                                <small style={{display:'block', color:'#666'}}>
-                                                    ℹ️ Este serviço será cadastrado automaticamente na tabela de serviços.
-                                                </small>
                                             </div>
                                         )}
 
@@ -362,31 +364,36 @@ export const AdminManagement: React.FC = () => {
                                                 <input required type="number" step="0.01" value={formData.price} onChange={e => setFormData({...formData, price: e.target.value})} />
                                             </div>
                                             <div className="form-group full-width">
-                                                <label>Preço Original (R$)</label>
-                                                <input type="number" step="0.01" value={formData.original_price || ''} onChange={e => setFormData({...formData, original_price: e.target.value})} placeholder="Para mostrar desconto" />
-                                            </div>
-                                        </div>
-                                        <div style={{display:'flex', gap:10}}>
-                                            <div className="form-group full-width">
                                                 <label>Qtd. Banhos</label>
                                                 <input required type="number" value={formData.bath_count} onChange={e => setFormData({...formData, bath_count: e.target.value})} />
+                                            </div>
+                                        </div>
+
+                                        <div style={{display:'flex', gap:10}}>
+                                            <div className="form-group full-width">
+                                                <label>Frequência</label>
+                                                <select className="input-lg" value={formData.frequency} onChange={e => setFormData({...formData, frequency: e.target.value})}>
+                                                    <option value="weekly">Semanal (7 dias)</option>
+                                                    <option value="biweekly">Quinzenal (14 dias)</option>
+                                                    <option value="monthly">Mensal (30 dias)</option>
+                                                </select>
                                             </div>
                                             <div className="form-group full-width">
                                                 <label>Cor do Tema</label>
                                                 <input type="color" style={{height:44, padding:4}} value={formData.color_theme && formData.color_theme.startsWith('#') ? formData.color_theme : '#9B59B6'} onChange={e => setFormData({...formData, color_theme: e.target.value})} />
                                             </div>
                                         </div>
+
                                         <div className="form-group">
                                             <label>Benefícios (Um por linha)</label>
-                                            <textarea className="input-lg" style={{padding:12, height: 100}} value={formData.features || ''} onChange={e => setFormData({...formData, features: e.target.value})} placeholder="Ex: Banho Premium&#10;Tosa Higiênica&#10;Taxi Dog" />
+                                            <textarea className="input-lg" style={{padding:12, height: 80}} value={formData.features || ''} onChange={e => setFormData({...formData, features: e.target.value})} placeholder="Ex: Banho Premium&#10;Tosa Higiênica" />
                                         </div>
                                         
                                         <div style={{display:'flex', gap:20, marginTop:10}}>
                                             <div className="form-group" style={{display:'flex', alignItems:'center', gap:8, cursor:'pointer'}} onClick={() => setFormData({...formData, highlight: !formData.highlight})}>
                                                 {formData.highlight ? <CheckSquare color="var(--primary)"/> : <Square color="#ccc"/>}
-                                                <label style={{margin:0, cursor:'pointer'}}>Destaque (Mais Popular)</label>
+                                                <label style={{margin:0, cursor:'pointer'}}>Destaque</label>
                                             </div>
-                                            
                                             <div className="form-group" style={{display:'flex', alignItems:'center', gap:8, cursor:'pointer'}} onClick={() => setFormData({...formData, active: !formData.active})}>
                                                 {formData.active ? <CheckSquare color="var(--primary)"/> : <Square color="#ccc"/>}
                                                 <label style={{margin:0, cursor:'pointer'}}>Ativo</label>
