@@ -174,10 +174,10 @@
     font-weight: 500;
 }
 
-/* Glass effect for features with better contrast */
-.feature-green { background: linear-gradient(135deg, #FFFFFF 40%, rgba(0, 184, 148, 0.12) 100%); }
-.feature-red { background: linear-gradient(135deg, #FFFFFF 40%, rgba(255, 118, 117, 0.12) 100%); }
-.feature-blue { background: linear-gradient(135deg, #FFFFFF 40%, rgba(155, 89, 182, 0.12) 100%); }
+/* Glass effect for features with better contrast - Optimized for Dark Mode */
+.feature-green { background: linear-gradient(135deg, var(--surface) 40%, rgba(0, 184, 148, 0.12) 100%); }
+.feature-red { background: linear-gradient(135deg, var(--surface) 40%, rgba(255, 118, 117, 0.12) 100%); }
+.feature-blue { background: linear-gradient(135deg, var(--surface) 40%, rgba(155, 89, 182, 0.12) 100%); }
 
 .feature-img-wrapper {
     position: absolute; 
