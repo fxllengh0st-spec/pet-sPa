@@ -1,4 +1,5 @@
 
+
 /* =========================================
    TOKENS (Design System) - VIBRANT BRAND UPDATE
    ========================================= */
@@ -6,27 +7,40 @@
 :root {
   /* Paleta Vibrante Baseada na Imagem da Marca */
   
-  /* Cores de Marca (Constantes) */
+  /* Roxo (Primary) - Sofisticação e "Spa" */
   --primary: #9B59B6;       
   --primary-hover: #8E44AD;
   --primary-glow: rgba(155, 89, 182, 0.4); 
+  
+  /* Ciano (Secondary Action) - Limpeza e Frescor */
   --brand-cyan: #00CEC9;
+  
+  /* Amarelo (Accent/Warning) - Energia */
   --brand-yellow: #FDCB6E;
+  
+  /* Verde (Success) - Saúde */
   --brand-green: #00B894;
 
-  /* Temas de Superfície - LIGHT MODE (Default) */
-  --bg-app: #F4F1F6;        
+  /* Neutros */
+  --secondary: #2D3436;     /* Texto Escuro */
+  --secondary-light: #636E72;
+  
+  --accent: #FDF2FA;        /* Roxo muito pálido para fundos de ícones */
   --surface: #FFFFFF;
-  --surface-alt: #FAFAFA;   
+  --surface-alt: #FAFAFA;   /* Fundo alternativo para cards secundários */
+  
+  /* AJUSTE DE DESIGN: Fundo sofisticado (Lavanda Acinzentado) */
+  --bg-app: #F4F1F6;        
+  
+  /* Input com contraste adequado sobre fundo branco */
   --bg-input: #F8FAFC;      
+  
   --border-light: #E2E8F0;  
+  
   --text-main: #2D3436;
   --text-body: #566573;     
   --text-muted: #95a5a6;
-  --secondary: #2D3436;
-  --secondary-light: #636E72;
-  --accent: #FDF2FA;
-
+  
   /* Status Colors */
   --status-pending-bg: #FFF8E1; --status-pending-text: #F39C12; 
   --status-confirmed-bg: #E0F2F1; --status-confirmed-text: #00B894; 
@@ -34,46 +48,28 @@
   --status-completed-bg: #F3E5F5; --status-completed-text: #9B59B6; 
   --status-cancelled-bg: #FFEBEE; --status-cancelled-text: #FF7675; 
 
-  /* Sombras */
-  --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.05);
-  --shadow-card: 0 10px 30px -5px rgba(0, 0, 0, 0.05);
-  --shadow-float: 0 20px 40px -5px rgba(155, 89, 182, 0.15);
-  
-  /* Outros */
+  /* Formas */
   --radius-sm: 8px;
   --radius-md: 16px;        
   --radius-lg: 24px;
   --radius-pill: 999px;     
+  
+  /* Sombras - Modernas e Profundas */
+  --shadow-sm: 0 2px 4px rgba(155, 89, 182, 0.05);
+  /* Sombra principal: Difusa e com leve tom da marca para integração */
+  --shadow-card: 0 10px 30px -5px rgba(45, 52, 54, 0.05), 0 4px 10px -2px rgba(0,0,0,0.01);
+  --shadow-float: 0 20px 40px -5px rgba(155, 89, 182, 0.15);
+  --shadow-inner: inset 0 2px 4px 0 rgba(0, 0, 0, 0.03);
+  
+  /* Z-Index Hierarchy */
+  --z-back: 0;
+  --z-normal: 10;
   --z-fixed: 100;
   --z-modal: 2000;
   --z-overlay: 2500;
   --z-toast: 3000;
+
+  --safe-bottom: env(safe-area-inset-bottom, 16px);
+  --header-height: 60px;
   --mobile-header-height: 56px;
-}
-
-/* DARK MODE OVERRIDES */
-[data-theme='dark'] {
-  --bg-app: #0F172A;        /* Slate 900 */
-  --surface: #1E293B;       /* Slate 800 */
-  --surface-alt: #1a2233;   
-  --bg-input: #0F172A;      
-  --border-light: #334155;  /* Slate 700 */
-  --text-main: #F8FAFC;     /* Slate 50 */
-  --text-body: #CBD5E1;     /* Slate 300 */
-  --text-muted: #64748B;    /* Slate 500 */
-  --secondary: #F8FAFC;
-  --secondary-light: #94A3B8;
-  --accent: #2e1e3b;        /* Roxo profundo pálido */
-
-  /* Sombras para Modo Escuro (mais suaves) */
-  --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.2);
-  --shadow-card: 0 10px 30px -5px rgba(0, 0, 0, 0.3);
-  --shadow-float: 0 20px 40px -5px rgba(0, 0, 0, 0.5);
-
-  /* Ajuste de Status para fundo escuro */
-  --status-pending-bg: #3e2e13; 
-  --status-confirmed-bg: #064e3b; 
-  --status-progress-bg: #0c4a6e; 
-  --status-completed-bg: #4c1d95; 
-  --status-cancelled-bg: #450a0a; 
 }
