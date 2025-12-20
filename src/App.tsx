@@ -9,7 +9,7 @@ import { AdminPanel } from './components/Admin';
 import { Logo } from './components/Logo';
 import { Marketplace } from './components/Marketplace';
 import { useToast } from './context/ToastContext';
-import { Home, User, HeartHandshake, Sparkles, PlusCircle } from 'lucide-react';
+import { Home, User, HeartHandshake, Sparkles, PlusCircle, Moon, Sun } from 'lucide-react';
 
 // Modules
 import { LoginFlowOverlay } from './components/LoginFlowOverlay';
@@ -32,11 +32,12 @@ export default function App() {
   const [session, setSession] = useState<any>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   
-  // Theme is now fixed to dark globally via CSS variables
-  // and direct attribute application for compatibility
-  useEffect(() => {
-    document.documentElement.setAttribute('data-theme', 'dark');
-  }, []);
+  // Theme State
+  const [theme, setTheme] = useState<'light' | 'dark'>(() => {
+    const saved = localStorage.getItem('petspa-theme');
+    if (saved === 'light' || saved === 'dark') return saved;
+    return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+  });
 
   // Data State
   const [pets, setPets] = useState<Pet[]>([]);
@@ -61,6 +62,14 @@ export default function App() {
   const [showMascotBubble, setShowMascotBubble] = useState(false);
 
   const toast = useToast();
+
+  // Apply Theme Effect
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', theme);
+    localStorage.setItem('petspa-theme', theme);
+  }, [theme]);
+
+  const toggleTheme = () => setTheme(prev => prev === 'light' ? 'dark' : 'light');
 
   // Scroll Observer
   useEffect(() => {
@@ -199,7 +208,9 @@ export default function App() {
        {/* MOBILE TOP BAR */}
        <div className="mobile-top-bar">
           <Logo height={44} onClick={() => navigateTo('home')} />
-          {/* Theme toggle removed for fixed dark mode */}
+          <button className="theme-toggle-btn" onClick={toggleTheme}>
+            {theme === 'light' ? <Moon size={20} /> : <Sun size={20} />}
+          </button>
        </div>
 
        {/* MOBILE BOTTOM NAV */}
@@ -254,6 +265,11 @@ export default function App() {
              <a href="#" className={`nav-link-item ${view === 'services' && 'active'}`} onClick={() => navigateTo('services')}>Serviços</a>
              <a href="#" className={`nav-link-item ${view === 'packages' && 'active'}`} onClick={() => navigateTo('packages')}>Clube VIP</a>
              <a href="#" className={`nav-link-item ${view === 'market' && 'active'}`} onClick={() => navigateTo('market')}>Adoção</a>
+             
+             {/* Theme Toggle Desktop */}
+             <button className="nav-link-item theme-icon-desktop" onClick={toggleTheme} title="Trocar Tema">
+                {theme === 'light' ? <Moon size={20} /> : <Sun size={20} />}
+             </button>
 
              {/* Chat button toggles modal now */}
              <a href="#" className={`nav-link-item nav-link-cta ${isChatOpen && 'active'}`} onClick={toggleChat}>Assistente IA</a>

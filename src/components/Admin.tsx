@@ -5,9 +5,9 @@ import { Appointment } from '../types';
 import { formatDate, formatCurrency, getPetAvatarUrl } from '../utils/ui';
 import { 
   Calendar as CalendarIcon, LayoutDashboard, ListTodo, User, Phone, 
-  TrendingUp, DollarSign, Users, Activity, BarChart3, PieChart, Settings,
-  ChevronLeft, ChevronRight, Clock, AlertCircle, CheckCircle2, MoreHorizontal,
-  CalendarCheck, Droplet
+  TrendingUp, DollarSign, Users, Activity, BarChart3, Settings,
+  ChevronLeft, ChevronRight, Clock, CheckCircle2, MoreHorizontal,
+  CalendarCheck, Droplet, Filter, ArrowUpRight
 } from 'lucide-react';
 import { useToast } from '../context/ToastContext';
 import { AdminManagement } from './AdminManagement';
@@ -25,7 +25,7 @@ export const AdminPanel: React.FC = () => {
       setAppointments(apps);
     } catch (e) { 
         console.error(e); 
-        toast.error('Erro ao carregar dados');
+        toast.error('Erro ao sincronizar dados');
     }
     finally { setLoading(false); }
   };
@@ -35,344 +35,209 @@ export const AdminPanel: React.FC = () => {
   const updateStatus = async (id: number, status: string) => {
      try {
         await api.admin.updateStatus(id, status);
-        toast.success(`Status atualizado para ${status}`);
+        toast.success(`Status: ${status}`);
         fetchData();
      } catch (e) {
-        toast.error('Erro ao atualizar status');
+        toast.error('Erro ao atualizar');
      }
   };
 
-  // --- KPI & Data Calculation ---
-  const kpis = useMemo(() => {
+  // --- BUSINESS INTELLIGENCE CALCULATIONS ---
+  const stats = useMemo(() => {
      const activeApps = appointments.filter(a => a.status !== 'cancelled');
      const todayStr = new Date().toDateString();
      
-     // 1. Today's Summary
      const todayApps = activeApps.filter(a => new Date(a.start_time).toDateString() === todayStr);
-     const todayCompleted = todayApps.filter(a => a.status === 'completed').length;
-     const todayPending = todayApps.filter(a => a.status === 'pending').length;
-     const todayInProgress = todayApps.filter(a => a.status === 'in_progress').length;
-
-     // 2. Revenue
-     const totalRevenue = activeApps.reduce((acc, curr) => acc + (curr.services?.price || 0), 0);
+     const revenue = activeApps.reduce((acc, curr) => acc + (curr.services?.price || 0), 0);
+     const occupancy = Math.min(100, Math.round((activeApps.length / 50) * 100)); // Base 50 slots/dia
      
-     // 3. Occupancy
-     const totalMinutes = activeApps.reduce((acc, curr) => acc + (curr.services?.duration_minutes || 0), 0);
-     const occupancyRate = Math.min(100, Math.round((totalMinutes / (40 * 60 * 4)) * 100));
+     // Weekly Volume Chart Data
+     const days = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
+     const volume = new Array(7).fill(0);
+     activeApps.forEach(a => volume[new Date(a.start_time).getDay()]++);
+     const maxVol = Math.max(...volume, 1);
+     const chart = days.map((label, i) => ({ label, val: volume[i], h: (volume[i]/maxVol)*100 }));
 
-     // 4. Ticket Average
-     const ticketAvg = activeApps.length ? totalRevenue / activeApps.length : 0;
-
-     // 5. Service Distribution
-     const serviceCount: Record<string, number> = {};
-     activeApps.forEach(a => {
-        const name = a.services?.name || 'Outros';
-        serviceCount[name] = (serviceCount[name] || 0) + 1;
-     });
-     const topServices = Object.entries(serviceCount)
-        .sort((a,b) => b[1] - a[1])
-        .slice(0, 4)
-        .map(([name, count]) => ({ name, count, pct: Math.round((count / activeApps.length) * 100) }));
-
-     // 6. Weekly Volume
-     const weekDays = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
-     const volumeByDay = new Array(7).fill(0);
-     activeApps.forEach(a => {
-        const day = new Date(a.start_time).getDay();
-        volumeByDay[day]++;
-     });
-     const maxDaily = Math.max(...volumeByDay, 1);
-     const chartData = weekDays.map((label, idx) => ({
-         label,
-         value: volumeByDay[idx],
-         heightPct: (volumeByDay[idx] / maxDaily) * 100
-     }));
-
-     return { 
-         totalRevenue, occupancyRate, ticketAvg, topServices, chartData, 
-         totalCount: activeApps.length,
-         todaySummary: {
-             total: todayApps.length,
-             completed: todayCompleted,
-             pending: todayPending,
-             inProgress: todayInProgress,
-             list: todayApps.slice(0, 5)
-         }
-     };
+     return { revenue, occupancy, chart, todayApps, total: activeApps.length };
   }, [appointments]);
 
   const DashboardView = () => (
-      <div className="admin-grid-layout fade-in">
-          
-          <div className="kpi-row" style={{ gridColumn: '1 / -1' }}>
-              <div className="kpi-card glass-morphism">
+      <div className="admin-dashboard-v2 fade-in">
+          {/* KPI ROW */}
+          <div className="admin-kpi-grid">
+              <div className="admin-kpi-card purple">
                   <div className="kpi-header">
-                      <div className="kpi-icon bg-purple-soft"><DollarSign size={20}/></div>
-                      <span className="kpi-trend trend-up"><TrendingUp size={14}/> +12%</span>
+                      <div className="kpi-icon-circle"><DollarSign size={20}/></div>
+                      <div className="kpi-trend"><ArrowUpRight size={14}/> 12%</div>
                   </div>
-                  <div className="kpi-value">{formatCurrency(kpis.totalRevenue)}</div>
-                  <div className="kpi-label">Receita Acumulada</div>
+                  <div className="kpi-info">
+                      <span className="kpi-label">Faturamento Total</span>
+                      <h2 className="kpi-value">{formatCurrency(stats.revenue)}</h2>
+                  </div>
+                  <div className="kpi-mini-chart">
+                      {stats.chart.map((d, i) => <div key={i} className="bar" style={{height: `${d.h}%`}}></div>)}
+                  </div>
               </div>
 
-              <div className="kpi-card glass-morphism">
+              <div className="admin-kpi-card cyan">
                   <div className="kpi-header">
-                      <div className="kpi-icon bg-cyan-soft"><Activity size={20}/></div>
-                      <span className="kpi-trend trend-up"><TrendingUp size={14}/> Estável</span>
+                      <div className="kpi-icon-circle"><Activity size={20}/></div>
+                      <div className="kpi-trend">Live</div>
                   </div>
-                  <div className="kpi-value">{kpis.occupancyRate}%</div>
-                  <div className="kpi-label">Ocupação da Agenda</div>
+                  <div className="kpi-info">
+                      <span className="kpi-label">Ocupação Agenda</span>
+                      <h2 className="kpi-value">{stats.occupancy}%</h2>
+                  </div>
+                  <div className="progress-track-kpi"><div className="fill" style={{width: `${stats.occupancy}%`}}></div></div>
               </div>
 
-              <div className="kpi-card glass-morphism">
+              <div className="admin-kpi-card orange">
                   <div className="kpi-header">
-                      <div className="kpi-icon bg-orange-soft"><Users size={20}/></div>
+                      <div className="kpi-icon-circle"><Users size={20}/></div>
                   </div>
-                  <div className="kpi-value">{formatCurrency(kpis.ticketAvg)}</div>
-                  <div className="kpi-label">Ticket Médio</div>
-              </div>
-
-              <div className="kpi-card glass-morphism">
-                  <div className="kpi-header">
-                      <div className="kpi-icon bg-green-soft"><CheckCircle2 size={20}/></div>
+                  <div className="kpi-info">
+                      <span className="kpi-label">Total Atendimentos</span>
+                      <h2 className="kpi-value">{stats.total}</h2>
                   </div>
-                  <div className="kpi-value">{kpis.todaySummary.completed}/{kpis.todaySummary.total}</div>
-                  <div className="kpi-label">Concluídos Hoje</div>
               </div>
           </div>
 
-          <div className="card admin-main-card reveal-on-scroll">
-              <div className="card-header-flex">
-                  <div>
-                      <h3>Agenda de Hoje</h3>
-                      <p className="text-muted text-sm">{new Date().toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' })}</p>
+          <div className="admin-two-col-grid">
+              {/* TODAY'S AGENDA */}
+              <div className="card admin-list-card">
+                  <div className="card-header-flex">
+                      <h3>Fila de Hoje</h3>
+                      <button className="btn btn-ghost btn-sm" onClick={() => setView('agenda')}>Ver Agenda</button>
                   </div>
-                  <button className="btn btn-ghost btn-sm" onClick={() => setView('agenda')}>Ver Tudo</button>
+                  <div className="admin-today-list">
+                      {stats.todayApps.length === 0 ? (
+                          <div className="empty-state-tiny">Nenhum agendamento para hoje.</div>
+                      ) : (
+                          stats.todayApps.map(app => (
+                              <div key={app.id} className="admin-today-item">
+                                  <div className="item-time">{new Date(app.start_time).getHours()}:00</div>
+                                  <img src={getPetAvatarUrl(app.pets?.name || '')} className="item-avatar" />
+                                  <div className="item-info">
+                                      <strong>{app.pets?.name}</strong>
+                                      <span>{app.services?.name}</span>
+                                  </div>
+                                  <div className={`status-pill pill-${app.status}`}>{app.status}</div>
+                              </div>
+                          ))
+                      )}
+                  </div>
               </div>
-              
-              <div className="today-agenda-list">
-                  {kpis.todaySummary.list.length === 0 ? (
-                      <div className="empty-state-small">Nenhum agendamento para hoje.</div>
-                  ) : (
-                      kpis.todaySummary.list.map(app => (
-                          <div key={app.id} className="today-item">
-                              <div className="today-time-slot">
-                                  <strong>{new Date(app.start_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</strong>
-                              </div>
-                              <div className="today-pet-avatar">
-                                  <img src={getPetAvatarUrl(app.pets?.name || '')} alt={app.pets?.name} />
-                              </div>
-                              <div className="today-info">
-                                  <strong>{app.pets?.name}</strong>
-                                  <span>{app.services?.name}</span>
-                              </div>
-                              <div className={`status-pill pill-${app.status}`}>
-                                  {app.status === 'pending' ? 'Pendente' : app.status === 'in_progress' ? 'No Banho' : 'Confirmado'}
-                              </div>
-                          </div>
-                      ))
-                  )}
-              </div>
-          </div>
 
-          <div className="card admin-side-card reveal-on-scroll">
-              <div className="card-header-flex">
+              {/* WEEKLY METRICS */}
+              <div className="card admin-chart-card">
                   <h3>Volume Semanal</h3>
-                  <BarChart3 size={20} className="text-muted"/>
-              </div>
-              <div className="chart-container-compact">
-                  {kpis.chartData.map((d, i) => (
-                      <div key={i} className="chart-bar-group">
-                          <div className="chart-bar-wrapper">
-                             <div className="chart-bar-fill" style={{ height: `${d.heightPct}%` }}></div>
+                  <div className="admin-main-chart">
+                      {stats.chart.map((d, i) => (
+                          <div key={i} className="chart-col">
+                              <div className="chart-bar-bg"><div className="chart-bar-fill" style={{height: `${d.h}%`}}></div></div>
+                              <span>{d.label}</span>
                           </div>
-                          <span className="chart-label">{d.label}</span>
-                      </div>
-                  ))}
+                      ))}
+                  </div>
               </div>
           </div>
       </div>
   );
-
-  const AgendaView = () => {
-      const [currentDate, setCurrentDate] = useState(new Date());
-
-      const getStartOfWeek = (date: Date) => {
-          const d = new Date(date);
-          const day = d.getDay();
-          const diff = d.getDate() - day;
-          return new Date(d.setDate(diff));
-      };
-
-      const startOfWeek = getStartOfWeek(currentDate);
-      const weekDays = Array.from({ length: 7 }, (_, i) => {
-          const d = new Date(startOfWeek);
-          d.setDate(d.getDate() + i);
-          return d;
-      });
-      const endOfWeek = new Date(startOfWeek);
-      endOfWeek.setDate(endOfWeek.getDate() + 6);
-
-      const hours = Array.from({ length: 11 }, (_, i) => i + 8); 
-      const PIXELS_PER_HOUR = 60;
-
-      const weekApps = appointments.filter(app => {
-          const d = new Date(app.start_time);
-          return d >= startOfWeek && d < new Date(endOfWeek.getTime() + 86400000);
-      });
-
-      return (
-          <div className="agenda-view-container fade-in">
-              <div className="calendar-header-modern">
-                  <div className="calendar-nav">
-                      <button className="btn-icon-sm" onClick={() => {
-                          const d = new Date(currentDate); d.setDate(d.getDate() - 7); setCurrentDate(d);
-                      }}><ChevronLeft size={20}/></button>
-                      <h2 className="current-week-label">
-                          {startOfWeek.toLocaleDateString('pt-BR', {day:'2-digit', month:'short'})} - {endOfWeek.toLocaleDateString('pt-BR', {day:'2-digit', month:'short', year:'numeric'})}
-                      </h2>
-                      <button className="btn-icon-sm" onClick={() => {
-                          const d = new Date(currentDate); d.setDate(d.getDate() + 7); setCurrentDate(d);
-                      }}><ChevronRight size={20}/></button>
-                  </div>
-                  <div className="calendar-legend-modern">
-                      <span className="legend-tag tag-pending">Pendente</span>
-                      <span className="legend-tag tag-confirmed">Confirmado</span>
-                      <span className="legend-tag tag-in_progress">No Banho</span>
-                      <button className="btn btn-secondary btn-sm" onClick={() => setCurrentDate(new Date())}>Hoje</button>
-                  </div>
-              </div>
-
-              <div className="agenda-grid-scroll no-scrollbar">
-                  <div className="agenda-grid">
-                      <div className="agenda-time-column">
-                          <div className="agenda-cell-header"><Clock size={14}/></div>
-                          {hours.map(h => <div key={h} className="agenda-time-cell">{h}:00</div>)}
-                      </div>
-                      
-                      {weekDays.map((day, i) => {
-                          const isToday = day.toDateString() === new Date().toDateString();
-                          const dayApps = weekApps.filter(a => new Date(a.start_time).toDateString() === day.toDateString());
-
-                          return (
-                              <div key={i} className={`agenda-day-column ${isToday ? 'agenda-today' : ''}`}>
-                                  <div className="agenda-cell-header">
-                                      <span className="day-name">{day.toLocaleDateString('pt-BR', { weekday: 'short' })}</span>
-                                      <span className="day-number">{day.getDate()}</span>
-                                  </div>
-                                  <div className="agenda-slots-area" style={{ height: hours.length * PIXELS_PER_HOUR }}>
-                                      {hours.map(h => <div key={h} className="agenda-grid-line" style={{ height: PIXELS_PER_HOUR }}></div>)}
-                                      
-                                      {dayApps.map(app => {
-                                          const start = new Date(app.start_time);
-                                          const top = ((start.getHours() - 8) + (start.getMinutes() / 60)) * PIXELS_PER_HOUR;
-                                          const height = ((app.services?.duration_minutes || 60) / 60) * PIXELS_PER_HOUR;
-
-                                          return (
-                                              <div 
-                                                  key={app.id} 
-                                                  className={`agenda-event app-status-${app.status}`}
-                                                  style={{ top, height }}
-                                                  onClick={() => {
-                                                      const nextStatusMap: any = { 'pending': 'confirmed', 'confirmed': 'in_progress', 'in_progress': 'completed' };
-                                                      const next = nextStatusMap[app.status];
-                                                      if(next && confirm(`Avançar ${app.pets?.name} para ${next}?`)) updateStatus(app.id, next);
-                                                  }}
-                                              >
-                                                  <div className="event-title">{app.pets?.name}</div>
-                                                  <div className="event-subtitle">{app.services?.name}</div>
-                                              </div>
-                                          );
-                                      })}
-                                  </div>
-                              </div>
-                          );
-                      })}
-                  </div>
-              </div>
-          </div>
-      );
-  };
 
   const KanbanView = () => (
-     <div className="kanban-board-modern fade-in">
-       <KanbanCol title="Pendentes" icon={<Clock size={16}/>} status="pending" items={appointments.filter(a => a.status === 'pending')} color="#F39C12" />
-       <KanbanCol title="Confirmados" icon={<CalendarCheck size={16}/>} status="confirmed" items={appointments.filter(a => a.status === 'confirmed')} color="#2D3436" />
-       <KanbanCol title="Em Atendimento" icon={<Droplet size={16}/>} status="in_progress" items={appointments.filter(a => a.status === 'in_progress')} color="#00CEC9" />
-       <KanbanCol title="Finalizados" icon={<CheckCircle2 size={16}/>} status="completed" items={appointments.filter(a => a.status === 'completed')} color="#9B59B6" />
-     </div>
+      <div className="admin-kanban-board fade-in">
+          <KanbanColumn title="Pendente" icon={<Clock size={16}/>} items={appointments.filter(a => a.status === 'pending')} status="pending" color="#F39C12" />
+          <KanbanColumn title="Confirmado" icon={<CalendarCheck size={16}/>} items={appointments.filter(a => a.status === 'confirmed')} status="confirmed" color="#2D3436" />
+          <KanbanColumn title="Em Atendimento" icon={<Droplet size={16}/>} items={appointments.filter(a => a.status === 'in_progress')} status="in_progress" color="#00CEC9" />
+          <KanbanColumn title="Concluído" icon={<CheckCircle2 size={16}/>} items={appointments.filter(a => a.status === 'completed')} status="completed" color="#9B59B6" />
+      </div>
   );
 
-  const KanbanCol = ({ title, icon, status, items, color }: { title: string, icon: any, status: string, items: Appointment[], color: string }) => (
-    <div className="kanban-column-modern">
-      <div className="kanban-header-modern" style={{ borderTopColor: color }}>
-        <div className="kanban-title-flex">
-            {icon}
-            <span>{title}</span>
-        </div>
-        <span className="kanban-count">{items.length}</span>
+  const KanbanColumn = ({ title, icon, items, status, color }: any) => (
+      <div className="kanban-col">
+          <div className="kanban-header" style={{borderTopColor: color}}>
+              {icon} <span>{title}</span> <span className="count">{items.length}</span>
+          </div>
+          <div className="kanban-cards">
+              {items.map((app: any) => (
+                  <div key={app.id} className="kanban-card">
+                      <div className="card-top">
+                          <img src={getPetAvatarUrl(app.pets?.name || '')} />
+                          <div className="meta">
+                              <strong>{app.pets?.name}</strong>
+                              <span>{new Date(app.start_time).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</span>
+                          </div>
+                      </div>
+                      <div className="card-service">{app.services?.name}</div>
+                      <div className="card-actions">
+                          {status === 'pending' && <button onClick={() => updateStatus(app.id, 'confirmed')} className="btn-kanban-act">Aprovar</button>}
+                          {status === 'confirmed' && <button onClick={() => updateStatus(app.id, 'in_progress')} className="btn-kanban-act">Iniciar</button>}
+                          {status === 'in_progress' && <button onClick={() => updateStatus(app.id, 'completed')} className="btn-kanban-act highlight">Finalizar</button>}
+                      </div>
+                  </div>
+              ))}
+          </div>
       </div>
-      <div className="kanban-list no-scrollbar">
-          {items.map(app => (
-            <div key={app.id} className="kanban-card-modern reveal-on-scroll">
-               <div className="kanban-card-top">
-                 <img src={getPetAvatarUrl(app.pets?.name || '')} className="kanban-avatar" />
-                 <div className="kanban-meta">
-                    <div className="kanban-pet-name">{app.pets?.name}</div>
-                    <div className="kanban-time">{new Date(app.start_time).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</div>
-                 </div>
-               </div>
-               <div className="kanban-service-label">{app.services?.name}</div>
-               <div className="kanban-client-row">
-                  <User size={12}/> {app.profiles?.full_name?.split(' ')[0]}
-               </div>
-               <div className="kanban-actions-row">
-                 {status === 'pending' && <button onClick={() => updateStatus(app.id, 'confirmed')} className="btn-action-kanban confirm">Aprovar</button>}
-                 {status === 'confirmed' && <button onClick={() => updateStatus(app.id, 'in_progress')} className="btn-action-kanban start">Iniciar</button>}
-                 {status === 'in_progress' && <button onClick={() => updateStatus(app.id, 'completed')} className="btn-action-kanban finish">Concluir</button>}
-                 <button className="btn-action-kanban more"><MoreHorizontal size={14}/></button>
-               </div>
-            </div>
-          ))}
-      </div>
-    </div>
   );
 
   return (
-    <div className="container admin-panel-page fade-in">
-       <div className="admin-page-header">
-          <div className="title-group">
-            <h1>Painel Administrativo</h1>
-            <p>Monitoramento em tempo real do Pet-S-PA</p>
+    <div className="container admin-main-page fade-in">
+       <div className="admin-top-nav-tabs">
+          <div className="brand-context">
+              <Logo height={32} />
+              <span>Admin Center</span>
           </div>
-          <div className="admin-nav-tabs">
-            <button className={`admin-tab ${view === 'dashboard' ? 'active' : ''}`} onClick={() => setView('dashboard')}>
-              <LayoutDashboard size={18}/> Dashboard
-            </button>
-            <button className={`admin-tab ${view === 'agenda' ? 'active' : ''}`} onClick={() => setView('agenda')}>
-              <CalendarIcon size={18}/> Agenda
-            </button>
-            <button className={`admin-tab ${view === 'kanban' ? 'active' : ''}`} onClick={() => setView('kanban')}>
-              <ListTodo size={18}/> Kanban
-            </button>
-            <button className={`admin-tab ${view === 'management' ? 'active' : ''}`} onClick={() => setView('management')}>
-              <Settings size={18}/> Config
-            </button>
+          <div className="tabs-group">
+              <button className={`tab-item ${view === 'dashboard' ? 'active' : ''}`} onClick={() => setView('dashboard')}><LayoutDashboard size={18}/> Dashboard</button>
+              <button className={`tab-item ${view === 'kanban' ? 'active' : ''}`} onClick={() => setView('kanban')}><ListTodo size={18}/> Fluxo (Kanban)</button>
+              <button className={`tab-item ${view === 'agenda' ? 'active' : ''}`} onClick={() => setView('agenda')}><CalendarIcon size={18}/> Agenda</button>
+              <button className={`tab-item ${view === 'management' ? 'active' : ''}`} onClick={() => setView('management')}><Settings size={18}/> Config</button>
           </div>
        </div>
 
-       {loading ? (
-         <div className="admin-loading-state">
-            <div className="spinner"></div>
-            <span>Sincronizando dados...</span>
-         </div>
-       ) : (
-         <div className="admin-content-area">
-           {view === 'dashboard' && <DashboardView />}
-           {view === 'agenda' && <AgendaView />}
-           {view === 'kanban' && <KanbanView />}
-           {view === 'management' && <AdminManagement />}
-         </div>
-       )}
+       <div className="admin-scroll-content">
+          {loading ? (
+              <div className="admin-loading-view"><div className="spinner"></div> Sincronizando dados mestres...</div>
+          ) : (
+              <>
+                {view === 'dashboard' && <DashboardView />}
+                {view === 'kanban' && <KanbanView />}
+                {view === 'agenda' && <div className="card" style={{minHeight:'600px', padding:0}}><AgendaView appointments={appointments} updateStatus={updateStatus} /></div>}
+                {view === 'management' && <AdminManagement />}
+              </>
+          )}
+       </div>
     </div>
   );
 };
+
+// Simplified Internal Agenda for the refined grid
+const AgendaView = ({ appointments, updateStatus }: any) => {
+    const hours = Array.from({length: 11}, (_, i) => i + 8);
+    const today = new Date().toDateString();
+    const todayApps = appointments.filter((a:any) => new Date(a.start_time).toDateString() === today);
+
+    return (
+        <div className="admin-agenda-grid-v2">
+            <div className="agenda-time-axis">
+                {hours.map(h => <div key={h} className="time-label">{h}:00</div>)}
+            </div>
+            <div className="agenda-content-area">
+                {hours.map(h => <div key={h} className="hour-slot-row"></div>)}
+                {todayApps.map((app: any) => {
+                    const start = new Date(app.start_time);
+                    const top = ((start.getHours() - 8) * 60 + start.getMinutes()) * 1.5; // 1.5px per minute
+                    const height = (app.services?.duration_minutes || 60) * 1.5;
+                    return (
+                        <div key={app.id} className={`agenda-event-box status-${app.status}`} style={{top, height}} onClick={() => updateStatus(app.id, 'in_progress')}>
+                            <strong>{app.pets?.name}</strong>
+                            <span>{app.services?.name}</span>
+                        </div>
+                    );
+                })}
+            </div>
+        </div>
+    );
+};
+
+const Logo = ({height}: any) => <img src="https://vfryefavzurwoiuznkwv.supabase.co/storage/v1/object/public/site-assets/logo.png" style={{height}} />;

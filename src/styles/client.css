@@ -1,0 +1,207 @@
+
+/* =========================================
+   CLIENT-SIDE STYLES (Marketing & UX)
+   ========================================= */
+
+/* --- HERO & HOME --- */
+.hero-header {
+  background: linear-gradient(135deg, var(--primary) 0%, #FF7675 100%);
+  border-radius: 0 0 40px 40px;
+  color: white;
+  margin-top: -20px; 
+  padding: 60px 20px 0;
+  position: relative; 
+  overflow: hidden;
+  box-shadow: 0 15px 40px -10px rgba(155, 89, 182, 0.4);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  min-height: 520px; 
+}
+
+@media (min-width: 1024px) {
+    .hero-header {
+        flex-direction: row;
+        text-align: left;
+        padding: 80px 100px 0;
+        justify-content: space-between;
+        min-height: 600px;
+        border-radius: 0 0 60px 60px;
+    }
+}
+
+.hero-pets-img {
+    width: 90%;
+    max-width: 400px;
+    height: auto;
+    margin-top: 30px;
+    filter: drop-shadow(0 20px 30px rgba(0,0,0,0.3));
+    z-index: 1;
+    transform: translateY(10px);
+    transition: transform 0.5s ease;
+}
+
+.hero-header:hover .hero-pets-img {
+    transform: translateY(0px) scale(1.02);
+}
+
+/* --- FEATURED BANNER "PURO CARINHO" (Screenshot Style) --- */
+.featured-banner-puro {
+    background: var(--surface-alt);
+    border-radius: 24px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    margin-bottom: 40px;
+    border: 1px solid var(--border-light);
+    box-shadow: var(--shadow-card);
+}
+
+.featured-puro-text-box {
+    padding: 40px;
+    flex: 1;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.accent-border-puro {
+    position: absolute;
+    left: 0;
+    top: 20%;
+    bottom: 20%;
+    width: 6px;
+    background: var(--brand-cyan);
+    border-radius: 0 4px 4px 0;
+}
+
+.featured-puro-text-box h2 {
+    font-size: 2.5rem;
+    color: white;
+    margin-bottom: 16px;
+}
+
+.featured-puro-text-box p {
+    font-size: 1.2rem;
+    color: var(--text-body);
+    line-height: 1.5;
+    max-width: 500px;
+}
+
+.featured-puro-image-box {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(15, 23, 42, 0.5);
+    padding: 20px;
+}
+
+.puro-pets-composite {
+    width: 100%;
+    height: auto;
+    object-fit: contain;
+    filter: drop-shadow(0 10px 20px rgba(0,0,0,0.5));
+}
+
+@media (min-width: 1024px) {
+    .featured-banner-puro {
+        flex-direction: row;
+        height: 400px;
+    }
+    .featured-puro-image-box {
+        padding: 0;
+    }
+    .puro-pets-composite {
+        height: 120%;
+        width: auto;
+        transform: translateY(10%);
+    }
+}
+
+/* --- GALLERY GRID (5 Columns) --- */
+.gallery-grid-5 {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+    margin-bottom: 40px;
+}
+
+@media (min-width: 768px) {
+    .gallery-grid-5 {
+        grid-template-columns: repeat(5, 1fr);
+    }
+}
+
+.gallery-card-tall {
+    aspect-ratio: 2/3;
+    border-radius: 20px;
+    overflow: hidden;
+    background: var(--surface);
+    border: 2px solid transparent;
+    transition: all 0.3s ease;
+}
+
+.gallery-card-tall img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.gallery-card-tall.placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(15, 23, 42, 0.8);
+    border: 2px solid var(--border-light);
+}
+
+.placeholder-content {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    font-weight: 600;
+}
+
+.gallery-card-tall:hover {
+    transform: translateY(-5px);
+    border-color: var(--primary);
+}
+
+/* --- SERVICES GRID --- */
+.services-preview-grid { 
+    display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 50px; 
+}
+
+@media (min-width: 768px) {
+    .services-preview-grid { grid-template-columns: repeat(4, 1fr); }
+}
+
+.service-img-card {
+    height: 180px; background-size: cover; background-position: center; border-radius: 24px;
+    position: relative; overflow: hidden; cursor: pointer; box-shadow: var(--shadow-card);
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    border: 1px solid var(--border-light); 
+}
+
+.service-img-card:hover {
+    transform: translateY(-8px) scale(1.03);
+    border-color: var(--primary);
+}
+
+/* --- TESTIMONIALS --- */
+.testimonial-card {
+    background: var(--surface);
+    padding: 32px;
+    border-radius: 32px;
+    border: 1px solid var(--border-light);
+    min-width: 300px;
+}
+
+.user-profile-row {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-top: 24px;
+}
