@@ -24,7 +24,6 @@ import { ServicesPage } from './views/Services';
 import { PackagesView } from './views/Packages';
 import { LoginPage, RegisterPage } from './views/Login';
 import { Dashboard } from './views/Dashboard';
-import { UserProfileView } from './views/Profile';
 import { PetDetailsView, AppointmentDetailsView } from './views/Details';
 
 export default function App() {
@@ -70,22 +69,6 @@ export default function App() {
   }, [theme]);
 
   const toggleTheme = () => setTheme(prev => prev === 'light' ? 'dark' : 'light');
-
-  // Scroll Observer
-  useEffect(() => {
-    const observer = new IntersectionObserver((entries) => {
-      entries.forEach(entry => {
-        if (entry.isIntersecting) {
-          entry.target.classList.add('visible');
-        }
-      });
-    }, { threshold: 0.1 });
-
-    const elements = document.querySelectorAll('.reveal-on-scroll');
-    elements.forEach(el => observer.observe(el));
-
-    return () => observer.disconnect();
-  }, [view, pets, apps]);
 
   // Initial Load Logic
   useEffect(() => {
@@ -163,7 +146,7 @@ export default function App() {
           session={session}
           onComplete={(hasPets) => { 
               setLoginStage('idle'); 
-              navigateTo('user-profile');
+              navigateTo('dashboard'); // Unified view
               if (!hasPets) {
                   setTimeout(() => {
                       setShowPetWizard(true);
@@ -236,7 +219,7 @@ export default function App() {
           </button>
 
           {session ? (
-             <button className={`nav-item-mobile ${view === 'dashboard' ? 'active' : ''}`} onClick={() => navigateTo('dashboard')}>
+             <button className={`nav-item-mobile ${view === 'dashboard' || view === 'user-profile' ? 'active' : ''}`} onClick={() => navigateTo('dashboard')}>
                 <User size={24} strokeWidth={view === 'dashboard' ? 2.5 : 2} />
                 <span>Perfil</span>
              </button>
@@ -275,7 +258,7 @@ export default function App() {
              <a href="#" className={`nav-link-item nav-link-cta ${isChatOpen && 'active'}`} onClick={toggleChat}>Assistente IA</a>
              {session ? (
                <>
-                 <a href="#" className="btn btn-primary btn-sm" onClick={() => navigateTo('dashboard')}>Minha Conta</a>
+                 <a href="#" className={`btn btn-primary btn-sm ${(view === 'dashboard' || view === 'user-profile') && 'active'}`} onClick={() => navigateTo('dashboard')}>Minha Conta</a>
                  {profile?.role === 'admin' && <a href="#" className="nav-link-item" onClick={() => navigateTo('admin')}>Admin</a>}
                  <a href="#" className="logout-link" onClick={handleLogout} style={{marginLeft: 20}}>Sair</a>
                </>
@@ -293,7 +276,6 @@ export default function App() {
           {view === 'login' && <LoginPage onNavigate={navigateTo} setLoginStage={setLoginStage} />}
           {view === 'register' && <RegisterPage onNavigate={navigateTo} setLoginStage={setLoginStage} />}
           
-          {/* Chat is now a global overlay widget */}
           {isChatOpen && (
               <Chat 
                   onClose={() => setIsChatOpen(false)}
@@ -303,9 +285,20 @@ export default function App() {
           )}
           
           {view === 'about' && <AboutUs onNavigate={navigateTo} />}
-          {view === 'dashboard' && <Dashboard profile={profile} pets={pets} apps={apps} onNavigate={navigateTo} setSelectedPet={setSelectedPet} setSelectedAppointment={setSelectedAppointment} onOpenBooking={() => setShowBookingModal(true)} />}
+          {(view === 'dashboard' || view === 'user-profile') && (
+            <Dashboard 
+                profile={profile} 
+                pets={pets} 
+                apps={apps} 
+                subscriptions={subscriptions}
+                onNavigate={navigateTo} 
+                setSelectedPet={setSelectedPet} 
+                setSelectedAppointment={setSelectedAppointment} 
+                onOpenBooking={() => setShowBookingModal(true)}
+                onAddPet={() => setShowPetWizard(true)}
+            />
+          )}
           {view === 'admin' && <AdminPanel />}
-          {view === 'user-profile' && <UserProfileView profile={profile} session={session} pets={pets} apps={apps} subscriptions={subscriptions} onNavigate={navigateTo} setSelectedPet={setSelectedPet} onAddPet={() => setShowPetWizard(true)} />}
           {view === 'pet-details' && <PetDetailsView selectedPet={selectedPet} apps={apps} subscriptions={subscriptions} onNavigate={navigateTo} setSelectedAppointment={setSelectedAppointment} />}
           {view === 'appointment-details' && <AppointmentDetailsView selectedAppointment={selectedAppointment} onNavigate={navigateTo} />}
        </main>
