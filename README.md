@@ -192,7 +192,8 @@ src/
 ├── utils/               # Funções puras, validadores e helpers de data
 ├── types/               # Definições estritas de TypeScript (Interfaces/Models)
 ├── App.tsx              # Orquestrador de rotas e providers
-└── main.tsx             # Ponto de entrada da aplicação```
+└── main.tsx             # Ponto de entrada da aplicação
+```
 
 ## 🎨 Design System
 
