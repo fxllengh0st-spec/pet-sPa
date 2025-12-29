@@ -1,219 +1,132 @@
 
-# 🐾 PetSpa - Plataforma SaaS de Gestão para Petshops
+# 🐾 PetSpa — Plataforma SaaS Premium para Petshops
 
 <div align="center">
-  <img src="https://img.shields.io/badge/React-18-blue?logo=react&style=for-the-badge" />
+  <img src="https://vfryefavzurwoiuznkwv.supabase.co/storage/v1/object/public/site-assets/logo.png" width="200" alt="PetSpa Logo" />
+  <br />
+  <p><i>Cuidado excepcional para pets, gestão impecável para empreendedores.</i></p>
+
+  <img src="https://img.shields.io/badge/React-19-blue?logo=react&style=for-the-badge" />
   <img src="https://img.shields.io/badge/TypeScript-5-blue?logo=typescript&style=for-the-badge" />
-  <img src="https://img.shields.io/badge/Vite-5-purple?logo=vite&style=for-the-badge" />
-  <img src="https://img.shields.io/badge/Supabase-PostgreSQL-green?logo=supabase&style=for-the-badge" />
+  <img src="https://img.shields.io/badge/Dark_Mode-Midnight-1e293b?style=for-the-badge" />
+  <img src="https://img.shields.io/badge/Supabase-Database-green?logo=supabase&style=for-the-badge" />
 </div>
 
-<br />
+---
 
-Bem-vindo ao **PetSpa**, uma aplicação web **PWA (Progressive Web App)** Mobile-First completa. O sistema gerencia agendamentos, assinaturas recorrentes (Clube VIP), fluxo de caixa e atendimento via Chatbot Híbrido.
+## 🚀 Sobre o Projeto
+
+O **PetSpa** é uma aplicação web **PWA (Progressive Web App)** Mobile-First, desenvolvida com foco extremo em **UI/UX**. Mais do que um simples sistema de agendamento, é uma plataforma completa de fidelização que une uma interface "Midnight" sofisticada a um motor de atendimento inteligente.
+
+Esta versão foi refinada para oferecer uma experiência de usuário fluida, com animações suaves, contraste otimizado para telas OLED e uma arquitetura escalável em React + TypeScript.
 
 ---
 
-## ✨ Funcionalidades
+## ✨ Funcionalidades Core
 
-### 📱 Cliente (App)
-- **Agendamento Inteligente:** Wizard com validação de horários, bloqueio de conflitos e slots automáticos baseados na duração do serviço.
-- **Chatbot Determinístico:** Assistente virtual (`bot-engine.ts`) que guia o usuário sem alucinações de IA, permitindo agendamento via chat.
-- **Clube de Assinaturas:** Gestão de planos mensais (ex: 4 banhos/mês) com agendamento automático.
-- **Gestão de Pets:** Cadastro detalhado com upload de fotos otimizado (compressão no cliente).
-- **Acompanhamento em Tempo Real:** Status do banho (Aguardando -> No Banho -> Pronto).
+### 📱 Experiência do Cliente (App)
+- **Interface Midnight Premium:** Design escuro sofisticado com hierarquia visual baseada em elevação de superfícies.
+- **Wizard de Agendamento Inteligente:** Fluxo guiado com validação de slots em tempo real, evitando conflitos de horários.
+- **Rastreamento em Tempo Real:** Card de acompanhamento dinâmico que informa se o pet está "Aguardando", "Em Banho" ou "Pronto".
+- **Clube VIP (Assinaturas):** Gestão de planos recorrentes com auto-agendamento de banhos para todo o mês.
+- **Mascote & Chatbot Híbrido:** Assistente virtual determinístico que guia o usuário sem alucinações de IA.
 
-### 🛡️ Admin (Backoffice)
-- **Dashboard Executivo:** KPIs de receita, ocupação e serviços mais vendidos.
-- **Agenda Visual:** Estilo Google Calendar com visualização semanal.
-- **Kanban Operacional:** Controle de fluxo (Check-in / Banho / Check-out).
-- **Gestão de Catálogo:** CRUD de Serviços e Pacotes.
+### 🛡️ Backoffice Administrativo
+- **Dashboard Executivo:** KPIs financeiros, taxa de ocupação e métricas de fidelidade.
+- **Gestão de Fluxo Kanban:** Controle operacional visual para a equipe de banhistas e tosadores.
+- **Agenda Semanal Dinâmica:** Visualização estilo calendário com drag-and-drop para reagendamentos rápidos.
+- **Gestão de Catálogo:** Controle total sobre serviços, pacotes e preços.
 
 ---
 
-## 🛠️ Como Duplicar e Rodar o Projeto
+## 🛠️ Stack Tecnológica
 
-Para rodar este projeto em sua própria infraestrutura, você precisará configurar o **Supabase** (Backend as a Service).
+- **Frontend:** React 19 + TypeScript.
+- **Build Tool:** Vite.
+- **Backend as a Service:** Supabase (Auth, PostgreSQL, Realtime).
+- **Styling:** Custom CSS Design System (Variáveis modernas, sem dependências de frameworks pesados).
+- **Icons:** Lucide React.
 
-### 1. Pré-requisitos
-*   Node.js v18+
-*   NPM ou Yarn
-*   Conta no [Supabase](https://supabase.com) (Plano Gratuito funciona perfeitamente)
+---
 
-### 2. Instalação Local
+## ⚙️ Configuração do Ambiente
 
-```bash
-# 1. Clone o repositório
-git clone https://github.com/seu-usuario/petspa.git
+### 1. Requisitos
+- Node.js v18+
+- Instância no [Supabase](https://supabase.com)
 
-# 2. Entre na pasta
-cd petspa
-
-# 3. Instale as dependências
-npm install
-
-# 4. Inicie o servidor de desenvolvimento
-npm run dev
-```
-
-### 3. ⚠️ Configuração do Banco de Dados (Supabase)
-
-Para o sistema funcionar, você deve criar um projeto no Supabase e rodar o seguinte script SQL no **SQL Editor** do painel do Supabase para criar a estrutura necessária:
+### 2. Estrutura do Banco de Dados
+Execute o script abaixo no SQL Editor do seu projeto Supabase para criar a fundação do sistema:
 
 ```sql
--- 1. Tabela de Perfis (Estende auth.users)
-create table public.profiles (
-  id uuid references auth.users not null primary key,
-  email text,
+-- Perfis de Usuário
+create table profiles (
+  id uuid references auth.users primary key,
   full_name text,
   phone text,
   role text default 'client' check (role in ('client', 'admin', 'employee')),
-  created_at timestamp with time zone default timezone('utc'::text, now()) not null
+  created_at timestamptz default now()
 );
 
--- 2. Tabela de Pets
-create table public.pets (
+-- Cadastro de Pets
+create table pets (
   id uuid default gen_random_uuid() primary key,
-  owner_id uuid references public.profiles(id) not null,
+  owner_id uuid references profiles(id) not null,
   name text not null,
   breed text,
   weight numeric,
-  birth_date date,
-  notes text,
-  avatar_url text, -- Armazena Base64 ou URL do Storage
-  created_at timestamp with time zone default timezone('utc'::text, now()) not null
+  avatar_url text,
+  created_at timestamptz default now()
 );
 
--- 3. Tabela de Serviços
-create table public.services (
+-- Serviços e Agendamentos
+create table services (
   id bigint generated by default as identity primary key,
   name text not null,
-  description text,
   price numeric not null,
-  duration_minutes integer default 60,
-  active boolean default true,
-  created_at timestamp with time zone default timezone('utc'::text, now()) not null
-);
-
--- 4. Tabela de Agendamentos
-create table public.appointments (
-  id bigint generated by default as identity primary key,
-  client_id uuid references public.profiles(id) not null,
-  pet_id uuid references public.pets(id) not null,
-  service_id bigint references public.services(id) not null,
-  start_time timestamp with time zone not null,
-  end_time timestamp with time zone not null,
-  status text default 'pending' check (status in ('pending', 'confirmed', 'in_progress', 'completed', 'cancelled')),
-  created_at timestamp with time zone default timezone('utc'::text, now()) not null
-);
-
--- 5. Pacotes / Assinaturas
-create table public.packages (
-  id bigint generated by default as identity primary key,
-  title text not null,
-  description text,
-  price numeric not null,
-  original_price numeric,
-  bath_count integer default 4,
-  features text[], -- Array de strings
-  highlight boolean default false,
-  color_theme text default '#9B59B6',
-  service_id bigint references public.services(id), -- Vincula ao serviço base
+  duration_minutes int default 60,
   active boolean default true
 );
 
-create table public.subscriptions (
+create table appointments (
   id bigint generated by default as identity primary key,
-  user_id uuid references public.profiles(id) not null,
-  pet_id uuid references public.pets(id) not null,
-  package_id bigint references public.packages(id) not null,
-  status text default 'active',
-  created_at timestamp with time zone default timezone('utc'::text, now()) not null
+  client_id uuid references profiles(id) not null,
+  pet_id uuid references pets(id) not null,
+  service_id bigint references services(id) not null,
+  start_time timestamptz not null,
+  end_time timestamptz not null,
+  status text default 'pending' check (status in ('pending', 'confirmed', 'in_progress', 'completed', 'cancelled'))
 );
-
--- TRIGGERS IMPORTANTES (Cria perfil ao registrar usuário)
-create or replace function public.handle_new_user()
-returns trigger as $$
-begin
-  insert into public.profiles (id, email, full_name, phone, role)
-  values (new.id, new.email, new.raw_user_meta_data->>'full_name', new.raw_user_meta_data->>'phone', 'client');
-  return new;
-end;
-$$ language plpgsql security definer;
-
-create trigger on_auth_user_created
-  after insert on auth.users
-  for each row execute procedure public.handle_new_user();
 ```
 
-> **Dica:** Lembre-se de desabilitar o RLS (Row Level Security) ou configurar as Políticas de Segurança adequadas para permitir leitura/escrita nas tabelas.
-
-### 4. Conectando ao Frontend
-
-1.  No painel do Supabase, vá em **Project Settings > API**.
-2.  Copie a `Project URL` e a `anon public key`.
-3.  Abra o arquivo `src/lib/supabase.ts` e substitua as constantes (ou melhor, use variáveis de ambiente).
-
-**Recomendado (Arquivo .env):**
+### 3. Variáveis de Ambiente
 Crie um arquivo `.env` na raiz do projeto:
-
 ```env
-VITE_SUPABASE_URL=sua_url_do_projeto
-VITE_SUPABASE_ANON_KEY=sua_chave_anonima
+VITE_SUPABASE_URL=seu_projeto_url
+VITE_SUPABASE_ANON_KEY=sua_chave_publica
 ```
-
-E atualize `src/lib/supabase.ts` para usar `import.meta.env.VITE_SUPABASE_URL`.
 
 ---
 
-## 📂 Estrutura do Projeto
+## 📂 Organização de Pastas
+O projeto segue uma estrutura modular focada em separação de responsabilidades:
 
-```
-## 📂 Estrutura do Projeto
-
-```
-src/
-├── components/          # Componentes de UI (Atômicos e Moleculares)
-│   ├── BookingWizard/   # Fluxo complexo de agendamento (Modularizado)
-│   ├── Admin.tsx        # Dashboard administrativo
-│   ├── Chat.tsx         # Interface de comunicação em tempo real
-│   └── Shared/          # Primitivos: Button, Input, Card, Modal, Header, Footer
-├── context/             # Gerenciamento de estado global (React Context API)
-│   ├── ToastContext.tsx # Sistema de notificações push/UI feedback
-│   ├── AuthContext.tsx  # Persistência de sessão e RBAC
-│   └── ThemeContext.tsx # Controle de design tokens (Light/Dark mode)
-├── services/            # Camada de infraestrutura e integração externa
-│   ├── supabase.ts      # Cliente e queries do Banco de Dados/Auth
-│   ├── bot-engine.ts    # Lógica de processamento de IA/Chatbot
-│   └── analytics.ts     # Rastreamento de performance e conversão
-├── views/               # Páginas principais (Containers de alto nível)
-├── hooks/               # Abstração de lógica de negócio e estados locais
-├── styles/              # Arquitetura CSS (Design System e Variáveis)
-├── utils/               # Funções puras, validadores e helpers de data
-├── types/               # Definições estritas de TypeScript (Interfaces/Models)
-├── App.tsx              # Orquestrador de rotas e providers
-└── main.tsx             # Ponto de entrada da aplicação
-
-```
-
-## 🎨 Design System
-
-O projeto utiliza CSS puro organizado em módulos (`styles/`) para garantir performance máxima sem dependências pesadas de build, mas com variáveis CSS modernas para facilitar a customização de temas (Dark Mode ready).
-
-*   **Cores:** Definidas em `src/styles/variables.css`.
-*   **Animações:** `fade-in-up`, `pop-in` definidas em `src/styles/animations.css`.
-
-## 🤖 Bot Engine
-
-O Chatbot localizado em `src/services/bot-engine.ts` **não** usa LLMs (ChatGPT/Gemini) diretamente para o fluxo conversacional para garantir:
-1.  **Custo Zero:** Não gasta tokens de API.
-2.  **Latência Zero:** Resposta imediata.
-3.  **Segurança:** Não inventa horários ou preços (Alucinação).
-
-Ele funciona como uma máquina de estados finita que navega o usuário pelo fluxo de agendamento.
+- `src/components`: Componentes de UI reutilizáveis e módulos complexos (Chat, Admin, Wizards).
+- `src/services`: Camada de API (Supabase) e o Motor do Chatbot (`bot-engine.ts`).
+- `src/styles`: Design System organizado por categorias (Animations, Layout, Pages, Variables).
+- `src/views`: As páginas/telas principais da aplicação.
 
 ---
 
-## 📝 Licença
+## 🤖 O Motor do Chatbot
+Diferente de IAs generativas comuns, o **BotEngine** do PetSpa utiliza uma máquina de estados finitos. Isso garante que o bot nunca invente preços ou horários, oferecendo uma experiência de agendamento 100% confiável e de custo zero de API para o lojista.
 
-Este projeto é de código aberto sob a licença MIT. Sinta-se livre para usar, modificar e comercializar.
+---
+
+## 📄 Licença
+Distribuído sob a licença MIT. Veja `LICENSE` para mais informações.
+
+---
+<div align="center">
+  Desenvolvido com ❤️ para apaixonados por pets.
+</div>
