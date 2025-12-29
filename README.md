@@ -169,19 +169,68 @@ E atualize `src/lib/supabase.ts` para usar `import.meta.env.VITE_SUPABASE_URL`.
 ## 📂 Estrutura do Projeto
 
 ```
+## 📂 Estrutura do Projeto
+
+```
 src/
-├── components/       # Componentes React (UI)
-│   ├── Admin.tsx     # Painel Administrativo Completo
-│   ├── BookingWizard # Lógica complexa de agendamento (Slots)
-│   ├── Chat.tsx      # Interface do Chat Widget
-│   └── ...
-├── context/          # Context API (Toast Notifications)
+├── components/
+│   ├── Admin.tsx
+│   ├── BookingWizard/
+│   │   ├── index.tsx
+│   │   ├── SlotSelector.tsx
+│   │   ├── ServicePicker.tsx
+│   │   └── ConfirmationStep.tsx
+│   ├── Chat.tsx
+│   ├── Header.tsx
+│   ├── Footer.tsx
+│   ├── Sidebar.tsx
+│   ├── Modal.tsx
+│   ├── Button.tsx
+│   ├── Input.tsx
+│   └── Card.tsx
+├── context/
+│   ├── ToastContext.tsx
+│   ├── AuthContext.tsx
+│   └── ThemeContext.tsx
 ├── services/
-│   ├── api.ts        # Camada de abstração do Supabase
-│   └── bot-engine.ts # Máquina de estados do Chatbot
-├── styles/           # CSS Modular e Design System
-├── utils/            # Helpers (Formatadores, Compressão de img)
-└── views/            # Páginas (Home, Dashboard, Profile)
+│   ├── api.ts
+│   ├── bot-engine.ts
+│   ├── supabase.ts
+│   └── analytics.ts
+├── styles/
+│   ├── globals.css
+│   ├── variables.css
+│   ├── components/
+│   │   ├── button.css
+│   │   ├── modal.css
+│   │   └── card.css
+│   └── themes/
+│       ├── light.css
+│       └── dark.css
+├── utils/
+│   ├── formatters.ts
+│   ├── imageCompression.ts
+│   ├── validators.ts
+│   ├── dateHelpers.ts
+│   └── constants.ts
+├── views/
+│   ├── Home.tsx
+│   ├── Dashboard.tsx
+│   ├── Profile.tsx
+│   ├── Appointments.tsx
+│   ├── Services.tsx
+│   └── Reports.tsx
+├── hooks/
+│   ├── useAuth.ts
+│   ├── useToast.ts
+│   └── useBooking.ts
+├── types/
+│   ├── index.ts
+│   ├── models.ts
+│   └── api.ts
+├── App.tsx
+└── main.tsx
+```
 ```
 
 ## 🎨 Design System
