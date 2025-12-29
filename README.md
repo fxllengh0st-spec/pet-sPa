@@ -173,65 +173,26 @@ E atualize `src/lib/supabase.ts` para usar `import.meta.env.VITE_SUPABASE_URL`.
 
 ```
 src/
-├── components/
-│   ├── Admin.tsx
-│   ├── BookingWizard/
-│   │   ├── index.tsx
-│   │   ├── SlotSelector.tsx
-│   │   ├── ServicePicker.tsx
-│   │   └── ConfirmationStep.tsx
-│   ├── Chat.tsx
-│   ├── Header.tsx
-│   ├── Footer.tsx
-│   ├── Sidebar.tsx
-│   ├── Modal.tsx
-│   ├── Button.tsx
-│   ├── Input.tsx
-│   └── Card.tsx
-├── context/
-│   ├── ToastContext.tsx
-│   ├── AuthContext.tsx
-│   └── ThemeContext.tsx
-├── services/
-│   ├── api.ts
-│   ├── bot-engine.ts
-│   ├── supabase.ts
-│   └── analytics.ts
-├── styles/
-│   ├── globals.css
-│   ├── variables.css
-│   ├── components/
-│   │   ├── button.css
-│   │   ├── modal.css
-│   │   └── card.css
-│   └── themes/
-│       ├── light.css
-│       └── dark.css
-├── utils/
-│   ├── formatters.ts
-│   ├── imageCompression.ts
-│   ├── validators.ts
-│   ├── dateHelpers.ts
-│   └── constants.ts
-├── views/
-│   ├── Home.tsx
-│   ├── Dashboard.tsx
-│   ├── Profile.tsx
-│   ├── Appointments.tsx
-│   ├── Services.tsx
-│   └── Reports.tsx
-├── hooks/
-│   ├── useAuth.ts
-│   ├── useToast.ts
-│   └── useBooking.ts
-├── types/
-│   ├── index.ts
-│   ├── models.ts
-│   └── api.ts
-├── App.tsx
-└── main.tsx
-```
-```
+├── components/          # Componentes de UI (Atômicos e Moleculares)
+│   ├── BookingWizard/   # Fluxo complexo de agendamento (Modularizado)
+│   ├── Admin.tsx        # Dashboard administrativo
+│   ├── Chat.tsx         # Interface de comunicação em tempo real
+│   └── Shared/          # Primitivos: Button, Input, Card, Modal, Header, Footer
+├── context/             # Gerenciamento de estado global (React Context API)
+│   ├── ToastContext.tsx # Sistema de notificações push/UI feedback
+│   ├── AuthContext.tsx  # Persistência de sessão e RBAC
+│   └── ThemeContext.tsx # Controle de design tokens (Light/Dark mode)
+├── services/            # Camada de infraestrutura e integração externa
+│   ├── supabase.ts      # Cliente e queries do Banco de Dados/Auth
+│   ├── bot-engine.ts    # Lógica de processamento de IA/Chatbot
+│   └── analytics.ts     # Rastreamento de performance e conversão
+├── views/               # Páginas principais (Containers de alto nível)
+├── hooks/               # Abstração de lógica de negócio e estados locais
+├── styles/              # Arquitetura CSS (Design System e Variáveis)
+├── utils/               # Funções puras, validadores e helpers de data
+├── types/               # Definições estritas de TypeScript (Interfaces/Models)
+├── App.tsx              # Orquestrador de rotas e providers
+└── main.tsx             # Ponto de entrada da aplicação```
 
 ## 🎨 Design System
 
